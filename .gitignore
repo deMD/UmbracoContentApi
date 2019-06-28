@@ -24,3 +24,12 @@
 
 # Ignore the Models Builder models out of date flag
 **/App_Data/Models/ood.flag
+/.vs
+/src/UmbracoContentApi/.vs/UmbracoContentApi
+/src/UmbracoContentApi/packages
+/src/UmbracoContentApi/UmbracoContentApi.Web/App_Data/Models
+/src/UmbracoContentApi/UmbracoContentApi.Web/bin
+/src/UmbracoContentApi/UmbracoContentApi.Web/obj/Debug
+/src/UmbracoContentApi/UmbracoContentApi.Web/Umbraco
+/src/UmbracoContentApi/UmbracoContentApi.sln.DotSettings.user
+/src/UmbracoContentApi/UmbracoContentApi.Web/UmbracoContentApi.Web.csproj.user
