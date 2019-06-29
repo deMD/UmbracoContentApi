@@ -420,6 +420,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\EntryApiController.cs" />
+    <Compile Include="Models\EntryModel.cs" />
+    <Compile Include="Models\SystemModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
