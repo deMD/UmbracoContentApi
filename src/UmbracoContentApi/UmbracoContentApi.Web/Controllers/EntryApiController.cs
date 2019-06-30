@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Web;
 using System.Web.Http;
+using HtmlAgilityPack;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Umbraco.Core.Models.PublishedContent;
@@ -41,7 +43,14 @@ namespace UmbracoContentApi.Web.Controllers
             var dict = new Dictionary<string, object>();
             foreach (var property in content.Properties)
             {
-                dict.Add(property.Alias, property.Value(culture));
+                var prop = property.Value(culture);
+                if (prop is IHtmlString html)
+                {
+                    var htmlDoc = new HtmlDocument();
+                    htmlDoc.LoadHtml(html.ToHtmlString());
+                }
+
+                dict.Add(property.Alias, prop);
             }
 
             entry.Fields = dict;
