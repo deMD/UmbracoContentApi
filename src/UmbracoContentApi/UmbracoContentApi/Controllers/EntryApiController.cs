@@ -2,16 +2,15 @@
 using System.Linq;
 using System.Web;
 using System.Web.Http;
-using HtmlAgilityPack;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Web;
 using Umbraco.Web.Composing;
 using Umbraco.Web.WebApi;
-using UmbracoContentApi.Web.Models;
+using UmbracoContentApi.Converters;
+using UmbracoContentApi.Models;
 
-namespace UmbracoContentApi.Web.Controllers
+namespace UmbracoContentApi.Controllers
 {
     public class EntryApiController : UmbracoApiController
     {
@@ -35,7 +34,7 @@ namespace UmbracoContentApi.Web.Controllers
                     CreatedAt = content.CreateDate,
                     EditedAt = content.UpdateDate,
                     Locale = content.GetCulture(culture).Culture,
-                    Type = "entry",
+                    Type = "Entry",
                     Revision = Services.ContentService.GetVersions(id).Count()
                 }
             };
@@ -46,8 +45,8 @@ namespace UmbracoContentApi.Web.Controllers
                 var prop = property.Value(culture);
                 if (prop is IHtmlString html)
                 {
-                    var htmlDoc = new HtmlDocument();
-                    htmlDoc.LoadHtml(html.ToHtmlString());
+                    var converter = new HtmlStringConverter();
+                    prop = converter.Convert(html);
                 }
 
                 dict.Add(property.Alias, prop);

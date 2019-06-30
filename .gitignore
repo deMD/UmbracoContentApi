@@ -33,3 +33,5 @@
 /src/UmbracoContentApi/UmbracoContentApi.Web/Umbraco
 /src/UmbracoContentApi/UmbracoContentApi.sln.DotSettings.user
 /src/UmbracoContentApi/UmbracoContentApi.Web/UmbracoContentApi.Web.csproj.user
+/src/UmbracoContentApi/UmbracoContentApi/bin/Debug
+/src/UmbracoContentApi/UmbracoContentApi/obj/Debug
