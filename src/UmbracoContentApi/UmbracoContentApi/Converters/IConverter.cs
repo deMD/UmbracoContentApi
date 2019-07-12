@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace UmbracoContentApi.Converters
 {
-    public interface IConverter<in T>
+    public interface IConverter
     {
-        object Convert(T value);
+        string EditorAlias { get; }
+
+        object Convert(object value);
     }
 }
