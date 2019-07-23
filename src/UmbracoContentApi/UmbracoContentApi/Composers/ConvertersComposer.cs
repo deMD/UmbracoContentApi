@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using System.Web;
-using Umbraco.Core;
+﻿using Umbraco.Core;
 using Umbraco.Core.Composing;
 using UmbracoContentApi.Converters;
 
@@ -19,7 +17,6 @@ namespace UmbracoContentApi.Composers
             composition.Register<IConverter, MultiUrlPickerConverter>();
             composition.Register<IConverter, IntegerConverter>();
             composition.Register<IConverter, NestedContentConverter>();
-
         }
     }
 }

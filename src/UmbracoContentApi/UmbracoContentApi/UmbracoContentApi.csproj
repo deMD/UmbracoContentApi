@@ -233,8 +233,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Composers\ApiConfigurationComposer.cs" />
     <Compile Include="Composers\ConvertersComposer.cs" />
-    <Compile Include="Controllers\EntryApiController.cs" />
+    <Compile Include="Controllers\ContentApiController.cs" />
     <Compile Include="Converters\ContentPickerConverter.cs" />
     <Compile Include="Converters\ImageCropperConverter.cs" />
     <Compile Include="Converters\IntegerConverter.cs" />

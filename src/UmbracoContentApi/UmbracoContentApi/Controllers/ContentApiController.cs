@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Web;
 using System.Web.Http;
+using System.Web.Http.Description;
+using System.Web.Routing;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Umbraco.Core.Models.PublishedContent;
@@ -14,13 +17,14 @@ using UmbracoContentApi.Models;
 
 namespace UmbracoContentApi.Controllers
 {
-    public class EntryApiController : UmbracoApiController
+    [RoutePrefix("api/content")]
+    public class ContentApiController : UmbracoApiController
     {
         private readonly IEnumerable<IConverter> _converters;
         private readonly UmbracoHelper _umbracoHelper;
         private readonly IVariationContextAccessor _variationContextAccessor;
 
-        public EntryApiController(
+        public ContentApiController(
             IVariationContextAccessor variationContextAccessor,
             IEnumerable<IConverter> converters)
         {
@@ -29,6 +33,8 @@ namespace UmbracoContentApi.Controllers
             _umbracoHelper = Current.UmbracoHelper;
         }
 
+        [Route("{id:guid}")]
+        [ResponseType(typeof(EntryModel))]
         public IHttpActionResult Get(Guid id, string culture = null)
         {
             IPublishedContent content = _umbracoHelper.Content(id);
@@ -67,14 +73,7 @@ namespace UmbracoContentApi.Controllers
 
             entry.Fields = dict;
 
-            return Json(
-                entry,
-                new JsonSerializerSettings
-                {
-                    Formatting = Formatting.Indented,
-                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                });
+            return Ok(entry);
         }
     }
 }
