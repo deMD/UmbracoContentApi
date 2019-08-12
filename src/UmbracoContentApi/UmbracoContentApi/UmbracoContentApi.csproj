@@ -235,6 +235,7 @@
   <ItemGroup>
     <Compile Include="Composers\ApiConfigurationComposer.cs" />
     <Compile Include="Composers\ConvertersComposer.cs" />
+    <Compile Include="Controllers\AssetApiController.cs" />
     <Compile Include="Controllers\ContentApiController.cs" />
     <Compile Include="Converters\ContentPickerConverter.cs" />
     <Compile Include="Converters\ImageCropperConverter.cs" />
@@ -246,8 +247,11 @@
     <Compile Include="Converters\TextBoxConverter.cs" />
     <Compile Include="Converters\TinyMceConverter.cs" />
     <Compile Include="Converters\IConverter.cs" />
+    <Compile Include="Enums\ContentType.cs" />
+    <Compile Include="Enums\LinkType.cs" />
+    <Compile Include="Models\AssetModel.cs" />
     <Compile Include="Models\LinkModel.cs" />
-    <Compile Include="Models\EntryModel.cs" />
+    <Compile Include="Models\ContentModel.cs" />
     <Compile Include="Models\MulitLinkModel.cs" />
     <Compile Include="Models\SystemModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

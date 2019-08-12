@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Umbraco.Core.Models.PublishedContent;
+﻿using Umbraco.Core.Models.PublishedContent;
+using UmbracoContentApi.Enums;
 using UmbracoContentApi.Models;
 
 namespace UmbracoContentApi.Converters
@@ -16,8 +12,8 @@ namespace UmbracoContentApi.Converters
         {
             return new LinkModel
             {
-                Id = ((IPublishedContent)value).Key,
-                LinkType = "Entry"
+                Id = ((IPublishedContent) value).Key,
+                LinkType = LinkType.Content.ToString()
             };
         }
     }

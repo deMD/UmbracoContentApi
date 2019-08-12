@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace UmbracoContentApi.Models
+﻿namespace UmbracoContentApi.Models
 {
     internal class MulitLinkModel
     {
@@ -15,12 +9,5 @@ namespace UmbracoContentApi.Models
         public string Target { get; set; }
 
         public string Type { get; set; }
-
-        internal enum ContentType
-        {
-            Entry,
-            Asset,
-            External
-        }
     }
 }

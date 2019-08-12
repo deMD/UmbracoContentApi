@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Umbraco.Core.Models.PublishedContent;
+﻿using System.Collections.Generic;
 using Umbraco.Web.Models;
 using UmbracoContentApi.Models;
 
@@ -16,15 +11,16 @@ namespace UmbracoContentApi.Converters
         public object Convert(object value)
         {
             var links = new List<MulitLinkModel>();
-            foreach (Link link in ((IEnumerable<object>) value))
+            foreach (Link link in (IEnumerable<object>) value)
             {
-                links.Add(new MulitLinkModel
-                {
-                    Name = link.Name,
-                    Target = link.Target,
-                    Type = ((MulitLinkModel.ContentType)(int)link.Type).ToString(),
-                    Url = link.Url
-                });
+                links.Add(
+                    new MulitLinkModel
+                    {
+                        Name = link.Name,
+                        Target = link.Target,
+                        Type = link.Type.ToString(),
+                        Url = link.Url
+                    });
             }
 
             return links;

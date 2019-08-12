@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Umbraco.Core.Models.PublishedContent;
+using UmbracoContentApi.Enums;
 using UmbracoContentApi.Models;
 
 namespace UmbracoContentApi.Converters
@@ -15,13 +12,14 @@ namespace UmbracoContentApi.Converters
         public object Convert(object value)
         {
             var list = new List<LinkModel>();
-            foreach (var element in (IEnumerable<IPublishedElement>)value)
+            foreach (IPublishedElement element in (IEnumerable<IPublishedElement>) value)
             {
-                list.Add(new LinkModel
-                {
-                    Id = element.Key,
-                    LinkType = "Entry"
-                });
+                list.Add(
+                    new LinkModel
+                    {
+                        Id = element.Key,
+                        LinkType = LinkType.Content.ToString()
+                    });
             }
 
             return list;

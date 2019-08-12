@@ -2,7 +2,7 @@
 
 namespace UmbracoContentApi.Models
 {
-    public class EntryModel
+    public class AssetModel
     {
         public SystemModel System { get; set; }
         public Dictionary<string, object> Fields { get; set; }
