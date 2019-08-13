@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
 using System.Web.Http.Description;
-using NPoco;
 using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Web;
 using Umbraco.Web.Composing;
@@ -45,27 +44,15 @@ namespace UmbracoContentApi.Controllers
                     CreatedAt = media.CreateDate,
                     EditedAt = media.UpdateDate,
                     Locale = _variationContextAccessor.VariationContext.Culture,
-                    Type = ContentType.Content.ToString(),
+                    Type = ContentType.Media.ToString(),
                     Revision = Services.ContentService.GetVersions(media.Id).Count()
                 }
             };
 
-            var dict = new Dictionary<string, object>();
-            //dict.Add("Name", media.Name);
-            //dict.Add("File", new
-            //{
-            //    Url = media.Url,
-            //    Details = new
-            //    {
-            //        Size = media.GetProperty("umbracoBytes").Value(),
-            //        // Only when image
-            //        Image = new
-            //        {
-            //            Width = media.GetProperty("umbracoWidth").Value(),
-            //            Height = media.GetProperty("umbracoHeight").Value()
-            //        }
-            //    }
-            //});
+            var dict = new Dictionary<string, object>
+            {
+                {"Name", media.Name}
+            };
 
             foreach (IPublishedProperty property in media.Properties)
             {

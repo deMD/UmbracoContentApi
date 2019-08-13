@@ -17,6 +17,8 @@ namespace UmbracoContentApi.Composers
             composition.Register<IConverter, MultiUrlPickerConverter>();
             composition.Register<IConverter, IntegerConverter>();
             composition.Register<IConverter, NestedContentConverter>();
+            composition.Register<IConverter, LabelConverter>();
+            composition.Register<IConverter, UploadFieldConverter>();
         }
     }
 }

@@ -240,6 +240,7 @@
     <Compile Include="Converters\ContentPickerConverter.cs" />
     <Compile Include="Converters\ImageCropperConverter.cs" />
     <Compile Include="Converters\IntegerConverter.cs" />
+    <Compile Include="Converters\LabelConverter.cs" />
     <Compile Include="Converters\MediaPickerConverter.cs" />
     <Compile Include="Converters\MultiUrlPickerConverter.cs" />
     <Compile Include="Converters\NestedContentConverter.cs" />
@@ -247,6 +248,7 @@
     <Compile Include="Converters\TextBoxConverter.cs" />
     <Compile Include="Converters\TinyMceConverter.cs" />
     <Compile Include="Converters\IConverter.cs" />
+    <Compile Include="Converters\UploadFieldConverter.cs" />
     <Compile Include="Enums\ContentType.cs" />
     <Compile Include="Enums\LinkType.cs" />
     <Compile Include="Models\AssetModel.cs" />

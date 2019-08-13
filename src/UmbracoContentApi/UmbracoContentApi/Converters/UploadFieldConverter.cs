@@ -6,13 +6,12 @@ using System.Threading.Tasks;
 
 namespace UmbracoContentApi.Converters
 {
-    internal class ImageCropperConverter : IConverter
+    class UploadFieldConverter : IConverter
     {
-        public string EditorAlias => "Umbraco.ImageCropper";
+        public string EditorAlias => "Umbraco.UploadField";
 
         public object Convert(object value)
         {
-            // return "Awaiting Asset implementation";
             return value;
         }
     }

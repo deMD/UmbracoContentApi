@@ -58,6 +58,12 @@ namespace UmbracoContentApi.Controllers
                 if (converter != null)
                 {
                     object prop = property.Value(culture);
+
+                    if (prop == null)
+                    {
+                        continue;
+                    }
+
                     prop = converter.Convert(prop);
                     dict.Add(property.Alias, prop);
                 }
