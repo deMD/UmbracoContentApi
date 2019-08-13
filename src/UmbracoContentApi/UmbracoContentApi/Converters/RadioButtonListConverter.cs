@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace UmbracoContentApi.Converters
 {
-    internal class UploadFieldConverter : IConverter
+    internal class RadioButtonListConverter : IConverter
     {
-        public string EditorAlias => "Umbraco.UploadField";
+        public string EditorAlias => "Umbraco.RadioButtonList";
 
         public object Convert(object value)
         {

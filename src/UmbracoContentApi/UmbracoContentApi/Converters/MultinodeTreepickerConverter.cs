@@ -1,13 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Umbraco.Core.Models.PublishedContent;
+using UmbracoContentApi.Enums;
 using UmbracoContentApi.Models;
 using UmbracoContentApi.Resolvers;
 
 namespace UmbracoContentApi.Converters
 {
-    internal class NestedContentConverter : IConverter
+    internal class MultinodeTreepickerConverter : IConverter
     {
-        public string EditorAlias => "Umbraco.NestedContent";
+        public string EditorAlias => "Umbraco.MultiNodeTreePicker";
 
         public object Convert(object value)
         {

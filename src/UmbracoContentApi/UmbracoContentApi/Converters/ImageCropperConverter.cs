@@ -12,7 +12,6 @@ namespace UmbracoContentApi.Converters
 
         public object Convert(object value)
         {
-            // return "Awaiting Asset implementation";
             return value;
         }
     }

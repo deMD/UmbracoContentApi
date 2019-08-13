@@ -19,6 +19,20 @@ namespace UmbracoContentApi.Composers
             composition.Register<IConverter, NestedContentConverter>();
             composition.Register<IConverter, LabelConverter>();
             composition.Register<IConverter, UploadFieldConverter>();
+            composition.Register<IConverter, ColorPickerConverter>();
+            composition.Register<IConverter, DateTimeConverter>();
+            composition.Register<IConverter, TagsConverter>();
+            composition.Register<IConverter, TrueFalseConverter>();
+            composition.Register<IConverter, CheckBoxListConverter>();
+            composition.Register<IConverter, DropdownFlexibleConverter>();
+            composition.Register<IConverter, RadioButtonListConverter>();
+            composition.Register<IConverter, MemberPickerConverter>();
+            composition.Register<IConverter, SliderConverter>();
+            composition.Register<IConverter, MultipleTextstringConverter>();
+            composition.Register<IConverter, MultinodeTreepickerConverter>();
+            composition.Register<IConverter, MarkdowneditorConverter>();
+            composition.Register<IConverter, MemberGroupPickerConverter>();
+            composition.Register<IConverter, UserPickerConverter>();
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Umbraco.Core.Models.PublishedContent;
+using UmbracoContentApi.Enums;
 using UmbracoContentApi.Models;
 
 namespace UmbracoContentApi.Converters
@@ -13,10 +14,10 @@ namespace UmbracoContentApi.Converters
         {
             if (value is IEnumerable<IPublishedContent> ar)
             {
-                return ar.Select(t => new LinkModel {Id = t.Key, LinkType = "Asset"}).ToList();
+                return ar.Select(t => new LinkModel {Id = t.Key, LinkType = LinkType.Media.ToString()}).ToList();
             }
 
-            return new LinkModel {Id = ((IPublishedContent) value).Key, LinkType = "Asset"};
+            return new LinkModel {Id = ((IPublishedContent) value).Key, LinkType = LinkType.Media.ToString() };
         }
     }
 }

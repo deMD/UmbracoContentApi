@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace UmbracoContentApi.Converters
 {
-    internal class UploadFieldConverter : IConverter
+    internal class CheckBoxListConverter : IConverter
     {
-        public string EditorAlias => "Umbraco.UploadField";
+        public string EditorAlias => "Umbraco.CheckBoxList";
 
         public object Convert(object value)
         {
