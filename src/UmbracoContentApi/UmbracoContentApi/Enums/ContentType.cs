@@ -3,6 +3,7 @@
     public enum ContentType
     {
         Content,
-        Media
+        Media,
+        Element
     }
 }

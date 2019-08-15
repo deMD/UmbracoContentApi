@@ -1,6 +1,7 @@
 ﻿using Umbraco.Core;
 using Umbraco.Core.Composing;
 using UmbracoContentApi.Converters;
+using UmbracoContentApi.Resolvers;
 
 namespace UmbracoContentApi.Composers
 {
@@ -8,6 +9,8 @@ namespace UmbracoContentApi.Composers
     {
         public void Compose(Composition composition)
         {
+            composition.Register<IContentResolver, ContentResolver>();
+
             composition.Register<IConverter, TextBoxConverter>();
             composition.Register<IConverter, TextAreaConverter>();
             composition.Register<IConverter, TinyMceConverter>();
