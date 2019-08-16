@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Web.Http;
 using System.Web.Http.Description;
 using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Web;
 using Umbraco.Web.Composing;
 using Umbraco.Web.WebApi;
-using UmbracoContentApi.Converters;
-using UmbracoContentApi.Enums;
 using UmbracoContentApi.Models;
 using UmbracoContentApi.Resolvers;
 
