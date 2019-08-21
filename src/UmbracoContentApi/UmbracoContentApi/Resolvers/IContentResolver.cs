@@ -5,6 +5,6 @@ namespace UmbracoContentApi.Resolvers
 {
     public interface IContentResolver
     {
-        ContentModel ResolveContent(IPublishedElement content, string culture = null);
+        ContentModel ResolveContent(IPublishedElement content);
     }
 }

@@ -36,13 +36,13 @@ namespace UmbracoContentApi.Controllers
 
         [Route("{id:guid}")]
         [ResponseType(typeof(ContentModel))]
-        public IHttpActionResult Get(Guid id, string culture = null)
+        public IHttpActionResult Get(Guid id)
         {
             var val = _publishedSnapshotService.EnterPreview(_userService.GetUserById(-1), _contentService.GetById(id).Id);
 
             IPublishedContent content = _umbracoHelper.Content(id);
 
-            ContentModel contentModel = _contentResolver.Value.ResolveContent(content, culture);
+            ContentModel contentModel = _contentResolver.Value.ResolveContent(content);
 
             return Ok(contentModel);
         }

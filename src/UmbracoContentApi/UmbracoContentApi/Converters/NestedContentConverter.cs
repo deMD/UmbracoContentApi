@@ -33,20 +33,6 @@ namespace UmbracoContentApi.Converters
             }
 
             return models;
-
-
-            //var list = new List<LinkModel>();
-            //foreach (IPublishedElement element in (IEnumerable<IPublishedElement>) value)
-            //{
-            //    list.Add(
-            //        new LinkModel
-            //        {
-            //            Id = element.Key,
-            //            LinkType = LinkTypeResolver.GetLinkType(element.ContentType.ItemType)
-            //        });
-            //}
-
-            //return list;
         }
     }
 }

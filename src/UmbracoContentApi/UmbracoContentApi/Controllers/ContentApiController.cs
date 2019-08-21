@@ -14,11 +14,13 @@ namespace UmbracoContentApi.Controllers
     public class ContentApiController : UmbracoApiController
     {
         private readonly Lazy<IContentResolver> _contentResolver;
+        private readonly IVariationContextAccessor _variationContextAccessor;
         private readonly UmbracoHelper _umbracoHelper;
 
-        public ContentApiController(Lazy<IContentResolver> contentResolver)
+        public ContentApiController(Lazy<IContentResolver> contentResolver, IVariationContextAccessor variationContextAccessor)
         {
             _contentResolver = contentResolver;
+            _variationContextAccessor = variationContextAccessor;
             _umbracoHelper = Current.UmbracoHelper;
         }
 
@@ -26,9 +28,14 @@ namespace UmbracoContentApi.Controllers
         [ResponseType(typeof(ContentModel))]
         public IHttpActionResult Get(Guid id, string culture = null)
         {
+            if (_variationContextAccessor.VariationContext.Culture != culture)
+            {
+                _variationContextAccessor.VariationContext = new VariationContext(culture);
+            }
+
             IPublishedContent content = _umbracoHelper.Content(id);
 
-            ContentModel contentModel = _contentResolver.Value.ResolveContent(content, culture);
+            ContentModel contentModel = _contentResolver.Value.ResolveContent(content);
 
             return Ok(contentModel);
         }

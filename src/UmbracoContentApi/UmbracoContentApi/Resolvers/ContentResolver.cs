@@ -25,7 +25,7 @@ namespace UmbracoContentApi.Resolvers
             _contentService = contentService;
         }
 
-        public ContentModel ResolveContent(IPublishedElement content, string culture = null)
+        public ContentModel ResolveContent(IPublishedElement content)
         {
             var contentModel = new ContentModel
             {
@@ -41,9 +41,7 @@ namespace UmbracoContentApi.Resolvers
             {
                 contentModel.System.CreatedAt = publishedContent.CreateDate;
                 contentModel.System.EditedAt = publishedContent.UpdateDate;
-                contentModel.System.Locale =
-                    publishedContent.Cultures.FirstOrDefault(x => x.Key == culture).Value?.Culture ??
-                    _variationContextAccessor.VariationContext.Culture;
+                contentModel.System.Locale = _variationContextAccessor.VariationContext.Culture;
                 contentModel.System.Revision = _contentService.GetVersions(publishedContent.Id).Count();
             }
 
@@ -54,7 +52,7 @@ namespace UmbracoContentApi.Resolvers
                     _converters.FirstOrDefault(x => x.EditorAlias.Equals(property.PropertyType.EditorAlias));
                 if (converter != null)
                 {
-                    object prop = property.Value(culture);
+                    object prop = property.Value();
 
                     if (prop == null)
                     {
