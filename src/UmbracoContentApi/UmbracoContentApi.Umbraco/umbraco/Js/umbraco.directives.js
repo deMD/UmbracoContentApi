@@ -4637,7 +4637,7 @@ Use this directive to construct a main content area inside the main editor windo
     'use strict';
     (function () {
         'use strict';
-        function EditorContentHeader(serverValidationManager) {
+        function EditorContentHeader(serverValidationManager, localizationService, editorState) {
             function link(scope, el, attr, ctrl) {
                 var unsubscribe = [];
                 if (!scope.serverValidationNameField) {
@@ -4646,6 +4646,21 @@ Use this directive to construct a main content area inside the main editor windo
                 if (!scope.serverValidationAliasField) {
                     scope.serverValidationAliasField = 'Alias';
                 }
+                scope.isNew = scope.content.state == 'NotCreated';
+                localizationService.localizeMany([
+                    scope.isNew ? 'placeholders_a11yCreateItem' : 'placeholders_a11yEdit',
+                    'placeholders_a11yName'
+                ]).then(function (data) {
+                    scope.a11yMessage = data[0];
+                    scope.a11yName = data[1];
+                    if (!scope.isNew) {
+                        scope.a11yMessage += ' ' + scope.content.name;
+                    } else {
+                        var name = editorState.current.contentTypeName;
+                        scope.a11yMessage += ' ' + name;
+                        scope.a11yName = name + ' ' + scope.a11yName;
+                    }
+                });
                 scope.vm = {};
                 scope.vm.dropdownOpen = false;
                 scope.vm.currentVariant = '';
@@ -4786,7 +4801,7 @@ Use this directive to construct a main content area inside the main editor windo
                 transclude: true,
                 restrict: 'E',
                 replace: true,
-                template: '<div data-element="editor-header" class="umb-editor-header" ng-class="{\'-split-view-active\': splitViewOpen === true}"> <div class="flex items-center" style="height: 100%;"> <div ng-if="showBackButton === true && splitViewOpen !== true" style="margin-right: 15px;"> <a class="umb-editor-header__back" href="#" ng-click="goBack()" prevent-default> <i class="fa fa-arrow-left" aria-hidden="true"></i> </a> </div> <div class="flex items-center" style="flex: 1;"> <div id="nameField" class="umb-editor-header__name-and-description" style="flex: 1 1 auto;"> <div class="umb-editor-header__name-wrapper"> <ng-form name="headerNameForm"> <input data-element="editor-name-field" type="text" class="umb-editor-header__name-input" localize="placeholder" placeholder="@placeholders_entername" name="headerName" ng-model="name" ng-class="{\'name-is-empty\': $parent.name===null || $parent.name===\'\'}" ng-disabled="nameDisabled" umb-auto-focus val-server-field="{{serverValidationNameField}}" required aria-required="true" aria-invalid="{{contentForm.headerNameForm.headerName.$invalid ? true : false}}" autocomplete="off" maxlength="255"> </ng-form> <a ng-if="content.variants.length > 0 && hideChangeVariant !== true" class="umb-variant-switcher__toggle" ng-click="vm.dropdownOpen = !vm.dropdownOpen" ng-class="{\'--error\': vm.errorsOnOtherVariants}"> <span>{{vm.currentVariant.language.name}}</span> <ins class="umb-variant-switcher__expand" ng-class="{\'icon-navigation-down\': !vm.dropdownOpen, \'icon-navigation-up\': vm.dropdownOpen}">&nbsp;</ins> </a> <span ng-if="hideChangeVariant" class="umb-variant-switcher__toggle"> <span>{{vm.currentVariant.language.name}}</span> </span> <umb-dropdown ng-if="vm.dropdownOpen" style="min-width: 100%; max-height: 250px; overflow-y: auto; margin-top: 5px;" on-close="vm.dropdownOpen = false" umb-keyboard-list> <umb-dropdown-item class="umb-variant-switcher__item" ng-class="{\'--current\': variant.active, \'--not-allowed\': variantIsOpen(variant.language.culture), \'--error\': variantHasError(variant.language.culture)}" ng-repeat="variant in content.variants"> <a class="umb-variant-switcher__name-wrapper" ng-click="selectVariant($event, variant)" prevent-default> <span class="umb-variant-switcher__name">{{variant.language.name}}</span> <umb-variant-state variant="variant" class="umb-variant-switcher__state"></umb-variant-state> </a> <div ng-if="splitViewOpen !== true && !variant.active" class="umb-variant-switcher__split-view" ng-click="openInSplitView($event, variant)">Open in split view</div> </umb-dropdown-item> </umb-dropdown> </div> </div> </div> <div ng-if="splitViewOpen"> <a class="umb-editor-header__close-split-view" ng-click="closeSplitView()"> <i class="icon-delete"></i> </a> </div> <div ng-if="content.apps && splitViewOpen !== true"> <umb-editor-navigation data-element="editor-sub-views" navigation="content.apps" on-select="selectNavigationItem(item)" on-anchor-select="selectAnchorItem(item, anchor)"> </umb-editor-navigation> </div> <div ng-if="menu.currentNode && splitViewOpen !== true && hideActionsMenu !== true"> <umb-editor-menu data-element="editor-actions" current-node="menu.currentNode" current-section="{{menu.currentSection}}"> </umb-editor-menu> </div> </div> </div> ',
+                template: '<div data-element="editor-header" class="umb-editor-header" ng-class="{\'-split-view-active\': splitViewOpen === true}"> <div class="flex items-center" style="height: 100%;"> <div ng-if="showBackButton === true && splitViewOpen !== true" style="margin-right: 15px;"> <a class="umb-editor-header__back" href="#" ng-click="goBack()" prevent-default> <i class="fa fa-arrow-left" aria-hidden="true"></i> </a> </div> <div class="flex items-center" style="flex: 1;"> <div id="nameField" class="umb-editor-header__name-and-description" style="flex: 1 1 auto;"> <div> <p tabindex="0" class="sr-only"> {{a11yMessage}} </p> </div> <div class="umb-editor-header__name-wrapper"> <label for="headerName" class="sr-only">{{a11yName}}</label> <ng-form name="headerNameForm"> <input data-element="editor-name-field" type="text" class="umb-editor-header__name-input" localize="placeholder" placeholder="@placeholders_entername" name="headerName" id="headerName" ng-model="name" ng-class="{\'name-is-empty\': $parent.name===null || $parent.name===\'\'}" ng-disabled="nameDisabled" umb-auto-focus val-server-field="{{serverValidationNameField}}" required aria-required="true" aria-invalid="{{contentForm.headerNameForm.headerName.$invalid ? true : false}}" autocomplete="off" maxlength="255"> </ng-form> <a ng-if="content.variants.length > 0 && hideChangeVariant !== true" class="umb-variant-switcher__toggle" ng-click="vm.dropdownOpen = !vm.dropdownOpen" ng-class="{\'--error\': vm.errorsOnOtherVariants}"> <span>{{vm.currentVariant.language.name}}</span> <ins class="umb-variant-switcher__expand" ng-class="{\'icon-navigation-down\': !vm.dropdownOpen, \'icon-navigation-up\': vm.dropdownOpen}">&nbsp;</ins> </a> <span ng-if="hideChangeVariant" class="umb-variant-switcher__toggle"> <span>{{vm.currentVariant.language.name}}</span> </span> <umb-dropdown ng-if="vm.dropdownOpen" style="min-width: 100%; max-height: 250px; overflow-y: auto; margin-top: 5px;" on-close="vm.dropdownOpen = false" umb-keyboard-list> <umb-dropdown-item class="umb-variant-switcher__item" ng-class="{\'--current\': variant.active, \'--not-allowed\': variantIsOpen(variant.language.culture), \'--error\': variantHasError(variant.language.culture)}" ng-repeat="variant in content.variants"> <a class="umb-variant-switcher__name-wrapper" ng-click="selectVariant($event, variant)" prevent-default> <span class="umb-variant-switcher__name">{{variant.language.name}}</span> <umb-variant-state variant="variant" class="umb-variant-switcher__state"></umb-variant-state> </a> <div ng-if="splitViewOpen !== true && !variant.active" class="umb-variant-switcher__split-view" ng-click="openInSplitView($event, variant)">Open in split view</div> </umb-dropdown-item> </umb-dropdown> </div> </div> </div> <div ng-if="splitViewOpen"> <a class="umb-editor-header__close-split-view" ng-click="closeSplitView()"> <i class="icon-delete"></i> </a> </div> <div ng-if="content.apps && splitViewOpen !== true"> <umb-editor-navigation data-element="editor-sub-views" navigation="content.apps" on-select="selectNavigationItem(item)" on-anchor-select="selectAnchorItem(item, anchor)"> </umb-editor-navigation> </div> <div ng-if="menu.currentNode && splitViewOpen !== true && hideActionsMenu !== true"> <umb-editor-menu data-element="editor-actions" current-node="menu.currentNode" current-section="{{menu.currentSection}}"> </umb-editor-menu> </div> </div> </div> ',
                 scope: {
                     name: '=',
                     nameDisabled: '<?',
@@ -5479,7 +5494,6 @@ Use this directive to construct a header inside the main editor window.
                     editor.moveRight = true;
                     editor.level = 0;
                     editor.styleIndex = 0;
-                    editor.infinityMode = true;
                     // push the new editor to the dom
                     scope.editors.push(editor);
                     $timeout(function () {
@@ -5548,7 +5562,7 @@ Use this directive to construct a header inside the main editor window.
             var directive = {
                 restrict: 'E',
                 replace: true,
-                template: '<div class="umb-editors"> <div class="umb-editor" ng-repeat="model in editors" ng-class="{\'umb-editor--small\': model.size === \'small\', \'umb-editor--animating\': model.animating, \'--notInFront\': model.inFront !== true, \'umb-editor--infinityMode\': model.infinityMode, \'moveRight\': model.moveRight, \'umb-editor--n0\': model.styleIndex === 0, \'umb-editor--n1\': model.styleIndex === 1, \'umb-editor--n2\': model.styleIndex === 2, \'umb-editor--n3\': model.styleIndex === 3, \'umb-editor--outOfRange\': model.level === -1, \'umb-editor--level0\': model.level === 0, \'umb-editor--level1\': model.level === 1, \'umb-editor--level2\': model.level === 2, \'umb-editor--level3\': model.level === 3}"> <div ng-if="!model.view && !model.animating" ng-transclude></div> <div ng-if="model.view && !model.animating" ng-include="model.view"></div> <div class="umb-editor__overlay"></div> </div> </div> ',
+                template: '<div class="umb-editors"> <div class="umb-editor" ng-repeat="model in editors" ng-class="{\'umb-editor--small\': model.size === \'small\', \'umb-editor--animating\': model.animating, \'--notInFront\': model.inFront !== true, \'umb-editor--infiniteMode\': model.infiniteMode, \'moveRight\': model.moveRight, \'umb-editor--n0\': model.styleIndex === 0, \'umb-editor--n1\': model.styleIndex === 1, \'umb-editor--n2\': model.styleIndex === 2, \'umb-editor--n3\': model.styleIndex === 3, \'umb-editor--outOfRange\': model.level === -1, \'umb-editor--level0\': model.level === 0, \'umb-editor--level1\': model.level === 1, \'umb-editor--level2\': model.level === 2, \'umb-editor--level3\': model.level === 3}"> <div ng-if="!model.view && !model.animating" ng-transclude></div> <div ng-if="model.view && !model.animating" ng-include="model.view"></div> <div class="umb-editor__overlay"></div> </div> </div> ',
                 link: link
             };
             return directive;
