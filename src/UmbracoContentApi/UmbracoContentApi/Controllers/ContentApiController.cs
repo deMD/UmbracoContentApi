@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Web.Http;
 using System.Web.Http.Description;
 using Umbraco.Core.Models.PublishedContent;
@@ -34,7 +35,6 @@ namespace UmbracoContentApi.Controllers
             }
 
             IPublishedContent content = _umbracoHelper.Content(id);
-
             ContentModel contentModel = _contentResolver.Value.ResolveContent(content);
 
             return Ok(contentModel);

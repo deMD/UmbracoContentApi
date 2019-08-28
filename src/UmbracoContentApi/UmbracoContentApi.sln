@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28803.156
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbracoContentApi.Web", "UmbracoContentApi.Web\UmbracoContentApi.Web.csproj", "{D0A77B9C-BF57-467E-902D-87E9F357FEBE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbracoContentApi.Umbraco", "UmbracoContentApi.Umbraco\UmbracoContentApi.Umbraco.csproj", "{D0A77B9C-BF57-467E-902D-87E9F357FEBE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbracoContentApi", "UmbracoContentApi\UmbracoContentApi.csproj", "{3BB9FCC0-1DD7-4D48-9831-DD4D1E8C49F1}"
 EndProject
