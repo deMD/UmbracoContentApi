@@ -9,6 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbracoContentApi.Core", "U
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{E12B378D-9B5E-47B6-9250-A48FE337B26F}"
 	ProjectSection(SolutionItems) = preProject
+		..\..\.gitignore = ..\..\.gitignore
 		..\..\README.md = ..\..\README.md
 	EndProjectSection
 EndProject

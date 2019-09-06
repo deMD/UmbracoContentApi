@@ -6,10 +6,10 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("UmbracoContentApi.Core")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Core implementation of the Umbraco Content Api. Contains the resolvers and converters needed to handle standard Umbraco editors.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("UmbracoContentApi")]
+[assembly: AssemblyCompany("Dave de Moel")]
+[assembly: AssemblyProduct("UmbracoContentApi Core")]
 [assembly: AssemblyCopyright("Copyright ©  2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

@@ -35,3 +35,6 @@
 /src/UmbracoContentApi/UmbracoContentApi.Web/UmbracoContentApi.Web.csproj.user
 /src/UmbracoContentApi/UmbracoContentApi/bin/Debug
 /src/UmbracoContentApi/UmbracoContentApi/obj/Debug
+
+**/bin/*
+**/obj/*

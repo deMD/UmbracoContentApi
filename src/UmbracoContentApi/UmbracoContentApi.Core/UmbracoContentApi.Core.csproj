@@ -233,7 +233,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Composers\ResolversComposer.cs" />
     <Compile Include="Composers\ConvertersComposer.cs" />
+    <Compile Include="ConverterCollection.cs" />
+    <Compile Include="ConverterCollectionBuilder.cs" />
+    <Compile Include="ConvertsCompositionExtensions.cs" />
     <Compile Include="Resolvers\MediaResolver.cs" />
     <Compile Include="Resolvers\ContentResolver.cs" />
     <Compile Include="Resolvers\IContentResolver.cs" />
@@ -285,5 +289,7 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Umbraco.SqlServerCE.4.0.0.1\build\Umbraco.SqlServerCE.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Umbraco.SqlServerCE.4.0.0.1\build\Umbraco.SqlServerCE.targets'))" />
+    <Error Condition="!Exists('..\packages\NuGet.Build.Tasks.Pack.5.2.0\build\NuGet.Build.Tasks.Pack.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NuGet.Build.Tasks.Pack.5.2.0\build\NuGet.Build.Tasks.Pack.targets'))" />
   </Target>
+  <Import Project="..\packages\NuGet.Build.Tasks.Pack.5.2.0\build\NuGet.Build.Tasks.Pack.targets" Condition="Exists('..\packages\NuGet.Build.Tasks.Pack.5.2.0\build\NuGet.Build.Tasks.Pack.targets')" />
 </Project>

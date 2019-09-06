@@ -142,3 +142,4 @@ C:\Git\UmbracoContentApi\src\UmbracoContentApi\UmbracoContentApi.Core\obj\Debug\
 C:\Git\UmbracoContentApi\src\UmbracoContentApi\UmbracoContentApi.Core\obj\Debug\UmbracoContentApi.Core.csproj.CopyComplete
 C:\Git\UmbracoContentApi\src\UmbracoContentApi\UmbracoContentApi.Core\obj\Debug\UmbracoContentApi.Core.dll
 C:\Git\UmbracoContentApi\src\UmbracoContentApi\UmbracoContentApi.Core\obj\Debug\UmbracoContentApi.Core.pdb
+C:\Git\UmbracoContentApi\src\UmbracoContentApi\UmbracoContentApi.Core\obj\Debug\UmbracoContentApi.Core.csprojAssemblyReference.cache

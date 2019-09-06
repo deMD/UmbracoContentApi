@@ -4,7 +4,7 @@ using Umbraco.Core.PropertyEditors.ValueConverters;
 
 namespace UmbracoContentApi.Core.Converters
 {
-    internal class ImageCropperConverter : IConverter
+    internal class ImagePropperConverter : IConverter
     {
         public string EditorAlias => "Umbraco.ImageCropper";
 
@@ -25,8 +25,8 @@ namespace UmbracoContentApi.Core.Converters
 
             return new
             {
-                ctn.Src,
-                Crops = cropUrls
+                Src ="Propper",
+                Crops = "Propper"
             };
         }
     }
