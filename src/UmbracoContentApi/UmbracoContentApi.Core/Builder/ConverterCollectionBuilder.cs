@@ -1,7 +1,7 @@
 ﻿using Umbraco.Core.Composing;
 using UmbracoContentApi.Core.Converters;
 
-namespace UmbracoContentApi.Core
+namespace UmbracoContentApi.Core.Builder
 {
     public class ConverterCollectionBuilder : OrderedCollectionBuilderBase<ConverterCollectionBuilder,
         ConverterCollection, IConverter>

@@ -1,6 +1,6 @@
 ﻿namespace UmbracoContentApi.Core.Converters
 {
-    internal class CheckBoxListConverter : IConverter
+    public class CheckBoxListConverter : IConverter
     {
         public string EditorAlias => "Umbraco.CheckBoxList";
 

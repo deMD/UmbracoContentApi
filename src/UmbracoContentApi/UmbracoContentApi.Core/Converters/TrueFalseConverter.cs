@@ -1,6 +1,6 @@
 ﻿namespace UmbracoContentApi.Core.Converters
 {
-    internal class TrueFalseConverter : IConverter
+    public class TrueFalseConverter : IConverter
     {
         public string EditorAlias => "Umbraco.TrueFalse";
 

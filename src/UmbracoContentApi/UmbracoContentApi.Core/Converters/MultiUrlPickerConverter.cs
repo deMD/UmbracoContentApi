@@ -4,7 +4,7 @@ using UmbracoContentApi.Core.Models;
 
 namespace UmbracoContentApi.Core.Converters
 {
-    internal class MultiUrlPickerConverter : IConverter
+    public class MultiUrlPickerConverter : IConverter
     {
         public string EditorAlias => "Umbraco.MultiUrlPicker";
 

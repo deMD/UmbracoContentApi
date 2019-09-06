@@ -1,6 +1,6 @@
 ﻿namespace UmbracoContentApi.Core.Converters
 {
-    internal class SliderConverter : IConverter
+    public class SliderConverter : IConverter
     {
         public string EditorAlias => "Umbraco.Slider";
 

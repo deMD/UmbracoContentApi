@@ -1,6 +1,6 @@
 ﻿namespace UmbracoContentApi.Core.Converters
 {
-    internal class TagsConverter : IConverter
+    public class TagsConverter : IConverter
     {
         public string EditorAlias => "Umbraco.Tags";
 

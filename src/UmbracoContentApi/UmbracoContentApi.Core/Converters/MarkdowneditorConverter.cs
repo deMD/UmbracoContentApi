@@ -1,6 +1,6 @@
 ﻿namespace UmbracoContentApi.Core.Converters
 {
-    internal class MarkdowneditorConverter : IConverter
+    public class MarkdowneditorConverter : IConverter
     {
         public string EditorAlias => "Umbraco.MarkdownEditor";
 

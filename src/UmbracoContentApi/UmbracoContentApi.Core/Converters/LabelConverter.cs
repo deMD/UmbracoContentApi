@@ -1,6 +1,6 @@
 ﻿namespace UmbracoContentApi.Core.Converters
 {
-    internal class LabelConverter : IConverter
+    public class LabelConverter : IConverter
     {
         public string EditorAlias => "Umbraco.Label";
 

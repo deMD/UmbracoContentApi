@@ -4,7 +4,7 @@ using UmbracoContentApi.Core.Enums;
 
 namespace UmbracoContentApi.Core.Resolvers
 {
-    internal static class LinkTypeResolver
+    public static class LinkTypeResolver
     {
         public static string GetLinkType(PublishedItemType itemType)
         {

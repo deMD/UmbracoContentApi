@@ -8,7 +8,7 @@ using UmbracoContentApi.Core.Converters;
 namespace UmbracoContentApi.Core.Composers
 {
     // ReSharper disable once UnusedMember.Global
-    internal class ConvertersComposer : IUserComposer
+    public class ConvertersComposer : IUserComposer
     {
         public void Compose(Composition composition)
         {

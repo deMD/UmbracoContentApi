@@ -2,7 +2,7 @@
 
 namespace UmbracoContentApi.Core.Converters
 {
-    internal class UserPickerConverter : IConverter
+    public class UserPickerConverter : IConverter
     {
         private readonly IUserService _userService;
 

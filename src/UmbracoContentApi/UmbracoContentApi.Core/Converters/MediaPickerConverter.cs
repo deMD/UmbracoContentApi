@@ -6,7 +6,7 @@ using UmbracoContentApi.Core.Resolvers;
 
 namespace UmbracoContentApi.Core.Converters
 {
-    internal class MediaPickerConverter : IConverter
+    public class MediaPickerConverter : IConverter
     {
         private readonly Lazy<IContentResolver> _contentResolver;
 

@@ -235,8 +235,8 @@
   <ItemGroup>
     <Compile Include="Composers\ResolversComposer.cs" />
     <Compile Include="Composers\ConvertersComposer.cs" />
-    <Compile Include="ConverterCollection.cs" />
-    <Compile Include="ConverterCollectionBuilder.cs" />
+    <Compile Include="Builder\ConverterCollection.cs" />
+    <Compile Include="Builder\ConverterCollectionBuilder.cs" />
     <Compile Include="ConvertsCompositionExtensions.cs" />
     <Compile Include="Resolvers\MediaResolver.cs" />
     <Compile Include="Resolvers\ContentResolver.cs" />
@@ -282,6 +282,7 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Umbraco.SqlServerCE.4.0.0.1\build\Umbraco.SqlServerCE.targets" Condition="Exists('..\packages\Umbraco.SqlServerCE.4.0.0.1\build\Umbraco.SqlServerCE.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -2,7 +2,7 @@
 
 namespace UmbracoContentApi.Core.Converters
 {
-    internal class MemberPickerConverter : IConverter
+    public class MemberPickerConverter : IConverter
     {
         public string EditorAlias => "Umbraco.MemberPicker";
 

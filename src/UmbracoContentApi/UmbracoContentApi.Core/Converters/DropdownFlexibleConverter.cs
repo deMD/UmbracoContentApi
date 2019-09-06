@@ -1,6 +1,6 @@
 ﻿namespace UmbracoContentApi.Core.Converters
 {
-    internal class DropdownFlexibleConverter : IConverter
+    public class DropdownFlexibleConverter : IConverter
     {
         public string EditorAlias => "Umbraco.DropDown.Flexible";
 

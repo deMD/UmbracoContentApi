@@ -4,7 +4,7 @@ using UmbracoContentApi.Core.Models;
 
 namespace UmbracoContentApi.Core.Converters
 {
-    internal class ContentPickerConverter : IConverter
+    public class ContentPickerConverter : IConverter
     {
         public string EditorAlias => "Umbraco.ContentPicker";
 

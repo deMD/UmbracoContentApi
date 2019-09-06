@@ -6,7 +6,7 @@ using UmbracoContentApi.Core.Resolvers;
 
 namespace UmbracoContentApi.Core.Converters
 {
-    internal class NestedContentConverter : IConverter
+    public class NestedContentConverter : IConverter
     {
         private readonly Lazy<IContentResolver> _contentResolver;
 

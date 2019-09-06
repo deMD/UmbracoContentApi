@@ -1,6 +1,6 @@
 ﻿namespace UmbracoContentApi.Core.Converters
 {
-    internal class RadioButtonListConverter : IConverter
+    public class RadioButtonListConverter : IConverter
     {
         public string EditorAlias => "Umbraco.RadioButtonList";
 

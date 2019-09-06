@@ -1,6 +1,6 @@
 ﻿namespace UmbracoContentApi.Core.Converters
 {
-    internal class UploadFieldConverter : IConverter
+    public class UploadFieldConverter : IConverter
     {
         public string EditorAlias => "Umbraco.UploadField";
 

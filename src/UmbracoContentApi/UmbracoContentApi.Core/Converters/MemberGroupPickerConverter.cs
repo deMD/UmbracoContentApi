@@ -2,7 +2,7 @@
 
 namespace UmbracoContentApi.Core.Converters
 {
-    internal class MemberGroupPickerConverter : IConverter
+    public class MemberGroupPickerConverter : IConverter
     {
         private readonly IMemberGroupService _memberGroupService;
 

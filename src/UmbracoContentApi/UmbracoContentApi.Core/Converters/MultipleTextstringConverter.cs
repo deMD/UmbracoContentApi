@@ -1,6 +1,6 @@
 ﻿namespace UmbracoContentApi.Core.Converters
 {
-    internal class MultipleTextstringConverter : IConverter
+    public class MultipleTextstringConverter : IConverter
     {
         public string EditorAlias => "Umbraco.MultipleTextstring";
 

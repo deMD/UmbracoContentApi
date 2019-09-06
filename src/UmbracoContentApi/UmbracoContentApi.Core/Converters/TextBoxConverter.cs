@@ -1,6 +1,6 @@
 ﻿namespace UmbracoContentApi.Core.Converters
 {
-    internal class TextBoxConverter : IConverter
+    public class TextBoxConverter : IConverter
     {
         public string EditorAlias => "Umbraco.TextBox";
 

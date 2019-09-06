@@ -2,7 +2,7 @@
 
 namespace UmbracoContentApi.Core.Converters
 {
-    internal class TinyMceConverter : IConverter
+    public class TinyMceConverter : IConverter
     {
         public string EditorAlias => "Umbraco.TinyMCE";
 

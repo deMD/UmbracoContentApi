@@ -1,6 +1,6 @@
 ﻿namespace UmbracoContentApi.Core.Converters
 {
-    internal class IntegerConverter : IConverter
+    public class IntegerConverter : IConverter
     {
         public string EditorAlias => "Umbraco.Integer";
 

@@ -1,4 +1,5 @@
 ﻿using Umbraco.Core.Composing;
+using UmbracoContentApi.Core.Builder;
 
 namespace UmbracoContentApi.Core
 {

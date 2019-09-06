@@ -5,7 +5,7 @@ using UmbracoContentApi.Core.Resolvers;
 
 namespace UmbracoContentApi.Core.Converters
 {
-    internal class MultinodeTreepickerConverter : IConverter
+    public class MultinodeTreepickerConverter : IConverter
     {
         public string EditorAlias => "Umbraco.MultiNodeTreePicker";
 
