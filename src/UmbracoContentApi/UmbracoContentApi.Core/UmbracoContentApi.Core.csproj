@@ -237,6 +237,7 @@
     <Compile Include="Composers\ConvertersComposer.cs" />
     <Compile Include="Builder\ConverterCollection.cs" />
     <Compile Include="Builder\ConverterCollectionBuilder.cs" />
+    <Compile Include="Converters\EmailAdressConverter.cs" />
     <Compile Include="ConvertsCompositionExtensions.cs" />
     <Compile Include="Resolvers\MediaResolver.cs" />
     <Compile Include="Resolvers\ContentResolver.cs" />
