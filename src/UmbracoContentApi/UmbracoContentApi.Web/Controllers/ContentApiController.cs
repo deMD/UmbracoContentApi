@@ -26,17 +26,11 @@ namespace UmbracoContentApi.Web.Controllers
 
         [Route("{id:guid}")]
         [ResponseType(typeof(ContentModel))]
-        public IHttpActionResult Get(Guid id, string culture = null)
-        {
-            if (_variationContextAccessor.VariationContext.Culture != culture)
-            {
-                _variationContextAccessor.VariationContext = new VariationContext(culture);
-            }
-
+        public IHttpActionResult Get(Guid id)
+        { 
             IPublishedContent content = _umbracoHelper.Content(id);
-            ContentModel contentModel = _contentResolver.Value.ResolveContent(content);
-
-            return Ok(contentModel);
+            var model = _contentResolver.Value.ResolveContent(content);
+            return Ok(model);
         }
     }
 }

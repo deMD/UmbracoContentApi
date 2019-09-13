@@ -12,6 +12,8 @@ namespace UmbracoContentApi.Core.Converters
 
         public object Convert(object value)
         {
+            // If the value is already in a json supported format, just return it.
+            // Otherwise convert it to a friendly format here.
             return value;
         }
     }

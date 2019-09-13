@@ -1,21 +1,68 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# Umbraco Content Api
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
-5.  Awesome sause
+The Umbraco Content Api is a package that enables easy integration of Headless Api functionality into your project.
+The package includes converters for all default Umbraco porperty editors and allows developers to add to and replace them at will.
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+Out of the box easy to use, full DI support and fast.
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+#### Basic Usage:
+1. Install the package
+2. Create an UmbracoApiController
+3. Inject the content resolver 
+4. Resolve the content
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+```csharp
+public class SampleApiController : UmbracoApiController
+    {
+        private readonly Lazy<IContentResolver> _contentResolver;
+
+        public ContentApiController(Lazy<IContentResolver> contentResolver)
+        {
+            _contentResolver = contentResolver;
+        }
+
+        public IHttpActionResult Get(Guid id)
+        { 
+            IPublishedContent content = Umbraco.Content(id);
+            var model = _contentResolver.Value.ResolveContent(content);
+            return Ok(model);
+        }
+    }
+```
+
+#### Creating and adding a converter
+To create a converter for your custom editor you need to implement the `IConverter` interface.
+```csharp
+// Converter:
+public class SampleConverter : IConverter
+    {
+        public string EditorAlias => "My.PropertyEditorAlias";
+
+        public object Convert(object value)
+        {
+            // If the value is already in a json supported format, just return it.
+            // Otherwise convert it to a friendly format here.
+            return value;
+        }
+    }
+// Composer:
+    [ComposeAfter(typeof(UmbracoContentApi.Core.Composers.ConvertersComposer))]
+    public class ConverterComposer : IUserComposer
+    {
+        public void Compose(Composition composition)
+        {
+            composition.Converters().Append<SampleConverter>();
+        }
+    }
+```
+
+#### Replace an exsisting converter
+To replace a converter just add the following to the composer:
+```csharp
+composition.Converters()
+    .Replace<ConverterToReplace, SampleConverter>();
+```
+
+#### Compatibility
+The Umbraco Content Api works with Umbraco 8.x.x
+
