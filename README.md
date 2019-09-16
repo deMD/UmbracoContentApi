@@ -1,3 +1,5 @@
+![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/UmbracoContentApi.Core)
+
 # Umbraco Content Api
 
 The Umbraco Content Api is a package that enables easy integration of Headless Api functionality into your project.
