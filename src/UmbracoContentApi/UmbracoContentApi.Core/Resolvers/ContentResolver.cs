@@ -37,15 +37,18 @@ namespace UmbracoContentApi.Core.Resolvers
                 }
             };
 
+            var dict = new Dictionary<string, object>();
+
             if (content is IPublishedContent publishedContent)
             {
                 contentModel.System.CreatedAt = publishedContent.CreateDate;
                 contentModel.System.EditedAt = publishedContent.UpdateDate;
                 contentModel.System.Locale = _variationContextAccessor.VariationContext.Culture;
                 contentModel.System.Revision = _contentService.GetVersions(publishedContent.Id).Count();
+                contentModel.System.Name = publishedContent.Name;
+                contentModel.System.UrlSegment = publishedContent.UrlSegment;
             }
 
-            var dict = new Dictionary<string, object>();
             foreach (IPublishedProperty property in content.Properties)
             {
                 IConverter converter =
