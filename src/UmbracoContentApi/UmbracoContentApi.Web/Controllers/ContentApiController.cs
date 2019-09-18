@@ -29,7 +29,7 @@ namespace UmbracoContentApi.Web.Controllers
         public IHttpActionResult Get(Guid id)
         { 
             IPublishedContent content = _umbracoHelper.Content(id);
-            var model = _contentResolver.Value.ResolveContent(content, true);
+            var model = _contentResolver.Value.ResolveContent(content);
             return Ok(model);
         }
     }
