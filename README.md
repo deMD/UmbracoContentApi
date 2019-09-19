@@ -1,4 +1,4 @@
-![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/UmbracoContentApi.Core)
+[![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/UmbracoContentApi.Core)](https://www.nuget.org/packages/UmbracoContentApi.Core/)
 
 # Umbraco Content Api
 
@@ -8,7 +8,7 @@ The package includes converters for all default Umbraco porperty editors and all
 Out of the box easy to use, full DI support and fast.
 
 #### Basic Usage:
-1. Download the package from: https://www.nuget.org/packages/UmbracoContentApi.Core/
+1. Download the package from [NuGet](https://www.nuget.org/packages/UmbracoContentApi.Core/)
 2. Install the package
 3. Create an UmbracoApiController
 4. Inject the content resolver 
