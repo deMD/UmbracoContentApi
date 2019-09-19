@@ -66,5 +66,5 @@ composition.Converters()
 ```
 
 #### Compatibility
-The Umbraco Content Api works with Umbraco 8.x.x
+The Umbraco Content Api works with Umbraco 8.1.3+
 
