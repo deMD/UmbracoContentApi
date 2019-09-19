@@ -3,8 +3,6 @@ using System.Web.Http;
 using System.Web.Http.Description;
 using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Core.Services;
-using Umbraco.Web;
-using Umbraco.Web.Composing;
 using Umbraco.Web.PublishedCache;
 using Umbraco.Web.WebApi;
 using UmbracoContentApi.Core.Models;
@@ -16,7 +14,6 @@ namespace UmbracoContentApi.Web.Controllers
     public class PreviewApiController : UmbracoApiController
     {
         private readonly Lazy<IContentResolver> _contentResolver;
-        private readonly UmbracoHelper _umbracoHelper;
         private readonly IPublishedSnapshotService _publishedSnapshotService;
         private readonly IUserService _userService;
         private readonly IContentService _contentService;
@@ -27,7 +24,6 @@ namespace UmbracoContentApi.Web.Controllers
             _publishedSnapshotService = publishedSnapshotService;
             _userService = userService;
             _contentService = contentService;
-            _umbracoHelper = Current.UmbracoHelper;
         }
 
         [Route("{id:guid}")]
@@ -36,7 +32,7 @@ namespace UmbracoContentApi.Web.Controllers
         {
             var val = _publishedSnapshotService.EnterPreview(_userService.GetUserById(-1), _contentService.GetById(id).Id);
 
-            IPublishedContent content = _umbracoHelper.Content(id);
+            IPublishedContent content = Umbraco.Content(id);
 
             ContentModel contentModel = _contentResolver.Value.ResolveContent(content);
 
