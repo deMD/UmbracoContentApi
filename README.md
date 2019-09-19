@@ -8,10 +8,11 @@ The package includes converters for all default Umbraco porperty editors and all
 Out of the box easy to use, full DI support and fast.
 
 #### Basic Usage:
-1. Install the package
-2. Create an UmbracoApiController
-3. Inject the content resolver 
-4. Resolve the content
+1. Download the package from: https://www.nuget.org/packages/UmbracoContentApi.Core/
+2. Install the package
+3. Create an UmbracoApiController
+4. Inject the content resolver 
+5. Resolve the content
 
 ```csharp
 public class SampleApiController : UmbracoApiController
