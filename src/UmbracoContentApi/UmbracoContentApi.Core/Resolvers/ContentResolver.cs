@@ -34,6 +34,11 @@ namespace UmbracoContentApi.Core.Resolvers
         {
             try
             {
+                if (content == null)
+                {
+                    throw new ArgumentNullException(nameof(content));
+                }
+
                 var contentModel = new ContentModel
                 {
                     System = new SystemModel
