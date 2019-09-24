@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Umbraco.Core.PropertyEditors.ValueConverters;
 
@@ -10,6 +11,11 @@ namespace UmbracoContentApi.Core.Converters
 
         public object Convert(object value)
         {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value), $"A value for {EditorAlias} is required.");
+            }
+
             var ctn = (ImageCropperValue) value;
 
             List<ImageCropperValue.ImageCropperCrop> crops = ctn.Crops?.ToList();

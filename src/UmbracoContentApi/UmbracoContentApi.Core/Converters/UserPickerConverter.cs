@@ -1,4 +1,5 @@
-﻿using Umbraco.Core.Services;
+﻿using System;
+using Umbraco.Core.Services;
 
 namespace UmbracoContentApi.Core.Converters
 {
@@ -15,6 +16,11 @@ namespace UmbracoContentApi.Core.Converters
 
         public object Convert(object value)
         {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value), $"A value for {EditorAlias} is required.");
+            }
+
             if (int.TryParse(value.ToString(), out int id))
             {
                 return _userService.GetUserById(id).Name;

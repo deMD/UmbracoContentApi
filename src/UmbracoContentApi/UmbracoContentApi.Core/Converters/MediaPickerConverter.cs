@@ -21,7 +21,7 @@ namespace UmbracoContentApi.Core.Converters
         {
             if (value == null)
             {
-                throw new ArgumentNullException(nameof(value));
+                throw new ArgumentNullException(nameof(value), $"A value for {EditorAlias} is required.");
             }
 
             if (value is IEnumerable<IPublishedContent> ar)

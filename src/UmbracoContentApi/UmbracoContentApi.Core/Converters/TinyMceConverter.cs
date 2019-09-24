@@ -1,4 +1,5 @@
-﻿using System.Web;
+﻿using System;
+using System.Web;
 
 namespace UmbracoContentApi.Core.Converters
 {
@@ -8,6 +9,11 @@ namespace UmbracoContentApi.Core.Converters
 
         public object Convert(object value)
         {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value), $"A value for {EditorAlias} is required.");
+            }
+
             if (value is IHtmlString htmlString)
             {
                 return htmlString.ToHtmlString();

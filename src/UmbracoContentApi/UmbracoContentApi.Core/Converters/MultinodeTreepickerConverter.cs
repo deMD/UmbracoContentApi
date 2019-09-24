@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Umbraco.Core.Models.PublishedContent;
 using UmbracoContentApi.Core.Models;
 using UmbracoContentApi.Core.Resolvers;
@@ -11,6 +12,11 @@ namespace UmbracoContentApi.Core.Converters
 
         public object Convert(object value)
         {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value), $"A value for {EditorAlias} is required.");
+            }
+
             var list = new List<LinkModel>();
             foreach (IPublishedElement element in (IEnumerable<IPublishedElement>) value)
             {

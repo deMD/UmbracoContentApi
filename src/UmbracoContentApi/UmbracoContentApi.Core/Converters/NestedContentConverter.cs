@@ -19,6 +19,11 @@ namespace UmbracoContentApi.Core.Converters
 
         public object Convert(object value)
         {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value), $"A value for {EditorAlias} is required.");
+            }
+
             var models = new List<ContentModel>();
             foreach (var element in (IEnumerable<IPublishedElement>) value)
             {

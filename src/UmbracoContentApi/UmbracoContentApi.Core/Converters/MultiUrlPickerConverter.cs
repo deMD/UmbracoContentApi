@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Umbraco.Web.Models;
 using UmbracoContentApi.Core.Models;
 
@@ -10,6 +11,11 @@ namespace UmbracoContentApi.Core.Converters
 
         public object Convert(object value)
         {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value), $"A value for {EditorAlias} is required.");
+            }
+
             var links = new List<MulitLinkModel>();
             foreach (Link link in (IEnumerable<object>) value)
             {
