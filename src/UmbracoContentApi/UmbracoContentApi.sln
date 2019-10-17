@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{E12B378D-9B5E-47B6-9250-A48FE337B26F}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\.gitignore = ..\..\.gitignore
+		..\..\GitVersion.yml = ..\..\GitVersion.yml
 		..\..\License.txt = ..\..\License.txt
 		..\..\README.md = ..\..\README.md
 	EndProjectSection
