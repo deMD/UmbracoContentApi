@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Umbraco.Core.Models.PublishedContent;
 using UmbracoContentApi.Core.Enums;
 using UmbracoContentApi.Core.Models;
@@ -9,7 +10,7 @@ namespace UmbracoContentApi.Core.Converters
     {
         public string EditorAlias => "Umbraco.ContentPicker";
 
-        public object Convert(object value)
+        public object Convert(object value, params KeyValuePair<string, object>[] options)
         {
             if (value == null)
             {

@@ -1,9 +1,11 @@
-﻿namespace UmbracoContentApi.Core.Converters
+﻿using System.Collections.Generic;
+
+namespace UmbracoContentApi.Core.Converters
 {
     public interface IConverter
     {
         string EditorAlias { get; }
 
-        object Convert(object value);
+        object Convert(object value, params KeyValuePair<string, object>[] options);
     }
 }

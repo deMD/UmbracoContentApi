@@ -1,4 +1,5 @@
-﻿using Umbraco.Core.Services;
+﻿using System.Collections.Generic;
+using Umbraco.Core.Services;
 
 namespace UmbracoContentApi.Core.Converters
 {
@@ -13,7 +14,7 @@ namespace UmbracoContentApi.Core.Converters
 
         public string EditorAlias => "Umbraco.MemberGroupPicker";
 
-        public object Convert(object value)
+        public object Convert(object value, params KeyValuePair<string, object>[] options)
         {
             if (int.TryParse(value.ToString(), out var id))
             {

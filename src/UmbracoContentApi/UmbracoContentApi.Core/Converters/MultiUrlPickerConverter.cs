@@ -9,7 +9,7 @@ namespace UmbracoContentApi.Core.Converters
     {
         public string EditorAlias => "Umbraco.MultiUrlPicker";
 
-        public object Convert(object value)
+        public object Convert(object value, params KeyValuePair<string, object>[] options)
         {
             if (value == null)
             {

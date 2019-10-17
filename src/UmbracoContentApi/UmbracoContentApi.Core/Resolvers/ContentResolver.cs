@@ -30,7 +30,7 @@ namespace UmbracoContentApi.Core.Resolvers
             _logger = logger;
         }
 
-        public ContentModel ResolveContent(IPublishedElement content)
+        public ContentModel ResolveContent(IPublishedElement content, params KeyValuePair<string, object>[] options)
         {
             try
             {
@@ -74,7 +74,7 @@ namespace UmbracoContentApi.Core.Resolvers
                             continue;
                         }
 
-                        prop = converter.Convert(prop);
+                        prop = converter.Convert(prop, options);
                         dict.Add(property.Alias, prop);
                     }
                     else

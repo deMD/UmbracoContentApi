@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Umbraco.Core.Models.PublishedContent;
 
 namespace UmbracoContentApi.Core.Converters
@@ -7,7 +8,7 @@ namespace UmbracoContentApi.Core.Converters
     {
         public string EditorAlias => "Umbraco.MemberPicker";
 
-        public object Convert(object value)
+        public object Convert(object value, params KeyValuePair<string, object>[] options)
         {
             if (value == null)
             {
