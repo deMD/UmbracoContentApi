@@ -14,7 +14,7 @@ namespace UmbracoContentApi.Core.Converters
 
         public string EditorAlias => "Umbraco.MemberGroupPicker";
 
-        public object Convert(object value, params KeyValuePair<string, object>[] options)
+        public object Convert(object value, Dictionary<string, object> options = null)
         {
             if (int.TryParse(value.ToString(), out var id))
             {

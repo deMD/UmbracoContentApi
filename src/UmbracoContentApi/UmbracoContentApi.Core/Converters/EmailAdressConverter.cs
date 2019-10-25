@@ -10,7 +10,7 @@ namespace UmbracoContentApi.Core.Converters
     {
         public string EditorAlias => "Umbraco.EmailAddress";
 
-        public object Convert(object value, params KeyValuePair<string, object>[] options)
+        public object Convert(object value, Dictionary<string, object> options = null)
         {
             // If the value is already in a json supported format, just return it.
             // Otherwise convert it to a friendly format here.

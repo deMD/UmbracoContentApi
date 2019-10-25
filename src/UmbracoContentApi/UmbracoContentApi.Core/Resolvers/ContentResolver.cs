@@ -30,7 +30,7 @@ namespace UmbracoContentApi.Core.Resolvers
             _logger = logger;
         }
 
-        public ContentModel ResolveContent(IPublishedElement content, params KeyValuePair<string, object>[] options)
+        public ContentModel ResolveContent(IPublishedElement content, Dictionary<string, object> options = null)
         {
             try
             {

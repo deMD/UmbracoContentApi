@@ -15,8 +15,8 @@ namespace UmbracoContentApi.Core.Resolvers
     {
         private readonly IContentService _contentService;
         private readonly IEnumerable<IConverter> _converters;
-        private readonly IVariationContextAccessor _variationContextAccessor;
         private readonly ILogger _logger;
+        private readonly IVariationContextAccessor _variationContextAccessor;
 
         public MediaResolver(
             IVariationContextAccessor variationContextAccessor,
@@ -50,7 +50,7 @@ namespace UmbracoContentApi.Core.Resolvers
 
                 var dict = new Dictionary<string, object>
                 {
-                    {"Name", media.Name}
+                    { "Name", media.Name }
                 };
 
                 foreach (IPublishedProperty property in media.Properties)

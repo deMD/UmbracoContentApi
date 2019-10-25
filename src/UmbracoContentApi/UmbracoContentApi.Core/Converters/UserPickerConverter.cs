@@ -15,7 +15,7 @@ namespace UmbracoContentApi.Core.Converters
 
         public string EditorAlias => "Umbraco.UserPicker";
 
-        public object Convert(object value, params KeyValuePair<string, object>[] options)
+        public object Convert(object value, Dictionary<string, object> options = null)
         {
             if (value == null)
             {

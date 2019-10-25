@@ -12,12 +12,11 @@ namespace UmbracoContentApi.Web.Controllers
     public class AssetApiController : UmbracoApiController
     {
         private readonly IMediaResolver _mediaResolver;
-        
+
         public AssetApiController(
             IMediaResolver mediaResolver)
         {
             _mediaResolver = mediaResolver;
-
         }
 
         [Route("{id:guid}")]

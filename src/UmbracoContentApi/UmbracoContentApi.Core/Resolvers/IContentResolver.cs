@@ -6,6 +6,6 @@ namespace UmbracoContentApi.Core.Resolvers
 {
     public interface IContentResolver
     {
-        ContentModel ResolveContent(IPublishedElement content, params KeyValuePair<string, object>[] options);
+        ContentModel ResolveContent(IPublishedElement content, Dictionary<string, object> options = null);
     }
 }

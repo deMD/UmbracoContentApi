@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Web.Http;
 using System.Web.Http.Description;
 using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Web.WebApi;
-using UmbracoContentApi.Core.Resolvers;
 using UmbracoContentApi.Core.Models;
+using UmbracoContentApi.Core.Resolvers;
 
 namespace UmbracoContentApi.Web.Controllers
 {
@@ -12,21 +13,29 @@ namespace UmbracoContentApi.Web.Controllers
     public class ContentApiController : UmbracoApiController
     {
         private readonly Lazy<IContentResolver> _contentResolver;
-        private readonly IVariationContextAccessor _variationContextAccessor;
 
-        public ContentApiController(Lazy<IContentResolver> contentResolver, IVariationContextAccessor variationContextAccessor)
+        public ContentApiController(
+            Lazy<IContentResolver> contentResolver)
         {
             _contentResolver = contentResolver;
-            _variationContextAccessor = variationContextAccessor;
         }
 
         [Route("{id:guid}")]
         [ResponseType(typeof(ContentModel))]
-        public IHttpActionResult Get(Guid id)
-        { 
+        public IHttpActionResult Get(Guid id, int level = 0)
+        {
             IPublishedContent content = Umbraco.Content(id);
-            var model = _contentResolver.Value.ResolveContent(content);
-            return Ok(model);
+            if (level <= 0)
+            {
+                return Ok(_contentResolver.Value.ResolveContent(content));
+            }
+
+            var dictionary = new Dictionary<string, object>
+            {
+                { "level", level }
+            };
+
+            return Ok(_contentResolver.Value.ResolveContent(content, dictionary));
         }
     }
 }

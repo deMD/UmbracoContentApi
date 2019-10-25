@@ -17,7 +17,7 @@ namespace UmbracoContentApi.Core.Converters
 
         public string EditorAlias => "Umbraco.NestedContent";
 
-        public object Convert(object value, params KeyValuePair<string, object>[] options)
+        public object Convert(object value, Dictionary<string, object> options = null)
         {
             if (value == null)
             {
@@ -25,9 +25,9 @@ namespace UmbracoContentApi.Core.Converters
             }
 
             var models = new List<ContentModel>();
-            foreach (var element in (IEnumerable<IPublishedElement>) value)
+            foreach (IPublishedElement element in (IEnumerable<IPublishedElement>)value)
             {
-                var model = _contentResolver.Value.ResolveContent(element);
+                ContentModel model = _contentResolver.Value.ResolveContent(element, options);
 
                 models.Add(model);
             }

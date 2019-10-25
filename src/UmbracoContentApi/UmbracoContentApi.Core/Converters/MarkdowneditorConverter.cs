@@ -4,9 +4,11 @@ namespace UmbracoContentApi.Core.Converters
 {
     public class MarkdowneditorConverter : IConverter
     {
+        /// <inheritdoc />
         public string EditorAlias => "Umbraco.MarkdownEditor";
 
-        public object Convert(object value, params KeyValuePair<string, object>[] options)
+        /// <inheritdoc />
+        public object Convert(object value, Dictionary<string, object> options = null)
         {
             return value;
         }
