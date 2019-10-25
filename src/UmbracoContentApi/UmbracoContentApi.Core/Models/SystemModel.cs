@@ -8,7 +8,7 @@ namespace UmbracoContentApi.Core.Models
 
         public string Name { get; set; }
 
-        public string UrlSegment { get; set; } 
+        public string UrlSegment { get; set; }
 
         public string Type { get; set; }
 

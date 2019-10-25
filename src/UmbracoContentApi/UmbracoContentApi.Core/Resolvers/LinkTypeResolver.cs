@@ -11,7 +11,7 @@ namespace UmbracoContentApi.Core.Resolvers
             switch (itemType)
             {
                 case PublishedItemType.Unknown:
-                    return "";
+                    return string.Empty;
                 case PublishedItemType.Element:
                     return LinkType.Element.ToString();
                 case PublishedItemType.Content:

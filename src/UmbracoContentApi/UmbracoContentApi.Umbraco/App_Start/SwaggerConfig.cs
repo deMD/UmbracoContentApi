@@ -1,9 +1,10 @@
-using System.Web.Http;
-using WebActivatorEx;
-using UmbracoContentApi.Web;
-using Swashbuckle.Application;
-using UmbracoContentApi.Web.Swagger;
 using System.Linq;
+using System.Reflection;
+using System.Web.Http;
+using Swashbuckle.Application;
+using UmbracoContentApi.Web;
+using UmbracoContentApi.Web.Swagger;
+using WebActivatorEx;
 
 [assembly: PreApplicationStartMethod(typeof(SwaggerConfig), "Register")]
 
@@ -13,10 +14,11 @@ namespace UmbracoContentApi.Web
     {
         public static void Register()
         {
-            var thisAssembly = typeof(SwaggerConfig).Assembly;
+            Assembly thisAssembly = typeof(SwaggerConfig).Assembly;
 
             GlobalConfiguration.Configuration
-                .EnableSwagger(c =>
+                .EnableSwagger(
+                    c =>
                     {
                         // By default, the service root url is inferred from the request used to access the docs.
                         // However, there may be situations (e.g. proxy and load-balanced environments) where this does not
@@ -63,7 +65,7 @@ namespace UmbracoContentApi.Web
                         //c.BasicAuth("basic")
                         //    .Description("Basic HTTP Authentication");
                         //
-						// NOTE: You must also configure 'EnableApiKeySupport' below in the SwaggerUI section
+                        // NOTE: You must also configure 'EnableApiKeySupport' below in the SwaggerUI section
                         //c.ApiKey("apiKey")
                         //    .Description("API Key Authentication")
                         //    .Name("apiKey")
@@ -180,7 +182,8 @@ namespace UmbracoContentApi.Web
                         //
                         //c.CustomProvider((defaultProvider) => new CachingSwaggerProvider(defaultProvider));
                     })
-                .EnableSwaggerUi(c =>
+                .EnableSwaggerUi(
+                    c =>
                     {
                         // Use the "DocumentTitle" option to change the Document title.
                         // Very helpful when you have multiple Swagger pages open, to tell them apart.

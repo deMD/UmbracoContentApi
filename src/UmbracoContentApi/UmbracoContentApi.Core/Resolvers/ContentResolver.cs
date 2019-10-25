@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using NPoco;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Core.Services;
@@ -74,7 +75,7 @@ namespace UmbracoContentApi.Core.Resolvers
                             continue;
                         }
 
-                        prop = converter.Convert(prop, options);
+                        prop = converter.Convert(prop, options?.ToDictionary(x => x.Key, x => x.Value));
                         dict.Add(property.Alias, prop);
                     }
                     else
