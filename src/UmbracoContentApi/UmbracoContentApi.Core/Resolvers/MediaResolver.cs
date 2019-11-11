@@ -43,8 +43,7 @@ namespace UmbracoContentApi.Core.Resolvers
                         CreatedAt = media.CreateDate,
                         EditedAt = media.UpdateDate,
                         Locale = _variationContextAccessor.VariationContext.Culture,
-                        Type = ContentType.Media.ToString(),
-                        Revision = _contentService.GetVersions(media.Id).Count()
+                        Type = ContentType.Media.ToString()
                     }
                 };
 

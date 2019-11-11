@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using NPoco;
 using Umbraco.Core.Logging;
@@ -52,12 +53,14 @@ namespace UmbracoContentApi.Core.Resolvers
 
                 var dict = new Dictionary<string, object>();
 
+               
                 if (content is IPublishedContent publishedContent)
                 {
+                  
+
                     contentModel.System.CreatedAt = publishedContent.CreateDate;
                     contentModel.System.EditedAt = publishedContent.UpdateDate;
                     contentModel.System.Locale = _variationContextAccessor.VariationContext.Culture;
-                    contentModel.System.Revision = _contentService.GetVersions(publishedContent.Id).Count();
                     contentModel.System.Name = publishedContent.Name;
                     contentModel.System.UrlSegment = publishedContent.UrlSegment;
                 }
@@ -75,7 +78,9 @@ namespace UmbracoContentApi.Core.Resolvers
                             continue;
                         }
 
+                      
                         prop = converter.Convert(prop, options?.ToDictionary(x => x.Key, x => x.Value));
+                      
                         dict.Add(property.Alias, prop);
                     }
                     else
