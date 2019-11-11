@@ -16,8 +16,6 @@ namespace UmbracoContentApi.Core.Models
 
         public DateTime EditedAt { get; set; }
 
-        public int Revision { get; set; }
-
         public string ContentType { get; set; }
 
         public string Locale { get; set; }
