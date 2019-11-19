@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
 using System.Linq;
 using Umbraco.Core.PropertyEditors.ValueConverters;
 
@@ -24,9 +26,21 @@ namespace UmbracoContentApi.Core.Converters
             // ReSharper disable once InvertIf
             if (crops?.Any() != null)
             {
-                foreach (ImageCropperValue.ImageCropperCrop crop in crops)
+                string cdnUrl = ConfigurationManager.AppSettings["ContentApi:CdnUrl"];
+
+                if (string.IsNullOrWhiteSpace(cdnUrl))
                 {
-                    cropUrls.Add(crop.Alias, ctn.Src + ctn.GetCropUrl(crop.Alias));
+                    foreach (ImageCropperValue.ImageCropperCrop crop in crops)
+                    {
+                        cropUrls.Add(crop.Alias, new Uri(ctn.Src + ctn.GetCropUrl(crop.Alias), UriKind.Relative).ToString());
+                    }
+                }
+                else
+                {
+                    foreach (ImageCropperValue.ImageCropperCrop crop in crops)
+                    {
+                        cropUrls.Add(crop.Alias, new Uri(new Uri(cdnUrl), ctn.Src + ctn.GetCropUrl(crop.Alias)).ToString());
+                    }
                 }
             }
 

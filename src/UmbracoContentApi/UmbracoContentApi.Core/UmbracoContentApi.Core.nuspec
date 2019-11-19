@@ -14,5 +14,9 @@
     <description>$description$</description>
     <copyright>Copyright 2019</copyright>
     <tags>Umbraco Api Content Contentapi Media Mediaapi UmbracoCms Headless	</tags>
+    <dependencies>
+      <dependency id="UmbracoCms.Core" version="(8.1,9.0)"></dependency>
+      <dependency id="UmbracoCms.Web" version="(8.1,9.0)"></dependency>
+    </dependencies>
   </metadata>
 </package>
