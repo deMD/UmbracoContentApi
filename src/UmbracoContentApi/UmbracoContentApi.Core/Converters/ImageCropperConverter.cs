@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.IO;
 using System.Linq;
 using Umbraco.Core.PropertyEditors.ValueConverters;
 
@@ -23,30 +22,36 @@ namespace UmbracoContentApi.Core.Converters
             List<ImageCropperValue.ImageCropperCrop> crops = ctn.Crops?.ToList();
             var cropUrls = new Dictionary<string, string>();
 
+            string cdnUrl = ConfigurationManager.AppSettings["ContentApi:CdnUrl"];
+
             // ReSharper disable once InvertIf
             if (crops?.Any() != null)
             {
-                string cdnUrl = ConfigurationManager.AppSettings["ContentApi:CdnUrl"];
-
                 if (string.IsNullOrWhiteSpace(cdnUrl))
                 {
                     foreach (ImageCropperValue.ImageCropperCrop crop in crops)
                     {
-                        cropUrls.Add(crop.Alias, new Uri(ctn.Src + ctn.GetCropUrl(crop.Alias), UriKind.Relative).ToString());
+                        cropUrls.Add(
+                            crop.Alias,
+                            new Uri(ctn.Src + ctn.GetCropUrl(crop.Alias), UriKind.Relative).ToString());
                     }
                 }
                 else
                 {
                     foreach (ImageCropperValue.ImageCropperCrop crop in crops)
                     {
-                        cropUrls.Add(crop.Alias, new Uri(new Uri(cdnUrl), ctn.Src + ctn.GetCropUrl(crop.Alias)).ToString());
+                        cropUrls.Add(
+                            crop.Alias,
+                            new Uri(new Uri(cdnUrl), ctn.Src + ctn.GetCropUrl(crop.Alias)).ToString());
                     }
                 }
             }
 
             return new
             {
-                ctn.Src,
+                Src = string.IsNullOrWhiteSpace(cdnUrl)
+                    ? new Uri(ctn.Src, UriKind.Relative).ToString()
+                    : new Uri(new Uri(cdnUrl), ctn.Src).ToString(),
                 Crops = cropUrls
             };
         }
