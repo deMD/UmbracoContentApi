@@ -30,8 +30,6 @@ namespace UmbracoContentApi.Web.Controllers
         [ResponseType(typeof(ContentModel))]
         public IHttpActionResult Get(Guid id)
         {
-            _publishedSnapshotService.EnterPreview(_userService.GetUserById(-1), _contentService.GetById(id).Id);
-            
             IPublishedContent content = _publishedSnapshotService.CreatePublishedSnapshot(
                     _publishedSnapshotService.EnterPreview(
                         _userService.GetUserById(-1),
