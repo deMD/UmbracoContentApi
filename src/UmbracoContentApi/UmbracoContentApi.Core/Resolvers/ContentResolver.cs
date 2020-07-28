@@ -56,13 +56,19 @@ namespace UmbracoContentApi.Core.Resolvers
                
                 if (content is IPublishedContent publishedContent)
                 {
-                  
-
                     contentModel.System.CreatedAt = publishedContent.CreateDate;
                     contentModel.System.EditedAt = publishedContent.UpdateDate;
                     contentModel.System.Locale = _variationContextAccessor.VariationContext.Culture;
                     contentModel.System.Name = publishedContent.Name;
                     contentModel.System.UrlSegment = publishedContent.UrlSegment;
+
+                    if (options != null && 
+                        options.ContainsKey("addUrl") &&
+                        bool.TryParse(options["addUrl"].ToString(), out bool addUrl) &&
+                        addUrl)
+                    {
+                        contentModel.System.Url = publishedContent.Url(mode: UrlMode.Absolute);
+                    }
                 }
 
                 foreach (IPublishedProperty property in content.Properties)

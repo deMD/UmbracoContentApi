@@ -14,11 +14,15 @@ namespace UmbracoContentApi.Web.Controllers
     public class PreviewApiController : UmbracoApiController
     {
         private readonly Lazy<IContentResolver> _contentResolver;
+        private readonly IContentService _contentService;
         private readonly IPublishedSnapshotService _publishedSnapshotService;
         private readonly IUserService _userService;
-        private readonly IContentService _contentService;
 
-        public PreviewApiController(Lazy<IContentResolver> contentResolver, IPublishedSnapshotService publishedSnapshotService, IUserService userService, IContentService contentService)
+        public PreviewApiController(
+            Lazy<IContentResolver> contentResolver,
+            IPublishedSnapshotService publishedSnapshotService,
+            IUserService userService,
+            IContentService contentService)
         {
             _contentResolver = contentResolver;
             _publishedSnapshotService = publishedSnapshotService;
@@ -37,7 +41,6 @@ namespace UmbracoContentApi.Web.Controllers
                 .Content.GetById(id);
 
             ContentModel contentModel = _contentResolver.Value.ResolveContent(content);
-
             return Ok(contentModel);
         }
     }
