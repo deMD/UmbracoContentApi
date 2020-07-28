@@ -69,6 +69,10 @@ composition.Converters()
 #### Compatibility
 The Umbraco Content Api works with Umbraco 8.1.3+
 
+#### Sample app login
+email: admin@contentapi.com
+password: Password123!
+
 ### Changelog
 
 #### 2.0.0

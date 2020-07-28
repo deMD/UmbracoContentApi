@@ -25,15 +25,17 @@ namespace UmbracoContentApi.Web.Controllers
         public IHttpActionResult Get(Guid id, int level = 0)
         {
             IPublishedContent content = Umbraco.Content(id);
-            if (level <= 0)
-            {
-                return Ok(_contentResolver.Value.ResolveContent(content));
-            }
-
             var dictionary = new Dictionary<string, object>
             {
-                { "level", level }
+                { "addUrl", true }
             };
+
+            if (level <= 0)
+            {
+                return Ok(_contentResolver.Value.ResolveContent(content, dictionary));
+            }
+
+            dictionary.Add("level", level);
 
             return Ok(_contentResolver.Value.ResolveContent(content, dictionary));
         }
