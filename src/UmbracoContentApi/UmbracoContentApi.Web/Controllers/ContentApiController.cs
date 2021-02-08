@@ -27,7 +27,8 @@ namespace UmbracoContentApi.Web.Controllers
             IPublishedContent content = Umbraco.Content(id);
             var dictionary = new Dictionary<string, object>
             {
-                { "addUrl", true }
+                { "addUrl", true },
+                { "flattenGrid", true }
             };
 
             if (level <= 0)

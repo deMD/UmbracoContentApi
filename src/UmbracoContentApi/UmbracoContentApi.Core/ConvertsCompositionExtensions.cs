@@ -3,7 +3,7 @@ using UmbracoContentApi.Core.Builder;
 
 namespace UmbracoContentApi.Core
 {
-    public static class ConvertsCompositionExtensions
+    public static class ConverterCompositionExtensions
     {
         public static ConverterCollectionBuilder Converters(this Composition composition)
         {

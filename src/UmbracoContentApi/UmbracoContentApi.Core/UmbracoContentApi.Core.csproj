@@ -236,12 +236,22 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Builder\GridConverterCollection.cs" />
+    <Compile Include="Builder\GridConverterCollectionBuilder.cs" />
+    <Compile Include="Composers\GridConvertersComposer.cs" />
     <Compile Include="Composers\ResolversComposer.cs" />
     <Compile Include="Composers\ConvertersComposer.cs" />
     <Compile Include="Builder\ConverterCollection.cs" />
     <Compile Include="Builder\ConverterCollectionBuilder.cs" />
     <Compile Include="Converters\EmailAdressConverter.cs" />
+    <Compile Include="Converters\Grid\HeadlineGridConverter.cs" />
+    <Compile Include="Converters\Grid\IGridConverter.cs" />
+    <Compile Include="Converters\UmbracoGridConverter.cs" />
     <Compile Include="ConvertsCompositionExtensions.cs" />
+    <Compile Include="GridConverterCollectionExtensions.cs" />
+    <Compile Include="Models\Grid\Grid.cs" />
+    <Compile Include="Resolvers\GridControlResolver.cs" />
+    <Compile Include="Resolvers\IGridControlResolver.cs" />
     <Compile Include="Resolvers\MediaResolver.cs" />
     <Compile Include="Resolvers\ContentResolver.cs" />
     <Compile Include="Resolvers\IContentResolver.cs" />
