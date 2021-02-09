@@ -35,6 +35,7 @@
                     if ($routeParams) {
                         // it's an API request, add the current client culture as a header value
                         config.headers['X-UMB-CULTURE'] = $routeParams.cculture ? $routeParams.cculture : $routeParams.mculture;
+                        config.headers['X-UMB-SEGMENT'] = $routeParams.csegment ? $routeParams.csegment : null;
                     }
                     return config;
                 }
@@ -99,7 +100,7 @@
                 //dealing with requests:
                 'request': function request(config) {
                     if (config.method === 'POST') {
-                        var clone = angular.copy(config);
+                        var clone = Utilities.copy(config);
                         transform(clone.data);
                         return clone;
                     }
@@ -156,7 +157,7 @@
                     // Make sure we have an object for the headers of the request
                     var headers = config.headers ? config.headers : {};
                     //Here we'll check if we should ignore the error (either based on the original header set or the request configuration)
-                    if (headers['x-umb-ignore-error'] === 'ignore' || config.umbIgnoreErrors === true || angular.isArray(config.umbIgnoreStatus) && config.umbIgnoreStatus.indexOf(rejection.status) !== -1) {
+                    if (headers['x-umb-ignore-error'] === 'ignore' || config.umbIgnoreErrors === true || Utilities.isArray(config.umbIgnoreStatus) && config.umbIgnoreStatus.indexOf(rejection.status) !== -1) {
                         //exit/ignore
                         return $q.reject(rejection);
                     }
