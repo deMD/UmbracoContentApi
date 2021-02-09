@@ -10,6 +10,7 @@ namespace UmbracoContentApi.Core.Composers
         public void Compose(Composition composition)
         {
             composition.Register<IContentResolver, ContentResolver>();
+            composition.Register<IGridControlResolver, GridControlResolver>();
             composition.Register<IMediaResolver, MediaResolver>();
         }
     }
