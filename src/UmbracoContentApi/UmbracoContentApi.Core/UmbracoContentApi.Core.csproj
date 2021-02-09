@@ -236,6 +236,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BlockConverterCompositionExtensions.cs" />
+    <Compile Include="Builder\BlockConverterCollection.cs" />
+    <Compile Include="Builder\BlockConverterCollectionBuilder.cs" />
     <Compile Include="Builder\GridConverterCollection.cs" />
     <Compile Include="Builder\GridConverterCollectionBuilder.cs" />
     <Compile Include="Composers\GridConvertersComposer.cs" />
@@ -243,6 +246,7 @@
     <Compile Include="Composers\ConvertersComposer.cs" />
     <Compile Include="Builder\ConverterCollection.cs" />
     <Compile Include="Builder\ConverterCollectionBuilder.cs" />
+    <Compile Include="Converters\BlockList\IBlockConverter.cs" />
     <Compile Include="Converters\EmailAdressConverter.cs" />
     <Compile Include="Converters\Grid\EmbedGridConverter.cs" />
     <Compile Include="Converters\Grid\QuoteGridConverter.cs" />
@@ -250,12 +254,15 @@
     <Compile Include="Converters\Grid\IGridConverter.cs" />
     <Compile Include="Converters\Grid\MediaConverter.cs" />
     <Compile Include="Converters\Grid\RteConverter.cs" />
+    <Compile Include="Converters\UmbracoBlocklistConverter.cs" />
     <Compile Include="Converters\UmbracoGridConverter.cs" />
     <Compile Include="ConvertsCompositionExtensions.cs" />
     <Compile Include="GridConverterCollectionExtensions.cs" />
     <Compile Include="Models\Grid\Grid.cs" />
     <Compile Include="Models\Grid\Media.cs" />
+    <Compile Include="Resolvers\BlockListResolver.cs" />
     <Compile Include="Resolvers\GridControlResolver.cs" />
+    <Compile Include="Resolvers\IBlockListResolver.cs" />
     <Compile Include="Resolvers\IGridControlResolver.cs" />
     <Compile Include="Resolvers\MediaResolver.cs" />
     <Compile Include="Resolvers\ContentResolver.cs" />

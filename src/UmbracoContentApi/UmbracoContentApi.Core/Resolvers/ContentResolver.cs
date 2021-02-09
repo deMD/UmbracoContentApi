@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using NPoco;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Core.Services;
@@ -17,8 +15,8 @@ namespace UmbracoContentApi.Core.Resolvers
         private readonly IContentService _contentService;
 
         private readonly IEnumerable<IConverter> _converters;
-        private readonly IVariationContextAccessor _variationContextAccessor;
         private readonly ILogger _logger;
+        private readonly IVariationContextAccessor _variationContextAccessor;
 
         public ContentResolver(
             IVariationContextAccessor variationContextAccessor,
@@ -53,7 +51,7 @@ namespace UmbracoContentApi.Core.Resolvers
 
                 var dict = new Dictionary<string, object>();
 
-               
+
                 if (content is IPublishedContent publishedContent)
                 {
                     contentModel.System.CreatedAt = publishedContent.CreateDate;
@@ -62,7 +60,7 @@ namespace UmbracoContentApi.Core.Resolvers
                     contentModel.System.Name = publishedContent.Name;
                     contentModel.System.UrlSegment = publishedContent.UrlSegment;
 
-                    if (options != null && 
+                    if (options != null &&
                         options.ContainsKey("addUrl") &&
                         bool.TryParse(options["addUrl"].ToString(), out bool addUrl) &&
                         addUrl)
@@ -84,9 +82,9 @@ namespace UmbracoContentApi.Core.Resolvers
                             continue;
                         }
 
-                      
+
                         prop = converter.Convert(prop, options?.ToDictionary(x => x.Key, x => x.Value));
-                      
+
                         dict.Add(property.Alias, prop);
                     }
                     else
