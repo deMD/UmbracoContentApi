@@ -78,3 +78,7 @@ password: Password123!
 #### 2.0.0
 
 Added options params to all converters.
+
+#### 2.0.10
+
+Added grid editor converters.
