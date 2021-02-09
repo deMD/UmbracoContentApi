@@ -7,6 +7,10 @@ The package includes converters for all default Umbraco porperty editors and all
 
 Out of the box easy to use, full DI support and fast.
 
+#### Compatibility
+- The Umbraco Content Api 2.0.10 works with Umbraco 8.1.3+
+- The Umbraco Content Api 3.0.0+ works with Umbraco 8.7.0+
+
 #### Basic Usage:
 1. Download the package from [NuGet](https://www.nuget.org/packages/UmbracoContentApi.Core/)
 2. Install the package
@@ -65,9 +69,6 @@ To replace a converter just add the following to the composer:
 composition.Converters()
     .Replace<ConverterToReplace, SampleConverter>();
 ```
-
-#### Compatibility
-The Umbraco Content Api works with Umbraco 8.1.3+
 
 #### Sample app login
 email: admin@contentapi.com
