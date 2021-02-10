@@ -38,14 +38,14 @@
     angular.module('umbraco.install').factory('installerService', function ($rootScope, $q, $timeout, $http, $templateRequest) {
         var _status = {
             index: 0,
-            current: undefined,
-            steps: undefined,
+            current: null,
+            steps: null,
             loading: true,
             progress: '100%'
         };
-        var factTimer = undefined;
+        var factTimer;
         var _installerModel = {
-            installId: undefined,
+            installId: null,
             instructions: {}
         };
         //add to umbraco installer facts here
@@ -298,7 +298,7 @@
                 });
             },
             switchToFeedback: function switchToFeedback() {
-                service.status.current = undefined;
+                service.status.current = null;
                 service.status.loading = true;
                 service.status.configuring = false;
                 //initial fact
@@ -311,8 +311,8 @@
             switchToConfiguration: function switchToConfiguration() {
                 service.status.loading = false;
                 service.status.configuring = true;
-                service.status.feedback = undefined;
-                service.status.fact = undefined;
+                service.status.feedback = null;
+                service.status.fact = null;
                 if (factTimer) {
                     clearInterval(factTimer);
                 }
@@ -354,7 +354,7 @@
                 id: -1
             }
         ];
-        if (installerService.status.current.model.dbType === undefined) {
+        if (angular.isUndefined(installerService.status.current.model.dbType) || installerService.status.current.model.dbType === null) {
             installerService.status.current.model.dbType = 0;
         }
         $scope.validateAndForward = function () {

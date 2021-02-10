@@ -14,7 +14,84 @@
  * Some angular helper/extension methods
  */
     function angularHelper($q) {
+        var requiredFormProps = [
+            '$error',
+            '$name',
+            '$dirty',
+            '$pristine',
+            '$valid',
+            '$submitted',
+            '$pending'
+        ];
+        function collectAllFormErrorsRecursively(formCtrl, allErrors) {
+            // loop over the error dictionary (see https://docs.angularjs.org/api/ng/type/form.FormController#$error)
+            var keys = Object.keys(formCtrl.$error);
+            if (keys.length === 0) {
+                return;
+            }
+            keys.forEach(function (validationKey) {
+                var ctrls = formCtrl.$error[validationKey];
+                ctrls.forEach(function (ctrl) {
+                    if (!ctrl) {
+                        // this happens when $setValidity('err', true) is called on a form controller without specifying the 3rd parameter for the control/form
+                        // which just means that this is an error on the formCtrl itself
+                        allErrors.push(formCtrl);    // add the error
+                    } else if (isForm(ctrl)) {
+                        // sometimes the control in error is the same form so we cannot recurse else we'll cause an infinite loop
+                        // and in this case it means the error is assigned directly to the form, not a control
+                        if (ctrl === formCtrl) {
+                            allErrors.push(ctrl);
+                            // add the error
+                            return;
+                        }
+                        // recurse with the sub form
+                        collectAllFormErrorsRecursively(ctrl, allErrors);
+                    } else {
+                        // it's a normal control
+                        allErrors.push(ctrl);    // add the error
+                    }
+                });
+            });
+        }
+        function isForm(obj) {
+            // a method to check that the collection of object prop names contains the property name expected
+            function allPropertiesExist(objectPropNames) {
+                //ensure that every required property name exists on the current object
+                return _.every(requiredFormProps, function (item) {
+                    return _.contains(objectPropNames, item);
+                });
+            }
+            //get the keys of the property names for the current object
+            var props = _.keys(obj);
+            //if the length isn't correct, try the next prop
+            if (props.length < requiredFormProps.length) {
+                return false;
+            }
+            //ensure that every required property name exists on the current scope property
+            return allPropertiesExist(props);
+        }
         return {
+            countAllFormErrors: function countAllFormErrors(formCtrl) {
+                var allErrors = [];
+                collectAllFormErrorsRecursively(formCtrl, allErrors);
+                return allErrors.length;
+            },
+            /**
+     * Will traverse up the $scope chain to all ancestors until the predicate matches for the current scope or until it's at the root.
+     * @param {any} scope
+     * @param {any} predicate
+     */
+            traverseScopeChain: function traverseScopeChain(scope, predicate) {
+                var s = scope.$parent;
+                while (s) {
+                    var result = predicate(s);
+                    if (result === true) {
+                        return s;
+                    }
+                    s = s.$parent;
+                }
+                return null;
+            },
             /**
      * Method used to re-run the $parsers for a given ngModel
      * @param {} scope 
@@ -36,7 +113,7 @@
             executeSequentialPromises: function executeSequentialPromises(promises) {
                 //this is sequential promise chaining, it's not pretty but we need to do it this way.
                 //$q.all doesn't execute promises in sequence but that's what we want to do here.
-                if (!angular.isArray(promises)) {
+                if (!Utilities.isArray(promises)) {
                     throw 'promises must be an array';
                 }
                 //now execute them in sequence... sorry there's no other good way to do it with angular promises
@@ -79,6 +156,7 @@
                     }
                 }
             },
+            isForm: isForm,
             /**
      * @ngdoc function
      * @name getCurrentForm
@@ -98,33 +176,9 @@
                 //The other way to do it in a directive is to require "^form", but in a controller the only other way to do it
                 // is to inject the $element object and use: $element.inheritedData('$formController');
                 var form = null;
-                var requiredFormProps = [
-                    '$error',
-                    '$name',
-                    '$dirty',
-                    '$pristine',
-                    '$valid',
-                    '$submitted',
-                    '$pending'
-                ];
-                // a method to check that the collection of object prop names contains the property name expected
-                function propertyExists(objectPropNames) {
-                    //ensure that every required property name exists on the current scope property
-                    return _.every(requiredFormProps, function (item) {
-                        return _.contains(objectPropNames, item);
-                    });
-                }
                 for (var p in scope) {
                     if (_.isObject(scope[p]) && p !== 'this' && p.substr(0, 1) !== '$') {
-                        //get the keys of the property names for the current property
-                        var props = _.keys(scope[p]);
-                        //if the length isn't correct, try the next prop
-                        if (props.length < requiredFormProps.length) {
-                            continue;
-                        }
-                        //ensure that every required property name exists on the current scope property
-                        var containProperty = propertyExists(props);
-                        if (containProperty) {
+                        if (this.isForm(scope[p])) {
                             form = scope[p];
                             break;
                         }
@@ -171,11 +225,11 @@
                     $valid: true,
                     $submitted: false,
                     $pending: undefined,
-                    $addControl: angular.noop,
-                    $removeControl: angular.noop,
-                    $setValidity: angular.noop,
-                    $setDirty: angular.noop,
-                    $setPristine: angular.noop,
+                    $addControl: Utilities.noop,
+                    $removeControl: Utilities.noop,
+                    $setValidity: Utilities.noop,
+                    $setDirty: Utilities.noop,
+                    $setPristine: Utilities.noop,
                     $name: formName
                 };
             }
@@ -688,7 +742,7 @@
      */
             load: function load(pathArray, scope, defaultAssetType) {
                 var promise;
-                if (!angular.isArray(pathArray)) {
+                if (!Utilities.isArray(pathArray)) {
                     throw 'pathArray must be an array';
                 }
                 // Check to see if there's anything to load, resolve promise if not
@@ -864,6 +918,867 @@
         angular.module('umbraco.services').factory('backdropService', backdropService);
     }());
     'use strict';
+    function _typeof(obj) {
+        if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
+            _typeof = function _typeof(obj) {
+                return typeof obj;
+            };
+        } else {
+            _typeof = function _typeof(obj) {
+                return obj && typeof Symbol === 'function' && obj.constructor === Symbol && obj !== Symbol.prototype ? 'symbol' : typeof obj;
+            };
+        }
+        return _typeof(obj);
+    }
+    /**
+ * @ngdoc service
+ * @name umbraco.services.blockEditorService
+ *
+ * @description
+ * <b>Added in Umbraco 8.7</b>. Service for dealing with Block Editors.
+ *
+ * Block Editor Service provides the basic features for a block editor.
+ * The main feature is the ability to create a Model Object which takes care of your data for your Block Editor.
+ *
+ *
+ * ##Samples
+ *
+ * ####Instantiate a Model Object for your property editor:
+ *
+ * <pre>
+ *     modelObject = blockEditorService.createModelObject(vm.model.value, vm.model.editor, vm.model.config.blocks, $scope);
+ *     modelObject.load().then(onLoaded);
+ * </pre>
+ *
+ *
+ * See {@link umbraco.services.blockEditorModelObject BlockEditorModelObject} for more samples.
+ *
+ */
+    (function () {
+        'use strict';
+        /**
+   * When performing a runtime copy of Block Editors entries, we copy the ElementType Data Model and inner IDs are kept identical, to ensure new IDs are changed on paste we need to provide a resolver for the ClipboardService.
+   */
+        angular.module('umbraco').run([
+            'clipboardService',
+            'udiService',
+            function (clipboardService, udiService) {
+                function replaceUdi(obj, key, dataObject) {
+                    var udi = obj[key];
+                    var newUdi = udiService.create('element');
+                    obj[key] = newUdi;
+                    dataObject.forEach(function (data) {
+                        if (data.udi === udi) {
+                            data.udi = newUdi;
+                        }
+                    });
+                }
+                function replaceUdisOfObject(obj, propValue) {
+                    for (var k in obj) {
+                        if (k === 'contentUdi') {
+                            replaceUdi(obj, k, propValue.contentData);
+                        } else if (k === 'settingsUdi') {
+                            replaceUdi(obj, k, propValue.settingsData);
+                        } else {
+                            // lets crawl through all properties of layout to make sure get captured all `contentUdi` and `settingsUdi` properties.
+                            var propType = _typeof(obj[k]);
+                            if (propType === 'object' || propType === 'array') {
+                                replaceUdisOfObject(obj[k], propValue);
+                            }
+                        }
+                    }
+                }
+                function replaceElementTypeBlockListUDIsResolver(obj, propClearingMethod) {
+                    replaceRawBlockListUDIsResolver(obj.value, propClearingMethod);
+                }
+                clipboardService.registerPastePropertyResolver(replaceElementTypeBlockListUDIsResolver, clipboardService.TYPES.ELEMENT_TYPE);
+                function replaceRawBlockListUDIsResolver(value, propClearingMethod) {
+                    if (_typeof(value) === 'object') {
+                        // we got an object, and it has these three props then we are most likely dealing with a Block Editor.
+                        if (value.layout !== undefined && value.contentData !== undefined && value.settingsData !== undefined) {
+                            replaceUdisOfObject(value.layout, value);
+                            // replace UDIs for inner properties of this Block Editors content data.
+                            if (value.contentData.length > 0) {
+                                value.contentData.forEach(function (item) {
+                                    for (var k in item) {
+                                        propClearingMethod(item[k], clipboardService.TYPES.RAW);
+                                    }
+                                });
+                            }
+                            // replace UDIs for inner properties of this Block Editors settings data.
+                            if (value.settingsData.length > 0) {
+                                value.settingsData.forEach(function (item) {
+                                    for (var k in item) {
+                                        propClearingMethod(item[k], clipboardService.TYPES.RAW);
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+                clipboardService.registerPastePropertyResolver(replaceRawBlockListUDIsResolver, clipboardService.TYPES.RAW);
+            }
+        ]);
+        function blockEditorService(blockEditorModelObject) {
+            /**
+     * @ngdocs function
+     * @name createModelObject
+     * @methodOf umbraco.services.blockEditorService
+     *
+     * @description
+     * Create a new Block Editor Model Object.
+     * See {@link umbraco.services.blockEditorModelObject blockEditorModelObject}
+     *
+     * @see umbraco.services.blockEditorModelObject
+     * @param {object} propertyModelValue data object of the property editor, usually model.value.
+     * @param {string} propertyEditorAlias alias of the property.
+     * @param {object} blockConfigurations block configurations.
+     * @param {angular-scope} scopeOfExistance A local angularJS scope that exists as long as the data exists.
+     * @param {angular-scope} propertyEditorScope A local angularJS scope that represents the property editors scope.
+     * @return {blockEditorModelObject} A instance of the BlockEditorModelObject class.
+     */
+            function createModelObject(propertyModelValue, propertyEditorAlias, blockConfigurations, scopeOfExistance, propertyEditorScope) {
+                return new blockEditorModelObject(propertyModelValue, propertyEditorAlias, blockConfigurations, scopeOfExistance, propertyEditorScope);
+            }
+            return { createModelObject: createModelObject };
+        }
+        angular.module('umbraco.services').service('blockEditorService', blockEditorService);
+    }());
+    'use strict';
+    /**
+ * @ngdoc service
+ * @name umbraco.services.blockEditorModelObject
+ *
+ * @description
+ * <b>Added in Umbraco 8.7</b>. Model Object for dealing with data of Block Editors.
+ *
+ * Block Editor Model Object provides the basic features for editing data of a block editor.<br/>
+ * Use the Block Editor Service to instantiate the Model Object.<br/>
+ * See {@link umbraco.services.blockEditorService blockEditorService}
+ *
+ */
+    (function () {
+        'use strict';
+        function blockEditorModelObjectFactory($interpolate, $q, udiService, contentResource, localizationService, umbRequestHelper, clipboardService) {
+            /**
+     * Simple mapping from property model content entry to editing model,
+     * needs to stay simple to avoid deep watching.
+     */
+            function mapToElementModel(elementModel, dataModel) {
+                if (!elementModel || !elementModel.variants || !elementModel.variants.length) {
+                    return;
+                }
+                var variant = elementModel.variants[0];
+                for (var t = 0; t < variant.tabs.length; t++) {
+                    var tab = variant.tabs[t];
+                    for (var p = 0; p < tab.properties.length; p++) {
+                        var prop = tab.properties[p];
+                        if (dataModel[prop.alias]) {
+                            prop.value = dataModel[prop.alias];
+                        }
+                    }
+                }
+            }
+            /**
+     * Simple mapping from elementModel to property model content entry,
+     * needs to stay simple to avoid deep watching.
+     */
+            function mapToPropertyModel(elementModel, dataModel) {
+                if (!elementModel || !elementModel.variants || !elementModel.variants.length) {
+                    return;
+                }
+                var variant = elementModel.variants[0];
+                for (var t = 0; t < variant.tabs.length; t++) {
+                    var tab = variant.tabs[t];
+                    for (var p = 0; p < tab.properties.length; p++) {
+                        var prop = tab.properties[p];
+                        if (prop.value) {
+                            dataModel[prop.alias] = prop.value;
+                        }
+                    }
+                }
+            }
+            /**
+     * Map property values from an ElementModel to another ElementModel.
+     * Used to tricker watchers for synchronization.
+     * @param {Object} fromModel ElementModel to recive property values from.
+     * @param {Object} toModel ElementModel to recive property values from.
+     */
+            function mapElementValues(fromModel, toModel) {
+                if (!fromModel || !fromModel.variants) {
+                    toModel.variants = null;
+                    return;
+                }
+                if (!fromModel.variants.length) {
+                    toModel.variants = [];
+                    return;
+                }
+                var fromVariant = fromModel.variants[0];
+                if (!fromVariant) {
+                    toModel.variants = [null];
+                    return;
+                }
+                var toVariant = toModel.variants[0];
+                for (var t = 0; t < fromVariant.tabs.length; t++) {
+                    var fromTab = fromVariant.tabs[t];
+                    var toTab = toVariant.tabs[t];
+                    for (var p = 0; p < fromTab.properties.length; p++) {
+                        var fromProp = fromTab.properties[p];
+                        var toProp = toTab.properties[p];
+                        toProp.value = fromProp.value;
+                    }
+                }
+            }
+            /**
+     * Generate label for Block, uses either the labelInterpolator or falls back to the contentTypeName.
+     * @param {Object} blockObject BlockObject to recive data values from.
+     */
+            function getBlockLabel(blockObject) {
+                if (blockObject.labelInterpolator !== undefined) {
+                    // We are just using the data model, since its a key/value object that is live synced. (if we need to add additional vars, we could make a shallow copy and apply those.)
+                    return blockObject.labelInterpolator(blockObject.data);
+                }
+                return blockObject.content.contentTypeName;
+            }
+            /**
+     * Used to add watchers on all properties in a content or settings model
+     */
+            function addWatchers(blockObject, isolatedScope, forSettings) {
+                var model = forSettings ? blockObject.settings : blockObject.content;
+                if (!model || !model.variants || !model.variants.length) {
+                    return;
+                }
+                // Start watching each property value.
+                var variant = model.variants[0];
+                var field = forSettings ? 'settings' : 'content';
+                var watcherCreator = forSettings ? createSettingsModelPropWatcher : createContentModelPropWatcher;
+                for (var t = 0; t < variant.tabs.length; t++) {
+                    var tab = variant.tabs[t];
+                    for (var p = 0; p < tab.properties.length; p++) {
+                        var prop = tab.properties[p];
+                        // Watch value of property since this is the only value we want to keep synced.
+                        // Do notice that it is not performing a deep watch, meaning that we are only watching primitive and changes directly to the object of property-value.
+                        // But we like to sync non-primitive values as well! Yes, and this does happen, just not through this code, but through the nature of JavaScript.
+                        // Non-primitive values act as references to the same data and are therefor synced.
+                        blockObject.__watchers.push(isolatedScope.$watch('blockObjects._' + blockObject.key + '.' + field + '.variants[0].tabs[' + t + '].properties[' + p + '].value', watcherCreator(blockObject, prop)));
+                        // We also like to watch our data model to be able to capture changes coming from other places.
+                        if (forSettings === true) {
+                            blockObject.__watchers.push(isolatedScope.$watch('blockObjects._' + blockObject.key + '.' + 'settingsData' + '.' + prop.alias, createLayoutSettingsModelWatcher(blockObject, prop)));
+                        } else {
+                            blockObject.__watchers.push(isolatedScope.$watch('blockObjects._' + blockObject.key + '.' + 'data' + '.' + prop.alias, createDataModelWatcher(blockObject, prop)));
+                        }
+                    }
+                }
+                if (blockObject.__watchers.length === 0) {
+                    // If no watcher where created, it means we have no properties to watch. This means that nothing will activate our generate the label, since its only triggered by watchers.
+                    blockObject.updateLabel();
+                }
+            }
+            /**
+     * Used to create a prop watcher for the data in the property editor data model.
+     */
+            function createDataModelWatcher(blockObject, prop) {
+                return function () {
+                    if (prop.value !== blockObject.data[prop.alias]) {
+                        // sync data:
+                        prop.value = blockObject.data[prop.alias];
+                        blockObject.updateLabel();
+                    }
+                };
+            }
+            /**
+     * Used to create a prop watcher for the settings in the property editor data model.
+     */
+            function createLayoutSettingsModelWatcher(blockObject, prop) {
+                return function () {
+                    if (prop.value !== blockObject.settingsData[prop.alias]) {
+                        // sync data:
+                        prop.value = blockObject.settingsData[prop.alias];
+                    }
+                };
+            }
+            /**
+     * Used to create a scoped watcher for a content property on a blockObject.
+     */
+            function createContentModelPropWatcher(blockObject, prop) {
+                return function () {
+                    if (blockObject.data[prop.alias] !== prop.value) {
+                        // sync data:
+                        blockObject.data[prop.alias] = prop.value;
+                    }
+                    blockObject.updateLabel();
+                };
+            }
+            /**
+     * Used to create a scoped watcher for a settings property on a blockObject.
+     */
+            function createSettingsModelPropWatcher(blockObject, prop) {
+                return function () {
+                    if (blockObject.settingsData[prop.alias] !== prop.value) {
+                        // sync data:
+                        blockObject.settingsData[prop.alias] = prop.value;
+                    }
+                };
+            }
+            function createDataEntry(elementTypeKey, dataItems) {
+                var data = {
+                    contentTypeKey: elementTypeKey,
+                    udi: udiService.create('element')
+                };
+                dataItems.push(data);
+                return data.udi;
+            }
+            function getDataByUdi(udi, dataItems) {
+                return dataItems.find(function (entry) {
+                    return entry.udi === udi;
+                }) || null;
+            }
+            /**
+     * Set the udi and key property for the content item
+     * @param {any} contentData
+     * @param {any} udi
+     */
+            function ensureUdiAndKey(contentData, udi) {
+                contentData.udi = udi;
+                // Change the content.key to the GUID part of the udi, else it's just random which we don't want, it must be consistent
+                contentData.key = udiService.getKey(udi);
+            }
+            /**
+     * Used to highlight unsupported properties for the user, changes unsupported properties into a unsupported-property.
+     */
+            var notSupportedProperties = [
+                'Umbraco.Tags',
+                'Umbraco.UploadField',
+                'Umbraco.ImageCropper',
+                'Umbraco.NestedContent'
+            ];
+            /**
+     * Formats the content apps and ensures unsupported property's have the notsupported view
+     * @param {any} scaffold
+     */
+            function formatScaffoldData(scaffold) {
+                // deal with not supported props
+                scaffold.variants.forEach(function (variant) {
+                    variant.tabs.forEach(function (tab) {
+                        tab.properties.forEach(function (property) {
+                            if (notSupportedProperties.indexOf(property.editor) !== -1) {
+                                property.view = 'notsupported';
+                            }
+                        });
+                    });
+                });
+                // could be empty in tests
+                if (!scaffold.apps) {
+                    console.warn('No content apps found in scaffold');
+                    return scaffold;
+                }
+                // replace view of content app
+                var contentApp = scaffold.apps.find(function (entry) {
+                    return entry.alias === 'umbContent';
+                });
+                if (contentApp) {
+                    contentApp.view = 'views/common/infiniteeditors/blockeditor/blockeditor.content.html';
+                }
+                // remove info app
+                var infoAppIndex = scaffold.apps.findIndex(function (entry) {
+                    return entry.alias === 'umbInfo';
+                });
+                if (infoAppIndex >= 0) {
+                    scaffold.apps.splice(infoAppIndex, 1);
+                }
+                return scaffold;
+            }
+            /**
+     * Creates a settings content app, we only want to do this if settings is present on the specific block.
+     * @param {any} contentModel
+     */
+            function appendSettingsContentApp(contentModel, settingsName) {
+                if (!contentModel.apps) {
+                    return;
+                }
+                // add the settings app
+                var settingsTab = {
+                    'name': settingsName,
+                    'alias': 'settings',
+                    'icon': 'icon-settings',
+                    'view': 'views/common/infiniteeditors/blockeditor/blockeditor.settings.html',
+                    'hasError': false
+                };
+                contentModel.apps.push(settingsTab);
+            }
+            /**
+     * @ngdoc method
+     * @name constructor
+     * @methodOf umbraco.services.blockEditorModelObject
+     * @description Constructor of the model object used to handle Block Editor data.
+     * @param {object} propertyModelValue data object of the property editor, usually model.value.
+     * @param {string} propertyEditorAlias alias of the property.
+     * @param {object} blockConfigurations block configurations.
+     * @param {angular-scope} scopeOfExistance A local angularJS scope that exists as long as the data exists.
+     * @param {angular-scope} propertyEditorScope A local angularJS scope that represents the property editors scope.
+     * @returns {BlockEditorModelObject} A instance of BlockEditorModelObject.
+     */
+            function BlockEditorModelObject(propertyModelValue, propertyEditorAlias, blockConfigurations, scopeOfExistance, propertyEditorScope) {
+                if (!propertyModelValue) {
+                    throw new Error('propertyModelValue cannot be undefined, to ensure we keep the binding to the angular model we need minimum an empty object.');
+                }
+                this.__watchers = [];
+                this.__labels = {};
+                // ensure basic part of data-structure is in place:
+                this.value = propertyModelValue;
+                this.value.layout = this.value.layout || {};
+                this.value.contentData = this.value.contentData || [];
+                this.value.settingsData = this.value.settingsData || [];
+                this.propertyEditorAlias = propertyEditorAlias;
+                this.blockConfigurations = blockConfigurations;
+                this.blockConfigurations.forEach(function (blockConfiguration) {
+                    if (blockConfiguration.view != null && blockConfiguration.view !== '') {
+                        blockConfiguration.view = umbRequestHelper.convertVirtualToAbsolutePath(blockConfiguration.view);
+                    }
+                    if (blockConfiguration.stylesheet != null && blockConfiguration.stylesheet !== '') {
+                        blockConfiguration.stylesheet = umbRequestHelper.convertVirtualToAbsolutePath(blockConfiguration.stylesheet);
+                    }
+                    if (blockConfiguration.thumbnail != null && blockConfiguration.thumbnail !== '') {
+                        blockConfiguration.thumbnail = umbRequestHelper.convertVirtualToAbsolutePath(blockConfiguration.thumbnail);
+                    }
+                });
+                this.scaffolds = [];
+                this.isolatedScope = scopeOfExistance.$new(true);
+                this.isolatedScope.blockObjects = {};
+                this.__watchers.push(this.isolatedScope.$on('$destroy', this.destroy.bind(this)));
+                this.__watchers.push(propertyEditorScope.$on('formSubmittingFinalPhase', this.sync.bind(this)));
+            }
+            ;
+            BlockEditorModelObject.prototype = {
+                update: function update(propertyModelValue, propertyEditorScope) {
+                    // clear watchers
+                    this.__watchers.forEach(function (w) {
+                        w();
+                    });
+                    delete this.__watchers;
+                    // clear block objects
+                    for (var key in this.isolatedScope.blockObjects) {
+                        this.destroyBlockObject(this.isolatedScope.blockObjects[key]);
+                    }
+                    this.isolatedScope.blockObjects = {};
+                    // update our values
+                    this.value = propertyModelValue;
+                    this.value.layout = this.value.layout || {};
+                    this.value.contentData = this.value.contentData || [];
+                    this.value.settingsData = this.value.settingsData || [];
+                    // re-create the watchers
+                    this.__watchers = [];
+                    this.__watchers.push(this.isolatedScope.$on('$destroy', this.destroy.bind(this)));
+                    this.__watchers.push(propertyEditorScope.$on('formSubmittingFinalPhase', this.sync.bind(this)));
+                },
+                /**
+       * @ngdoc method
+       * @name getBlockConfiguration
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Get block configuration object for a given contentElementTypeKey.
+       * @param {string} key contentElementTypeKey to recive the configuration model for.
+       * @returns {Object | null} Configuration model for the that specific block. Or ´null´ if the contentElementTypeKey isnt available in the current block configurations.
+       */
+                getBlockConfiguration: function getBlockConfiguration(key) {
+                    return this.blockConfigurations.find(function (bc) {
+                        return bc.contentElementTypeKey === key;
+                    }) || null;
+                },
+                /**
+       * @ngdoc method
+       * @name load
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Load the scaffolding models for the given configuration, these are needed to provide useful models for each block.
+       * @param {Object} blockObject BlockObject to receive data values from.
+       * @returns {Promise} A Promise object which resolves when all scaffold models are loaded.
+       */
+                load: function load() {
+                    var self = this;
+                    var tasks = [];
+                    tasks.push(localizationService.localize('blockEditor_tabBlockSettings').then(function (settingsName) {
+                        // self.__labels might not exists anymore, this happens if this instance has been destroyed before the load is complete.
+                        if (self.__labels) {
+                            self.__labels.settingsName = settingsName;
+                        }
+                    }));
+                    var scaffoldKeys = [];
+                    this.blockConfigurations.forEach(function (blockConfiguration) {
+                        scaffoldKeys.push(blockConfiguration.contentElementTypeKey);
+                        if (blockConfiguration.settingsElementTypeKey != null) {
+                            scaffoldKeys.push(blockConfiguration.settingsElementTypeKey);
+                        }
+                    });
+                    // removing duplicates.
+                    scaffoldKeys = scaffoldKeys.filter(function (value, index, self) {
+                        return self.indexOf(value) === index;
+                    });
+                    scaffoldKeys.forEach(function (contentTypeKey) {
+                        tasks.push(contentResource.getScaffoldByKey(-20, contentTypeKey).then(function (scaffold) {
+                            // self.scaffolds might not exists anymore, this happens if this instance has been destroyed before the load is complete.
+                            if (self.scaffolds) {
+                                self.scaffolds.push(formatScaffoldData(scaffold));
+                            }
+                        }));
+                    });
+                    return $q.all(tasks);
+                },
+                /**
+       * @ngdoc method
+       * @name getAvailableAliasesForBlockContent
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Retrive a list of aliases that are available for content of blocks in this property editor, does not contain aliases of block settings.
+       * @return {Array} array of strings representing alias.
+       */
+                getAvailableAliasesForBlockContent: function getAvailableAliasesForBlockContent() {
+                    var _this = this;
+                    return this.blockConfigurations.map(function (blockConfiguration) {
+                        return _this.getScaffoldFromKey(blockConfiguration.contentElementTypeKey).contentTypeAlias;
+                    });
+                },
+                /**
+       * @ngdoc method
+       * @name getAvailableBlocksForBlockPicker
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Retrive a list of available blocks, the list containing object with the confirugation model(blockConfigModel) and the element type model(elementTypeModel).
+       * The purpose of this data is to provide it for the Block Picker.
+       * @return {Array} array of objects representing available blocks, each object containing properties blockConfigModel and elementTypeModel.
+       */
+                getAvailableBlocksForBlockPicker: function getAvailableBlocksForBlockPicker() {
+                    var _this2 = this;
+                    var blocks = [];
+                    this.blockConfigurations.forEach(function (blockConfiguration) {
+                        var scaffold = _this2.getScaffoldFromKey(blockConfiguration.contentElementTypeKey);
+                        if (scaffold) {
+                            blocks.push({
+                                blockConfigModel: blockConfiguration,
+                                elementTypeModel: scaffold.documentType
+                            });
+                        }
+                    });
+                    return blocks;
+                },
+                /**
+       * @ngdoc method
+       * @name getScaffoldFromKey
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Get scaffold model for a given contentTypeKey.
+       * @param {string} key contentTypeKey to recive the scaffold model for.
+       * @returns {Object | null} Scaffold model for the that content type. Or null if the scaffolding model dosnt exist in this context.
+       */
+                getScaffoldFromKey: function getScaffoldFromKey(contentTypeKey) {
+                    return this.scaffolds.find(function (o) {
+                        return o.contentTypeKey === contentTypeKey;
+                    });
+                },
+                /**
+       * @ngdoc method
+       * @name getScaffoldFromAlias
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Get scaffold model for a given contentTypeAlias, used by clipboardService.
+       * @param {string} alias contentTypeAlias to recive the scaffold model for.
+       * @returns {Object | null} Scaffold model for the that content type. Or null if the scaffolding model dosnt exist in this context.
+       */
+                getScaffoldFromAlias: function getScaffoldFromAlias(contentTypeAlias) {
+                    return this.scaffolds.find(function (o) {
+                        return o.contentTypeAlias === contentTypeAlias;
+                    });
+                },
+                /**
+       * @ngdoc method
+       * @name getBlockObject
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Retrieve a Block Object for the given layout entry.
+       * The Block Object offers the necessary data to display and edit a block.
+       * The Block Object setups live syncronization of content and settings models back to the data of your Property Editor model.
+       * The returned object, named ´BlockObject´, contains several usefull models to make editing of this block happen.
+       * The ´BlockObject´ contains the following properties:
+       * - key {string}: runtime generated key, usefull for tracking of this object
+       * - content {Object}: Content model, the content data in a ElementType model.
+       * - settings {Object}: Settings model, the settings data in a ElementType model.
+       * - config {Object}: A local deep copy of the block configuration model.
+       * - label {string}: The label for this block.
+       * - updateLabel {Method}: Method to trigger an update of the label for this block.
+       * - data {Object}: A reference to the content data object from your property editor model.
+       * - settingsData {Object}: A reference to the settings data object from your property editor model.
+       * - layout {Object}: A refernce to the layout entry from your property editor model.
+       * @param {Object} layoutEntry the layout entry object to build the block model from.
+       * @return {Object | null} The BlockObject for the given layout entry. Or null if data or configuration wasnt found for this block.
+       */
+                getBlockObject: function getBlockObject(layoutEntry) {
+                    var contentUdi = layoutEntry.contentUdi;
+                    var dataModel = getDataByUdi(contentUdi, this.value.contentData);
+                    if (dataModel === null) {
+                        console.error('Couldn\'t find content model of ' + contentUdi);
+                        return null;
+                    }
+                    var blockConfiguration = this.getBlockConfiguration(dataModel.contentTypeKey);
+                    var contentScaffold = null;
+                    if (blockConfiguration === null) {
+                        console.warn('The block of ' + contentUdi + ' is not being initialized because its contentTypeKey(\'' + dataModel.contentTypeKey + '\') is not allowed for this PropertyEditor');
+                    } else {
+                        contentScaffold = this.getScaffoldFromKey(blockConfiguration.contentElementTypeKey);
+                        if (contentScaffold === null) {
+                            console.error('The block of ' + contentUdi + ' is not begin initialized cause its Element Type was not loaded.');
+                        }
+                    }
+                    if (blockConfiguration === null || contentScaffold === null) {
+                        blockConfiguration = {
+                            label: 'Unsupported',
+                            unsupported: true
+                        };
+                    }
+                    var blockObject = {};
+                    // Set an angularJS cloneNode method, to avoid this object begin cloned.
+                    blockObject.cloneNode = function () {
+                        return null;    // angularJS accept this as a cloned value as long as the
+                    };
+                    blockObject.key = String.CreateGuid().replace(/-/g, '');
+                    blockObject.config = Utilities.copy(blockConfiguration);
+                    if (blockObject.config.label && blockObject.config.label !== '') {
+                        blockObject.labelInterpolator = $interpolate(blockObject.config.label);
+                    }
+                    blockObject.__scope = this.isolatedScope;
+                    blockObject.updateLabel = _.debounce(function () {
+                        // Check wether scope still exists, maybe object was destoyed in these seconds.
+                        if (this.__scope) {
+                            this.label = getBlockLabel(this);
+                            this.__scope.$evalAsync();
+                        }
+                    }.bind(blockObject), 10);
+                    // make basics from scaffold
+                    if (contentScaffold !== null) {
+                        // We might not have contentScaffold
+                        blockObject.content = Utilities.copy(contentScaffold);
+                        ensureUdiAndKey(blockObject.content, contentUdi);
+                        mapToElementModel(blockObject.content, dataModel);
+                    } else {
+                        blockObject.content = null;
+                    }
+                    blockObject.data = dataModel;
+                    blockObject.layout = layoutEntry;
+                    blockObject.__watchers = [];
+                    if (blockConfiguration.settingsElementTypeKey) {
+                        var settingsScaffold = this.getScaffoldFromKey(blockConfiguration.settingsElementTypeKey);
+                        if (settingsScaffold !== null) {
+                            if (!layoutEntry.settingsUdi) {
+                                // if this block does not have settings data, then create it. This could happen because settings model has been added later than this content was created.
+                                layoutEntry.settingsUdi = createDataEntry(blockConfiguration.settingsElementTypeKey, this.value.settingsData);
+                            }
+                            var settingsUdi = layoutEntry.settingsUdi;
+                            var settingsData = getDataByUdi(settingsUdi, this.value.settingsData);
+                            if (settingsData === null) {
+                                console.error('Couldnt find content settings data of ' + settingsUdi);
+                                return null;
+                            }
+                            blockObject.settingsData = settingsData;
+                            // make basics from scaffold
+                            blockObject.settings = Utilities.copy(settingsScaffold);
+                            ensureUdiAndKey(blockObject.settings, settingsUdi);
+                            mapToElementModel(blockObject.settings, settingsData);
+                            // add settings content-app
+                            appendSettingsContentApp(blockObject.content, this.__labels.settingsName);
+                        }
+                    }
+                    blockObject.retrieveValuesFrom = function (content, settings) {
+                        if (this.content !== null) {
+                            mapElementValues(content, this.content);
+                        }
+                        if (this.config.settingsElementTypeKey !== null) {
+                            mapElementValues(settings, this.settings);
+                        }
+                    };
+                    blockObject.sync = function () {
+                        if (this.content !== null) {
+                            mapToPropertyModel(this.content, this.data);
+                        }
+                        if (this.config.settingsElementTypeKey !== null) {
+                            mapToPropertyModel(this.settings, this.settingsData);
+                        }
+                    };
+                    // first time instant update of label.
+                    blockObject.label = getBlockLabel(blockObject);
+                    // Add blockObject to our isolated scope to enable watching its values:
+                    this.isolatedScope.blockObjects['_' + blockObject.key] = blockObject;
+                    addWatchers(blockObject, this.isolatedScope);
+                    addWatchers(blockObject, this.isolatedScope, true);
+                    blockObject.destroy = function () {
+                        // remove property value watchers:
+                        this.__watchers.forEach(function (w) {
+                            w();
+                        });
+                        delete this.__watchers;
+                        // help carbage collector:
+                        delete this.config;
+                        delete this.layout;
+                        delete this.data;
+                        delete this.settingsData;
+                        delete this.content;
+                        delete this.settings;
+                        // remove model from isolatedScope.
+                        delete this.__scope.blockObjects['_' + this.key];
+                        // NOTE: It seems like we should call this.__scope.$destroy(); since that is the only way to remove a scope from it's parent,
+                        // however that is not the case since __scope is actually this.isolatedScope which gets cleaned up when the outer scope is
+                        // destroyed. If we do that here it breaks the scope chain and validation.
+                        delete this.__scope;
+                        // removes this method, making it impossible to destroy again.
+                        delete this.destroy;
+                        // lets remove the key to make things blow up if this is still referenced:
+                        delete this.key;
+                    };
+                    return blockObject;
+                },
+                /**
+       * @ngdoc method
+       * @name removeDataAndDestroyModel
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Removes the data and destroys the Block Model.
+       * Notice this method does not remove the block from your layout, this will need to be handlede by the Property Editor since this services donst know about your layout structure.
+       * @param {Object} blockObject The BlockObject to be removed and destroyed.
+       */
+                removeDataAndDestroyModel: function removeDataAndDestroyModel(blockObject) {
+                    var udi = blockObject.layout.contentUdi;
+                    var settingsUdi = blockObject.layout.settingsUdi || null;
+                    this.destroyBlockObject(blockObject);
+                    this.removeDataByUdi(udi);
+                    if (settingsUdi) {
+                        this.removeSettingsByUdi(settingsUdi);
+                    }
+                },
+                /**
+       * @ngdoc method
+       * @name destroyBlockObject
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Destroys the Block Model, but all data is kept.
+       * @param {Object} blockObject The BlockObject to be destroyed.
+       */
+                destroyBlockObject: function destroyBlockObject(blockObject) {
+                    blockObject.destroy();
+                },
+                /**
+       * @ngdoc method
+       * @name getLayout
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Retrieve the layout object from this specific property editor model.
+       * @param {object} defaultStructure if no data exist the layout of your poerty editor will be set to this object.
+       * @return {Object} Layout object, structure depends on the model of your property editor.
+       */
+                getLayout: function getLayout(defaultStructure) {
+                    if (!this.value.layout[this.propertyEditorAlias]) {
+                        this.value.layout[this.propertyEditorAlias] = defaultStructure;
+                    }
+                    return this.value.layout[this.propertyEditorAlias];
+                },
+                /**
+       * @ngdoc method
+       * @name create
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Create a empty layout entry, notice the layout entry is not added to the property editors model layout object, since the layout sturcture depends on the property editor.
+       * @param {string} contentElementTypeKey the contentElementTypeKey of the block you wish to create, if contentElementTypeKey is not avaiable in the block configuration then ´null´ will be returned.
+       * @return {Object | null} Layout entry object, to be inserted at a decired location in the layout object. Or null if contentElementTypeKey is unavaiaible.
+       */
+                create: function create(contentElementTypeKey) {
+                    var blockConfiguration = this.getBlockConfiguration(contentElementTypeKey);
+                    if (blockConfiguration === null) {
+                        return null;
+                    }
+                    var entry = { contentUdi: createDataEntry(contentElementTypeKey, this.value.contentData) };
+                    if (blockConfiguration.settingsElementTypeKey != null) {
+                        entry.settingsUdi = createDataEntry(blockConfiguration.settingsElementTypeKey, this.value.settingsData);
+                    }
+                    return entry;
+                },
+                /**
+       * @ngdoc method
+       * @name createFromElementType
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Insert data from ElementType Model
+       * @return {Object | null} Layout entry object, to be inserted at a decired location in the layout object. Or ´null´ if the given ElementType isnt supported by the block configuration.
+       */
+                createFromElementType: function createFromElementType(elementTypeDataModel) {
+                    elementTypeDataModel = clipboardService.parseContentForPaste(elementTypeDataModel, clipboardService.TYPES.ELEMENT_TYPE);
+                    var contentElementTypeKey = elementTypeDataModel.contentTypeKey;
+                    var layoutEntry = this.create(contentElementTypeKey);
+                    if (layoutEntry === null) {
+                        return null;
+                    }
+                    var dataModel = getDataByUdi(layoutEntry.contentUdi, this.value.contentData);
+                    if (dataModel === null) {
+                        return null;
+                    }
+                    mapToPropertyModel(elementTypeDataModel, dataModel);
+                    return layoutEntry;
+                },
+                /**
+       * @ngdoc method
+       * @name sync
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Force immidiate update of the blockobject models to the property model.
+       */
+                sync: function sync() {
+                    for (var key in this.isolatedScope.blockObjects) {
+                        this.isolatedScope.blockObjects[key].sync();
+                    }
+                },
+                /**
+       * @ngdoc method
+       * @name removeDataByUdi
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Removes the content data of a given UDI.
+       * Notice this method does not remove the block from your layout, this will need to be handled by the Property Editor since this services don't know about your layout structure.
+       * @param {string} udi The UDI of the content data to be removed.
+       */
+                removeDataByUdi: function removeDataByUdi(udi) {
+                    var index = this.value.contentData.findIndex(function (o) {
+                        return o.udi === udi;
+                    });
+                    if (index !== -1) {
+                        this.value.contentData.splice(index, 1);
+                    }
+                },
+                /**
+       * @ngdoc method
+       * @name removeSettingsByUdi
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Removes the settings data of a given UDI.
+       * Notice this method does not remove the settingsUdi from your layout, this will need to be handled by the Property Editor since this services don't know about your layout structure.
+       * @param {string} udi The UDI of the settings data to be removed.
+       */
+                removeSettingsByUdi: function removeSettingsByUdi(udi) {
+                    var index = this.value.settingsData.findIndex(function (o) {
+                        return o.udi === udi;
+                    });
+                    if (index !== -1) {
+                        this.value.settingsData.splice(index, 1);
+                    }
+                },
+                /**
+       * @ngdoc method
+       * @name destroy
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Notice you should not need to destroy the BlockEditorModelObject since it will automaticly be destroyed when the scope of existance gets destroyed.
+       */
+                destroy: function destroy() {
+                    this.__watchers.forEach(function (w) {
+                        w();
+                    });
+                    for (var key in this.isolatedScope.blockObjects) {
+                        this.destroyBlockObject(this.isolatedScope.blockObjects[key]);
+                    }
+                    delete this.__watchers;
+                    delete this.value;
+                    delete this.propertyEditorAlias;
+                    delete this.blockConfigurations;
+                    delete this.scaffolds;
+                    this.isolatedScope.$destroy();
+                    delete this.isolatedScope;
+                    delete this.destroy;
+                }
+            };
+            return BlockEditorModelObject;
+        }
+        angular.module('umbraco.services').service('blockEditorModelObject', blockEditorModelObjectFactory);
+    }());
+    'use strict';
     /**
  * @ngdoc service
  * @name umbraco.services.clipboardService
@@ -877,7 +1792,26 @@
  *
  */
     function clipboardService(notificationsService, eventsService, localStorageService, iconHelper) {
-        var clearPropertyResolvers = [];
+        var TYPES = {};
+        TYPES.ELEMENT_TYPE = 'elementType';
+        TYPES.RAW = 'raw';
+        var clearPropertyResolvers = {};
+        var pastePropertyResolvers = {};
+        var clipboardTypeResolvers = {};
+        clipboardTypeResolvers[TYPES.ELEMENT_TYPE] = function (data, propMethod) {
+            for (var t = 0; t < data.variants[0].tabs.length; t++) {
+                var tab = data.variants[0].tabs[t];
+                for (var p = 0; p < tab.properties.length; p++) {
+                    var prop = tab.properties[p];
+                    propMethod(prop, TYPES.ELEMENT_TYPE);
+                }
+            }
+        };
+        clipboardTypeResolvers[TYPES.RAW] = function (data, propMethod) {
+            for (var p = 0; p < data.length; p++) {
+                propMethod(data[p], TYPES.RAW);
+            }
+        };
         var STORAGE_KEY = 'umbClipboardService';
         var retriveStorage = function retriveStorage() {
             if (localStorageService.isSupported === false) {
@@ -908,23 +1842,23 @@
             }
             return false;
         };
-        function clearPropertyForStorage(prop) {
-            for (var i = 0; i < clearPropertyResolvers.length; i++) {
-                clearPropertyResolvers[i](prop, clearPropertyForStorage);
+        function resolvePropertyForStorage(prop, type) {
+            type = type || 'raw';
+            var resolvers = clearPropertyResolvers[type];
+            for (var i = 0; i < resolvers.length; i++) {
+                resolvers[i](prop, resolvePropertyForStorage);
             }
         }
-        var prepareEntryForStorage = function prepareEntryForStorage(entryData, firstLevelClearupMethod) {
-            var cloneData = angular.copy(entryData);
+        var prepareEntryForStorage = function prepareEntryForStorage(type, entryData, firstLevelClearupMethod) {
+            var cloneData = Utilities.copy(entryData);
             if (firstLevelClearupMethod != undefined) {
                 firstLevelClearupMethod(cloneData);
             }
-            // remove keys from sub-entries
-            for (var t = 0; t < cloneData.variants[0].tabs.length; t++) {
-                var tab = cloneData.variants[0].tabs[t];
-                for (var p = 0; p < tab.properties.length; p++) {
-                    var prop = tab.properties[p];
-                    clearPropertyForStorage(prop);
-                }
+            var typeResolver = clipboardTypeResolvers[type];
+            if (typeResolver) {
+                typeResolver(cloneData, resolvePropertyForStorage);
+            } else {
+                console.warn('Umbraco.service.clipboardService has no type resolver for \'' + type + '\'.');
             }
             return cloneData;
         };
@@ -937,19 +1871,107 @@
                 }).length > 0;
             }).length === entry.aliases.length);
         };
+        function resolvePropertyForPaste(prop, type) {
+            type = type || 'raw';
+            var resolvers = pastePropertyResolvers[type];
+            for (var i = 0; i < resolvers.length; i++) {
+                resolvers[i](prop, resolvePropertyForPaste);
+            }
+        }
         var service = {};
         /**
+   * Default types to store in clipboard.
+   */
+        service.TYPES = TYPES;
+        /**
   * @ngdoc method
-  * @name umbraco.services.clipboardService#registrerPropertyClearingResolver
+  * @name umbraco.services.clipboardService#parseContentForPaste
+  * @methodOf umbraco.services.clipboardService
+  *
+  * @param {object} function The content entry to be cloned and resolved.
+  *
+  * @description
+  * Executed registered property resolvers for inner properties, to be done on pasting a clipbaord content entry.
+  *
+  */
+        service.parseContentForPaste = function (pasteEntryData, type) {
+            var cloneData = Utilities.copy(pasteEntryData);
+            var typeResolver = clipboardTypeResolvers[type];
+            if (typeResolver) {
+                typeResolver(cloneData, resolvePropertyForPaste);
+            } else {
+                console.warn('Umbraco.service.clipboardService has no type resolver for \'' + type + '\'.');
+            }
+            return cloneData;
+        };
+        /**
+  * @ngdoc method
+  * @name umbraco.services.clipboardService#registrerClearPropertyResolver
   * @methodOf umbraco.services.clipboardService
   *
   * @param {string} function A method executed for every property and inner properties copied.
+  * @param {string} string A string representing the property type format for this resolver to execute for.
   *
   * @description
-  * Executed for all properties including inner properties when performing a copy action.
+  * Executed for all properties of given type when performing a copy action.
+  *
+  * @deprecated Incorrect spelling please use 'registerClearPropertyResolver'
   */
-        service.registrerClearPropertyResolver = function (resolver) {
-            clearPropertyResolvers.push(resolver);
+        service.registrerClearPropertyResolver = function (resolver, type) {
+            this.registerClearPropertyResolver(resolver, type);
+        };
+        /**
+  * @ngdoc method
+  * @name umbraco.services.clipboardService#registerClearPropertyResolver
+  * @methodOf umbraco.services.clipboardService
+  *
+  * @param {method} function A method executed for every property and inner properties copied. Notice the method both needs to deal with retriving a property object {alias:..editor:..value:... ,...} and the raw property value as if the property is an inner property of a nested property.
+  * @param {string} string A string representing the property type format for this resolver to execute for.
+  *
+  * @description
+  * Executed for all properties of given type when performing a copy action.
+  */
+        service.registerClearPropertyResolver = function (resolver, type) {
+            type = type || 'raw';
+            if (!clearPropertyResolvers[type]) {
+                clearPropertyResolvers[type] = [];
+            }
+            clearPropertyResolvers[type].push(resolver);
+        };
+        /**
+  * @ngdoc method
+  * @name umbraco.services.clipboardService#registerPastePropertyResolver
+  * @methodOf umbraco.services.clipboardService
+  *
+  * @param {method} function A method executed for every property and inner properties copied. Notice the method both needs to deal with retriving a property object {alias:..editor:..value:... ,...} and the raw property value as if the property is an inner property of a nested property.
+  * @param {string} string A string representing the property type format for this resolver to execute for.
+  *
+  * @description
+  * Executed for all properties of given type when performing a paste action.
+  */
+        service.registerPastePropertyResolver = function (resolver, type) {
+            type = type || 'raw';
+            if (!pastePropertyResolvers[type]) {
+                pastePropertyResolvers[type] = [];
+            }
+            pastePropertyResolvers[type].push(resolver);
+        };
+        /**
+  * @ngdoc method
+  * @name umbraco.services.clipboardService#registrerTypeResolvers
+  * @methodOf umbraco.services.clipboardService
+  *
+  * @param {method} function A method for to execute resolvers for each properties of the specific type.
+  * @param {string} string A string representing the content type format for this resolver to execute for.
+  *
+  * @description
+  * Executed for all properties including inner properties when performing a paste action.
+  */
+        service.registrerTypeResolvers = function (resolver, type) {
+            if (!clipboardTypeResolvers[type]) {
+                clipboardTypeResolvers[type] = [];
+            }
+            clipboardTypeResolvers[type].push(resolver);
         };
         /**
   * @ngdoc method
@@ -979,9 +2001,10 @@
                 unique: uniqueKey,
                 type: type,
                 alias: alias,
-                data: prepareEntryForStorage(data, firstLevelClearupMethod),
+                data: prepareEntryForStorage(type, data, firstLevelClearupMethod),
                 label: displayLabel,
-                icon: displayIcon
+                icon: displayIcon,
+                date: Date.now()
             };
             storage.entries.push(entry);
             if (saveStorage(storage) === true) {
@@ -1007,10 +2030,13 @@
   * Saves a single JS-object with a type and alias to the clipboard.
   */
         service.copyArray = function (type, aliases, datas, displayLabel, displayIcon, uniqueKey, firstLevelClearupMethod) {
+            if (type === 'elementTypeArray') {
+                type = 'elementType';
+            }
             var storage = retriveStorage();
             // Clean up each entry
             var copiedDatas = datas.map(function (data) {
-                return prepareEntryForStorage(data, firstLevelClearupMethod);
+                return prepareEntryForStorage(type, data, firstLevelClearupMethod);
             });
             // remove previous copies of this entry:
             storage.entries = storage.entries.filter(function (entry) {
@@ -1022,7 +2048,8 @@
                 aliases: aliases,
                 data: copiedDatas,
                 label: displayLabel,
-                icon: displayIcon
+                icon: displayIcon,
+                date: Date.now()
             };
             storage.entries.push(entry);
             if (saveStorage(storage) === true) {
@@ -1066,7 +2093,7 @@
   *
   * @param {string} type A string defining the type of data to recive.
   * @param {string} aliases A array of strings providing the alias of the data you want to recive.
-  * 
+  *
   * @description
   * Returns an array of entries matching the given type and one of the provided aliases.
   */
@@ -1085,7 +2112,7 @@
   *
   * @param {string} type A string defining the type of data to recive.
   * @param {string} aliases A array of strings providing the alias of the data you want to recive.
-  * 
+  *
   * @description
   * Returns an array of data of entries matching the given type and one of the provided aliases.
   */
@@ -1101,7 +2128,7 @@
   *
   * @param {string} type A string defining the type of data to remove.
   * @param {string} aliases A array of strings providing the alias of the data you want to remove.
-  * 
+  *
   * @description
   * Removes entries matching the given type and one of the provided aliases.
   */
@@ -1118,6 +2145,44 @@
     }
     angular.module('umbraco.services').factory('clipboardService', clipboardService);
     'use strict';
+    function _slicedToArray(arr, i) {
+        return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();
+    }
+    function _nonIterableRest() {
+        throw new TypeError('Invalid attempt to destructure non-iterable instance');
+    }
+    function _iterableToArrayLimit(arr, i) {
+        if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === '[object Arguments]')) {
+            return;
+        }
+        var _arr = [];
+        var _n = true;
+        var _d = false;
+        var _e = undefined;
+        try {
+            for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+                _arr.push(_s.value);
+                if (i && _arr.length === i)
+                    break;
+            }
+        } catch (err) {
+            _d = true;
+            _e = err;
+        } finally {
+            try {
+                if (!_n && _i['return'] != null)
+                    _i['return']();
+            } finally {
+                if (_d)
+                    throw _e;
+            }
+        }
+        return _arr;
+    }
+    function _arrayWithHoles(arr) {
+        if (Array.isArray(arr))
+            return arr;
+    }
     /**
 * @ngdoc service
 * @name umbraco.services.contentEditingHelper
@@ -1127,7 +2192,7 @@
     function contentEditingHelper(fileManager, $q, $location, $routeParams, editorState, notificationsService, navigationService, localizationService, serverValidationManager, formHelper) {
         function isValidIdentifier(id) {
             //empty id <= 0
-            if (angular.isNumber(id)) {
+            if (Utilities.isNumber(id)) {
                 if (id === 0) {
                     return false;
                 }
@@ -1145,12 +2210,30 @@
             }
             return true;
         }
+        function showNotificationsForModelsState(ms) {
+            for (var _i = 0, _Object$entries = Object.entries(ms); _i < _Object$entries.length; _i++) {
+                var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 2), key = _Object$entries$_i[0], value = _Object$entries$_i[1];
+                var errorMsg = value[0];
+                // if the error message is json it's a complex editor validation response that we need to parse
+                if (Utilities.isString(errorMsg) && errorMsg.startsWith('[') || Utilities.isArray(errorMsg)) {
+                    // flatten the json structure, create validation paths for each property and add each as a property error
+                    var idsToErrors = serverValidationManager.parseComplexEditorError(errorMsg, '');
+                    idsToErrors.forEach(function (x) {
+                        if (x.modelState) {
+                            showNotificationsForModelsState(x.modelState);
+                        }
+                    });
+                } else if (value[0]) {
+                    notificationsService.error('Validation', value[0]);
+                }
+            }
+        }
         return {
             //TODO: We need to move some of this to formHelper for saving, too many editors use this method for saving when this entire
             //service should only be used for content/media/members
             /** Used by the content editor and mini content editor to perform saving operations */
             contentEditorPerformSave: function contentEditorPerformSave(args) {
-                if (!angular.isObject(args)) {
+                if (!Utilities.isObject(args)) {
                     throw 'args must be an object';
                 }
                 if (!args.scope) {
@@ -1203,6 +2286,10 @@
                         }
                         return $q.resolve(data);
                     }, function (err) {
+                        formHelper.resetForm({
+                            scope: args.scope,
+                            hasErrors: true
+                        });
                         self.handleSaveError({
                             showNotifications: args.showNotifications,
                             softRedirect: args.softRedirect,
@@ -1249,7 +2336,7 @@
     The content.allowedActions parameter contains a list of chars, each represents a button by permission so
     here we'll build the buttons according to the chars of the user. */
             configureContentEditorButtons: function configureContentEditorButtons(args) {
-                if (!angular.isObject(args)) {
+                if (!Utilities.isObject(args)) {
                     throw 'args must be an object';
                 }
                 if (!args.content) {
@@ -1417,9 +2504,11 @@
      *
      * @description
      * Returns a id for the variant that is unique between all variants on the content
+     * Note "invariant" is used for the invariant culture,
+     * "null" is used for the NULL segment
      */
             buildCompositeVariantId: function buildCompositeVariantId(variant) {
-                return (variant.language ? variant.language.culture : 'invariant') + '_' + (variant.segment ? variant.segment : '');
+                return (variant.language ? variant.language.culture : 'invariant') + '_' + (variant.segment ? variant.segment : 'null');
             },
             /**
      * @ngdoc method
@@ -1657,9 +2746,7 @@
                         formHelper.handleServerValidation(args.err.data.ModelState);
                         //add model state errors to notifications
                         if (args.showNotifications) {
-                            for (var e in args.err.data.ModelState) {
-                                notificationsService.error('Validation', args.err.data.ModelState[e][0]);
-                            }
+                            showNotificationsForModelsState(args.err.data.ModelState);
                         }
                         if (!this.redirectToCreatedContent(args.err.data.id, args.softRedirect) || args.softRedirect) {
                             // If we are not redirecting it's because this is not newly created content, else in some cases we are
@@ -1727,7 +2814,10 @@
                     // but we need to remove everything after the query so that it is just:
                     // /belle/#/content/edit/9876 (where 9876 is the new id)
                     //clear the query strings
-                    navigationService.clearSearch(['cculture']);
+                    navigationService.clearSearch([
+                        'cculture',
+                        'csegment'
+                    ]);
                     if (softRedirect) {
                         navigationService.setSoftRedirect();
                     }
@@ -1774,7 +2864,7 @@
             createIdArray: function createIdArray(array) {
                 var newArray = [];
                 angular.forEach(array, function (arrayItem) {
-                    if (angular.isObject(arrayItem)) {
+                    if (Utilities.isObject(arrayItem)) {
                         newArray.push(arrayItem.id);
                     } else {
                         newArray.push(arrayItem);
@@ -1898,7 +2988,7 @@
                             // get sort order from composition
                             contentTypeGroup.sortOrder = compositionGroup.sortOrder;
                             // splice group to the top of the array
-                            var contentTypeGroupCopy = angular.copy(contentTypeGroup);
+                            var contentTypeGroupCopy = Utilities.copy(contentTypeGroup);
                             var index = contentType.groups.indexOf(contentTypeGroup);
                             contentType.groups.splice(index, 1);
                             contentType.groups.unshift(contentTypeGroupCopy);
@@ -2407,6 +3497,7 @@ When building a custom infinite editor view you can use the same components as a
             var editorsKeyboardShorcuts = [];
             var editors = [];
             var isEnabled = true;
+            var lastElementInFocus = null;
             // events for backdrop
             eventsService.on('appState.backdrop', function (name, args) {
                 if (args.show === true) {
@@ -2491,6 +3582,11 @@ When building a custom infinite editor view you can use the same components as a
           when the infinite editor closes
       */
                 unbindKeyboardShortcuts();
+                // if this is the first editor layer, save the currently focused element
+                // so we can re-apply focus to it once all the editor layers are closed 
+                if (editors.length === 0) {
+                    lastElementInFocus = document.activeElement;
+                }
                 // set flag so we know when the editor is open in "infinite mode"
                 editor.infiniteMode = true;
                 editors.push(editor);
@@ -2523,6 +3619,9 @@ When building a custom infinite editor view you can use the same components as a
                 $timeout(function () {
                     // rebind keyboard shortcuts for the new editor in focus
                     rebindKeyboardShortcuts();
+                    if (editors.length === 0 && lastElementInFocus) {
+                        lastElementInFocus.focus();
+                    }
                 }, 0);
             }
             /**
@@ -2727,7 +3826,7 @@ When building a custom infinite editor view you can use the same components as a
             function rollback(editor) {
                 editor.view = 'views/common/infiniteeditors/rollback/rollback.html';
                 if (!editor.size)
-                    editor.size = 'small';
+                    editor.size = 'medium';
                 open(editor);
             }
             /**
@@ -2789,7 +3888,7 @@ When building a custom infinite editor view you can use the same components as a
             function mediaPicker(editor) {
                 editor.view = 'views/common/infiniteeditors/mediapicker/mediapicker.html';
                 if (!editor.size)
-                    editor.size = 'small';
+                    editor.size = 'medium';
                 editor.updatedMediaNodes = [];
                 open(editor);
             }
@@ -2979,7 +4078,7 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens the user group picker in infinite editing, the submit callback returns the saved template
+     * Opens the template editor in infinite editing, the submit callback returns the saved template
      * @param {Object} editor rendering options
      * @param {String} editor.id The template id
      * @param {Callback} editor.submit Submits the editor
@@ -3177,7 +4276,7 @@ When building a custom infinite editor view you can use the same components as a
      *
      */
             function unbindKeyboardShortcuts() {
-                var shortcuts = angular.copy(keyboardService.keyboardEvent);
+                var shortcuts = Utilities.copy(keyboardService.keyboardEvent);
                 editorsKeyboardShorcuts.push(shortcuts);
                 // unbind the current shortcuts because we only want to
                 // shortcuts from the newly opened editor working
@@ -3352,7 +4451,7 @@ When building a custom infinite editor view you can use the same components as a
     'use strict';
     /** Used to broadcast and listen for global events and allow the ability to add async listeners to the callbacks */
     /*
-    Core app events: 
+    Core app events:
 
     app.ready
     app.authenticated
@@ -3411,23 +4510,26 @@ When building a custom infinite editor view you can use the same components as a
      */
             setFiles: function setFiles(args) {
                 //propertyAlias, files
-                if (!angular.isString(args.propertyAlias)) {
+                if (!Utilities.isString(args.propertyAlias)) {
                     throw 'args.propertyAlias must be a non empty string';
                 }
-                if (!angular.isObject(args.files)) {
+                if (!Utilities.isObject(args.files)) {
                     throw 'args.files must be an object';
                 }
                 //normalize to null
                 if (!args.culture) {
                     args.culture = null;
                 }
+                if (!args.segment) {
+                    args.segment = null;
+                }
                 var metaData = [];
-                if (angular.isArray(args.metaData)) {
+                if (Utilities.isArray(args.metaData)) {
                     metaData = args.metaData;
                 }
-                //this will clear the files for the current property/culture and then add the new ones for the current property
+                //this will clear the files for the current property/culture/segment and then add the new ones for the current property
                 fileCollection = _.reject(fileCollection, function (item) {
-                    return item.alias === args.propertyAlias && (!args.culture || args.culture === item.culture);
+                    return item.alias === args.propertyAlias && (!args.culture || args.culture === item.culture) && (!args.segment || args.segment === item.segment);
                 });
                 for (var i = 0; i < args.files.length; i++) {
                     //save the file object to the files collection
@@ -3435,6 +4537,7 @@ When building a custom infinite editor view you can use the same components as a
                         alias: args.propertyAlias,
                         file: args.files[i],
                         culture: args.culture,
+                        segment: args.segment,
                         metaData: metaData
                     });
                 }
@@ -3557,10 +4660,10 @@ When building a custom infinite editor view you can use the same components as a
      * @function
      *
      * @description
-     * Called by controllers when submitting a form - this ensures that all client validation is checked, 
+     * Called by controllers when submitting a form - this ensures that all client validation is checked,
      * server validation is cleared, that the correct events execute and status messages are displayed.
      * This returns true if the form is valid, otherwise false if form submission cannot continue.
-     * 
+     *
      * @param {object} args An object containing arguments for form submission
      */
             submitForm: function submitForm(args) {
@@ -3582,14 +4685,25 @@ When building a custom infinite editor view you can use the same components as a
                     scope: args.scope,
                     action: args.action
                 });
+                // Some property editors need to perform an action after all property editors have reacted to the formSubmitting.
+                args.scope.$broadcast('formSubmittingFinalPhase', {
+                    scope: args.scope,
+                    action: args.action
+                });
+                // Set the form state to submitted
+                currentForm.$setSubmitted();
                 //then check if the form is valid
                 if (!args.skipValidation) {
                     if (currentForm.$invalid) {
                         return false;
                     }
                 }
-                //reset the server validations
-                serverValidationManager.reset();
+                //reset the server validations if required (default is true), otherwise notify existing ones of changes
+                if (!args.keepServerValidation) {
+                    serverValidationManager.reset();
+                } else {
+                    serverValidationManager.notify();
+                }
                 return true;
             },
             /**
@@ -3600,23 +4714,33 @@ When building a custom infinite editor view you can use the same components as a
      *
      * @description
      * Called by controllers when a form has been successfully submitted, this ensures the correct events are raised.
-     * 
+     *
      * @param {object} args An object containing arguments for form submission
      */
             resetForm: function resetForm(args) {
+                var currentForm;
                 if (!args) {
                     throw 'args cannot be null';
                 }
                 if (!args.scope) {
                     throw 'args.scope cannot be null';
                 }
-                args.scope.$broadcast('formSubmitted', { scope: args.scope });
+                if (!args.formCtrl) {
+                    //try to get the closest form controller
+                    currentForm = angularHelper.getRequiredCurrentForm(args.scope);
+                } else {
+                    currentForm = args.formCtrl;
+                }
+                // Set the form state to pristine
+                currentForm.$setPristine();
+                currentForm.$setUntouched();
+                args.scope.$broadcast(args.hasErrors ? 'formSubmittedValidationFailed' : 'formSubmitted', { scope: args.scope });
             },
             showNotifications: function showNotifications(args) {
                 if (!args || !args.notifications) {
                     return false;
                 }
-                if (angular.isArray(args.notifications)) {
+                if (Utilities.isArray(args.notifications)) {
                     for (var i = 0; i < args.notifications.length; i++) {
                         notificationsService.showNotification(args.notifications[i]);
                     }
@@ -3633,7 +4757,7 @@ When building a custom infinite editor view you can use the same components as a
      * @description
      * Needs to be called when a form submission fails, this will wire up all server validation errors in ModelState and
      * add the correct messages to the notifications. If a server error has occurred this will show a ysod.
-     * 
+     *
      * @param {object} err The error object returned from the http promise
      */
             handleError: function handleError(err) {
@@ -3664,52 +4788,11 @@ When building a custom infinite editor view you can use the same components as a
      *
      * @description
      * This wires up all of the server validation model state so that valServer and valServerField directives work
-     * 
+     *
      * @param {object} err The error object returned from the http promise
      */
             handleServerValidation: function handleServerValidation(modelState) {
-                for (var e in modelState) {
-                    //This is where things get interesting....
-                    // We need to support validation for all editor types such as both the content and content type editors.
-                    // The Content editor ModelState is quite specific with the way that Properties are validated especially considering
-                    // that each property is a User Developer property editor.
-                    // The way that Content Type Editor ModelState is created is simply based on the ASP.Net validation data-annotations 
-                    // system. 
-                    // So, to do this there's some special ModelState syntax we need to know about.
-                    // For Content Properties, which are user defined, we know that they will exist with a prefixed
-                    // ModelState of "_Properties.", so if we detect this, then we know it's for a content Property.
-                    //the alias in model state can be in dot notation which indicates
-                    // * the first part is the content property alias
-                    // * the second part is the field to which the valiation msg is associated with
-                    //There will always be at least 3 parts for content properties since all model errors for properties are prefixed with "_Properties"
-                    //If it is not prefixed with "_Properties" that means the error is for a field of the object directly.
-                    var parts = e.split('.');
-                    //Check if this is for content properties - specific to content/media/member editors because those are special 
-                    // user defined properties with custom controls.
-                    if (parts.length > 1 && parts[0] === '_Properties') {
-                        var propertyAlias = parts[1];
-                        var culture = null;
-                        if (parts.length > 2) {
-                            culture = parts[2];
-                            //special check in case the string is formatted this way
-                            if (culture === 'null') {
-                                culture = null;
-                            }
-                        }
-                        //if it contains 3 '.' then we will wire it up to a property's html field
-                        if (parts.length > 3) {
-                            //add an error with a reference to the field for which the validation belongs too
-                            serverValidationManager.addPropertyError(propertyAlias, culture, parts[3], modelState[e][0]);
-                        } else {
-                            //add a generic error for the property, no reference to a specific html field
-                            serverValidationManager.addPropertyError(propertyAlias, culture, '', modelState[e][0]);
-                        }
-                    } else {
-                        //Everthing else is just a 'Field'... the field name could contain any level of 'parts' though, for example:
-                        // Groups[0].Properties[2].Alias
-                        serverValidationManager.addFieldError(e, modelState[e][0]);
-                    }
-                }
+                serverValidationManager.addErrorsForModelState(modelState);
             }
         };
     }
@@ -4924,13 +6007,13 @@ When building a custom infinite editor view you can use the same components as a
             function clearSelection(items, folders, selection) {
                 var i = 0;
                 selection.length = 0;
-                if (angular.isArray(items)) {
+                if (Utilities.isArray(items)) {
                     for (i = 0; items.length > i; i++) {
                         var item = items[i];
                         item.selected = false;
                     }
                 }
-                if (angular.isArray(folders)) {
+                if (Utilities.isArray(folders)) {
                     for (i = 0; folders.length > i; i++) {
                         var folder = folders[i];
                         folder.selected = false;
@@ -4953,7 +6036,7 @@ When building a custom infinite editor view you can use the same components as a
             function selectAllItems(items, selection, $event) {
                 var checkbox = $event.target;
                 var clearSelection = false;
-                if (!angular.isArray(items)) {
+                if (!Utilities.isArray(items)) {
                     return;
                 }
                 selection.length = 0;
@@ -4986,7 +6069,7 @@ When building a custom infinite editor view you can use the same components as a
     * @param {Array} selection Listview selection, available as $scope.selection
     */
             function selectAllItemsToggle(items, selection) {
-                if (!angular.isArray(items)) {
+                if (!Utilities.isArray(items)) {
                     return;
                 }
                 if (isSelectedAll(items, selection)) {
@@ -5257,6 +6340,7 @@ When building a custom infinite editor view you can use the same components as a
         var service = {
             // loads the language resource file from the server
             initLocalizedResources: function initLocalizedResources() {
+                // TODO: This promise handling is super ugly, we should just be returnning the promise from $http and returning inner values. 
                 var deferred = $q.defer();
                 if (resourceFileLoadStatus === 'loaded') {
                     deferred.resolve(innerDictionary);
@@ -5547,11 +6631,11 @@ When building a custom infinite editor view you can use the same components as a
                         val = val ? val : '';
                         //need to detect if the val is a string or an object
                         var keyVal;
-                        if (angular.isString(val)) {
+                        if (Utilities.isString(val)) {
                             keyVal = key + '="' + (val ? val : '') + '" ';
                         } else {
                             //if it's not a string we'll send it through the json serializer
-                            var json = angular.toJson(val);
+                            var json = Utilities.toJson(val);
                             //then we need to url encode it so that it's safe
                             var encoded = encodeURIComponent(json);
                             keyVal = key + '="' + encoded + '" ';
@@ -5605,7 +6689,7 @@ When building a custom infinite editor view you can use the same components as a
                     var val = item.value;
                     if (item.value !== null && item.value !== undefined && !_.isString(item.value)) {
                         try {
-                            val = angular.toJson(val);
+                            val = Utilities.toJson(val);
                         } catch (e) {
                         }
                     }
@@ -5677,7 +6761,7 @@ When building a custom infinite editor view you can use the same components as a
                     }
                     //this performs a simple check to see if we have a media file as value
                     //it doesnt catch everything, but better then nothing
-                    if (angular.isString(item.value) && item.value.indexOf(mediaRoot) === 0) {
+                    if (Utilities.isString(item.value) && item.value.indexOf(mediaRoot) === 0) {
                         return true;
                     }
                     return false;
@@ -5763,7 +6847,7 @@ When building a custom infinite editor view you can use the same components as a
      * @param {boolean} thumbnail Whether to return the thumbnail url or normal url
      */
             resolveFileFromEntity: function resolveFileFromEntity(mediaEntity, thumbnail) {
-                var mediaPath = angular.isObject(mediaEntity.metaData) ? mediaEntity.metaData.MediaPath : null;
+                var mediaPath = Utilities.isObject(mediaEntity.metaData) ? mediaEntity.metaData.MediaPath : null;
                 if (!mediaPath) {
                     //don't throw since this image legitimately might not contain a media path, but output a warning
                     $log.warn('Cannot resolve the file url from the mediaEntity, it does not contain the required metaData');
@@ -6173,7 +7257,7 @@ When building a custom infinite editor view you can use the same components as a
  * Section navigation and search, and maintain their state for the entire application lifetime
  *
  */
-    function navigationService($routeParams, $location, $q, $injector, eventsService, umbModelMapper, treeService, appState) {
+    function navigationService($routeParams, $location, $q, $injector, eventsService, umbModelMapper, treeService, appState, backdropService) {
         //the promise that will be resolved when the navigation is ready
         var navReadyPromise = $q.defer();
         //the main tree's API reference, this is acquired when the tree has initialized
@@ -6182,10 +7266,15 @@ When building a custom infinite editor view you can use the same components as a
             mainTreeApi = args.treeApi;
             navReadyPromise.resolve(mainTreeApi);
         });
+        eventsService.on('appState.backdrop', function (e, args) {
+            var element = $(args.element);
+            element.addClass('above-backdrop');
+        });
         //A list of query strings defined that when changed will not cause a reload of the route
         var nonRoutingQueryStrings = [
             'mculture',
             'cculture',
+            'csegment',
             'lq',
             'sr'
         ];
@@ -6243,7 +7332,7 @@ When building a custom infinite editor view you can use the same components as a
    * @param {any} requestPath
    */
         function pathToRouteParts(requestPath) {
-            if (!angular.isString(requestPath)) {
+            if (!Utilities.isString(requestPath)) {
                 throw 'The value for requestPath is not a string';
             }
             var pathAndQuery = requestPath.split('#')[1];
@@ -6265,6 +7354,15 @@ When building a custom infinite editor view you can use the same components as a
                 return result;
             }
         }
+        function closeBackdrop() {
+            var aboveClass = 'above-backdrop';
+            var leftColumn = $('#leftcolumn');
+            var isLeftColumnOnTop = leftColumn.hasClass(aboveClass);
+            if (isLeftColumnOnTop) {
+                backdropService.close();
+                leftColumn.removeClass(aboveClass);
+            }
+        }
         var service = {
             /**
      * @ngdoc method
@@ -6280,10 +7378,10 @@ When building a custom infinite editor view you can use the same components as a
      * @param {object} nextUrlParams Either a string path or a dictionary of route parameters
      */
             isRouteChangingNavigation: function isRouteChangingNavigation(currUrlParams, nextUrlParams) {
-                if (angular.isString(currUrlParams)) {
+                if (Utilities.isString(currUrlParams)) {
                     currUrlParams = pathToRouteParts(currUrlParams);
                 }
-                if (angular.isString(nextUrlParams)) {
+                if (Utilities.isString(nextUrlParams)) {
                     nextUrlParams = pathToRouteParts(nextUrlParams);
                 }
                 //check if there is a query string to indicate that a "soft redirect" is taking place, if so we are not changing navigation
@@ -6363,7 +7461,7 @@ When building a custom infinite editor view you can use the same components as a
      * @param {Object} nextRouteParams The next route parameters
      */
             retainQueryStrings: function retainQueryStrings(currRouteParams, nextRouteParams) {
-                var toRetain = angular.copy(nextRouteParams);
+                var toRetain = Utilities.copy(nextRouteParams);
                 var updated = false;
                 _.each(retainedQueryStrings, function (r) {
                     // if mculture is set to null in nextRouteParams, the value will be undefined and we will not retain any query string that has a value of "null"
@@ -6531,7 +7629,9 @@ When building a custom infinite editor view you can use the same components as a
      */
             showMenu: function showMenu(args) {
                 var self = this;
+                var backDropOptions = { 'element': $('#leftcolumn')[0] };
                 return treeService.getMenu({ treeNode: args.node }).then(function (data) {
+                    backdropService.open(backDropOptions);
                     //check for a default
                     //NOTE: event will be undefined when a call to hideDialog is made so it won't re-load the default again.
                     // but perhaps there's a better way to deal with with an additional parameter in the args ? it works though.
@@ -6571,6 +7671,7 @@ When building a custom infinite editor view you can use the same components as a
                 appState.setMenuState('currentNode', null);
                 appState.setMenuState('menuActions', []);
                 setMode('tree');
+                closeBackdrop();
             },
             /** Executes a given menu action */
             executeMenuAction: function executeMenuAction(action, node, section) {
@@ -6584,13 +7685,13 @@ When building a custom infinite editor view you can use the same components as a
                     throw 'section cannot be null';
                 }
                 appState.setMenuState('currentNode', node);
-                if (action.metaData && action.metaData['actionRoute'] && angular.isString(action.metaData['actionRoute'])) {
+                if (action.metaData && action.metaData['actionRoute'] && Utilities.isString(action.metaData['actionRoute'])) {
                     //first check if the menu item simply navigates to a route
                     var parts = action.metaData['actionRoute'].split('?');
                     $location.path(parts[0]).search(parts.length > 1 ? parts[1] : '');
                     this.hideNavigation();
                     return;
-                } else if (action.metaData && action.metaData['jsAction'] && angular.isString(action.metaData['jsAction'])) {
+                } else if (action.metaData && action.metaData['jsAction'] && Utilities.isString(action.metaData['jsAction'])) {
                     //we'll try to get the jsAction from the injector
                     var menuAction = action.metaData['jsAction'].split('.');
                     if (menuAction.length !== 2) {
@@ -6664,24 +7765,37 @@ When building a custom infinite editor view you can use the same components as a
                 if (args.action.metaData['actionView']) {
                     templateUrl = args.action.metaData['actionView'];
                 } else {
-                    //by convention we will look into the /views/{treetype}/{action}.html
-                    // for example: /views/content/create.html
-                    //we will also check for a 'packageName' for the current tree, if it exists then the convention will be:
-                    // for example: /App_Plugins/{mypackage}/backoffice/{treetype}/create.html
                     var treeAlias = treeService.getTreeAlias(args.node);
-                    var packageTreeFolder = treeService.getTreePackageFolder(treeAlias);
                     if (!treeAlias) {
                         throw 'Could not get tree alias for node ' + args.node.id;
                     }
-                    if (packageTreeFolder) {
-                        templateUrl = Umbraco.Sys.ServerVariables.umbracoSettings.appPluginsPath + '/' + packageTreeFolder + '/backoffice/' + treeAlias + '/' + args.action.alias + '.html';
-                    } else {
-                        templateUrl = 'views/' + treeAlias + '/' + args.action.alias + '.html';
-                    }
+                    templateUrl = this.getTreeTemplateUrl(treeAlias, args.action.alias);
                 }
                 setMode('dialog');
                 if (templateUrl) {
                     appState.setMenuState('dialogTemplateUrl', templateUrl);
+                }
+            },
+            /**
+      * @ngdoc method
+      * @name umbraco.services.navigationService#getTreeTemplateUrl
+      * @methodOf umbraco.services.navigationService
+      *
+      * @param {string} treeAlias the alias of the tree to look up
+      * @param {string} action the view file name
+      * @description
+      * creates the templateUrl based on treeAlias and action
+      * by convention we will look into the /views/{treetype}/{action}.html
+      * for example: /views/content/create.html
+      * we will also check for a 'packageName' for the current tree, if it exists then the convention will be:
+      * for example: /App_Plugins/{mypackage}/backoffice/{treetype}/create.html
+      */
+            getTreeTemplateUrl: function getTreeTemplateUrl(treeAlias, action) {
+                var packageTreeFolder = treeService.getTreePackageFolder(treeAlias);
+                if (packageTreeFolder) {
+                    return Umbraco.Sys.ServerVariables.umbracoSettings.appPluginsPath + '/' + packageTreeFolder + '/backoffice/' + treeAlias + '/' + action + '.html';
+                } else {
+                    return 'views/' + treeAlias + '/' + action + '.html';
                 }
             },
             /**
@@ -6717,6 +7831,7 @@ When building a custom infinite editor view you can use the same components as a
                         node: appState.getMenuState('currentNode')
                     });
                 } else {
+                    closeBackdrop();
                     setMode('default');
                 }
             },
@@ -6752,6 +7867,7 @@ When building a custom infinite editor view you can use the same components as a
       */
             hideNavigation: function hideNavigation() {
                 appState.setMenuState('menuActions', []);
+                closeBackdrop();
                 setMode('default');
             }
         };
@@ -6806,6 +7922,7 @@ When building a custom infinite editor view you can use the same components as a
     * @param {String} item.message longer text for the notication, trimmed after 200 characters, which can then be exanded
     * @param {String} item.type Notification type, can be: "success","warning","error" or "info" 
     * @param {String} item.url url to open when notification is clicked
+    * @param {String} item.target the target used together with `url`. Empty if not specified.
     * @param {String} item.view path to custom view to load into the notification box
     * @param {Array} item.actions Collection of button actions to append (label, func, cssClass)
     * @param {Boolean} item.sticky if set to true, the notification will not auto-close
@@ -7004,7 +8121,7 @@ When building a custom infinite editor view you can use the same components as a
      * @param {Int} index index where the notication should be removed from
      */
             remove: function remove(index) {
-                if (angular.isObject(index)) {
+                if (Utilities.isObject(index)) {
                     var i = nArray.indexOf(index);
                     angularHelper.safeApply($rootScope, function () {
                         nArray.splice(i, 1);
@@ -7124,7 +8241,13 @@ When building a custom infinite editor view you can use the same components as a
                     if (!overlay.submitButtonStyle)
                         overlay.submitButtonStyle = 'danger';
                     if (!overlay.submitButtonLabelKey)
-                        overlay.submitButtonLabelKey = 'contentTypeEditor_yesDelete';
+                        overlay.submitButtonLabelKey = 'actions_delete';
+                    break;
+                case 'remove':
+                    if (!overlay.submitButtonStyle)
+                        overlay.submitButtonStyle = 'primary';
+                    if (!overlay.submitButtonLabelKey)
+                        overlay.submitButtonLabelKey = 'actions_remove';
                     break;
                 default:
                     if (!overlay.submitButtonLabelKey)
@@ -7136,12 +8259,17 @@ When building a custom infinite editor view you can use the same components as a
                 overlay.confirmType = 'delete';
                 confirm(overlay);
             }
+            function confirmRemove(overlay) {
+                overlay.confirmType = 'remove';
+                confirm(overlay);
+            }
             var service = {
                 open: open,
                 close: _close,
                 ysod: ysod,
                 confirm: confirm,
-                confirmDelete: confirmDelete
+                confirmDelete: confirmDelete,
+                confirmRemove: confirmRemove
             };
             return service;
         }
@@ -7490,6 +8618,44 @@ When building a custom infinite editor view you can use the same components as a
         angular.module('umbraco.services').factory('sectionService', sectionService);
     }());
     'use strict';
+    function _slicedToArray(arr, i) {
+        return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();
+    }
+    function _nonIterableRest() {
+        throw new TypeError('Invalid attempt to destructure non-iterable instance');
+    }
+    function _iterableToArrayLimit(arr, i) {
+        if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === '[object Arguments]')) {
+            return;
+        }
+        var _arr = [];
+        var _n = true;
+        var _d = false;
+        var _e = undefined;
+        try {
+            for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+                _arr.push(_s.value);
+                if (i && _arr.length === i)
+                    break;
+            }
+        } catch (err) {
+            _d = true;
+            _e = err;
+        } finally {
+            try {
+                if (!_n && _i['return'] != null)
+                    _i['return']();
+            } finally {
+                if (_d)
+                    throw _e;
+            }
+        }
+        return _arr;
+    }
+    function _arrayWithHoles(arr) {
+        if (Array.isArray(arr))
+            return arr;
+    }
     /**
  * @ngdoc service
  * @name umbraco.services.serverValidationManager
@@ -7499,78 +8665,518 @@ When building a custom infinite editor view you can use the same components as a
  * Used to handle server side validation and wires up the UI with the messages. There are 2 types of validation messages, one
  * is for user defined properties (called Properties) and the other is for field properties which are attached to the native 
  * model objects (not user defined). The methods below are named according to these rules: Properties vs Fields.
+ * 
+ * For a more indepth explanation of how server side validation works with the angular app, see this GitHub PR: 
+ * https://github.com/umbraco/Umbraco-CMS/pull/8339
+ * 
  */
     function serverValidationManager($timeout) {
+        // The array of callback objects, each object is:
+        // - propertyAlias (this is the property's 'path' if it's a nested error)
+        // - culture
+        // - fieldName
+        // - segment
+        // - callback (function)
+        // - id (unique identifier, auto-generated, used internally for unsubscribing the callback)
+        // - options (used for complex properties, can contain options.matchType which can be either "suffix" or "prefix" or "contains")
         var callbacks = [];
+        // The array of error message objects, each object 'key' is:    
+        // - propertyAlias (this is the property's 'path' if it's a nested error)
+        // - culture
+        // - fieldName
+        // - segment
+        // The object also contains:
+        // - errorMsg
+        var errorMsgItems = [];
+        var defaultMatchOptions = { matchType: null };
         /** calls the callback specified with the errors specified, used internally */
-        function executeCallback(self, errorsForCallback, callback, culture) {
-            callback.apply(self, [
-                false,
+        function executeCallback(errorsForCallback, callback, culture, segment, isValid) {
+            callback.apply(instance, [
+                isValid,
                 // pass in a value indicating it is invalid
                 errorsForCallback,
                 // pass in the errors for this item
-                self.items,
+                errorMsgItems,
                 // pass in all errors in total
-                culture    // pass the culture that we are listing for.
+                culture,
+                // pass the culture that we are listing for.
+                segment    // pass the segment that we are listing for.
             ]);
         }
-        function getFieldErrors(self, fieldName) {
-            if (!angular.isString(fieldName)) {
+        /**
+   * @ngdoc function
+   * @name notify
+   * @methodOf umbraco.services.serverValidationManager
+   * @function
+   *
+   * @description
+   * Notifies all subscriptions again. Called when there are changes to subscriptions or errors. 
+   */
+        function notify() {
+            $timeout(function () {
+                for (var i = 0; i < errorMsgItems.length; i++) {
+                    var item = errorMsgItems[i];
+                }
+                notifyCallbacks();
+            });
+        }
+        function getFieldErrors(fieldName) {
+            if (!Utilities.isString(fieldName)) {
                 throw 'fieldName must be a string';
             }
             //find errors for this field name
-            return _.filter(self.items, function (item) {
+            return _.filter(errorMsgItems, function (item) {
                 return item.propertyAlias === null && item.culture === 'invariant' && item.fieldName === fieldName;
             });
         }
-        function getPropertyErrors(self, propertyAlias, culture, fieldName) {
-            if (!angular.isString(propertyAlias)) {
+        function getPropertyErrors(propertyAlias, culture, segment, fieldName, options) {
+            if (!Utilities.isString(propertyAlias)) {
                 throw 'propertyAlias must be a string';
             }
-            if (fieldName && !angular.isString(fieldName)) {
+            if (fieldName && !Utilities.isString(fieldName)) {
                 throw 'fieldName must be a string';
             }
             if (!culture) {
                 culture = 'invariant';
             }
+            if (!segment) {
+                segment = null;
+            }
+            if (!options) {
+                options = defaultMatchOptions;
+            }
             //find all errors for this property
-            return _.filter(self.items, function (item) {
-                return item.propertyAlias === propertyAlias && item.culture === culture && (item.fieldName === fieldName || fieldName === undefined || fieldName === '');
+            return _.filter(errorMsgItems, function (errMsgItem) {
+                if (!errMsgItem.propertyAlias) {
+                    return false;
+                }
+                var matchProp = matchErrMsgItemProperty(errMsgItem, propertyAlias, options);
+                return matchProp && errMsgItem.culture === culture && errMsgItem.segment === segment    // ignore field matching if match options are used
+&& (options.matchType || errMsgItem.fieldName === fieldName || fieldName === undefined || fieldName === '');
             });
         }
-        function getCultureErrors(self, culture) {
+        /**
+   * Returns true if the error message item's data matches the property validation key with a match type provided by the options
+   * @param {any} errMsgItem The error message item
+   * @param {any} propertyValidationKey The property validation key) 
+   * @param {any} options The match type options
+   */
+        function matchErrMsgItemProperty(errMsgItem, propertyValidationKey, options) {
+            if (errMsgItem.propertyAlias === propertyValidationKey) {
+                return true;
+            }
+            if (options.matchType === 'prefix' && errMsgItem.propertyAlias.startsWith(propertyValidationKey + '/')) {
+                return true;
+            }
+            if (options.matchType === 'suffix' && errMsgItem.propertyAlias.endsWith('/' + propertyValidationKey)) {
+                return true;
+            }
+            if (options.matchType === 'contains' && errMsgItem.propertyAlias.includes('/' + propertyValidationKey + '/')) {
+                return true;
+            }
+            return false;
+        }
+        function getVariantErrors(culture, segment) {
             if (!culture) {
                 culture = 'invariant';
             }
+            if (!segment) {
+                segment = null;
+            }
             //find all errors for this property
-            return _.filter(self.items, function (item) {
-                return item.culture === culture;
+            return _.filter(errorMsgItems, function (item) {
+                return item.culture === culture && item.segment === segment;
             });
         }
-        function notifyCallbacks(self) {
-            for (var cb in callbacks) {
-                if (callbacks[cb].propertyAlias === null && callbacks[cb].fieldName !== null) {
-                    //its a field error callback
-                    var fieldErrors = getFieldErrors(self, callbacks[cb].fieldName);
-                    if (fieldErrors.length > 0) {
-                        executeCallback(self, fieldErrors, callbacks[cb].callback, callbacks[cb].culture);
+        function notifyCallback(cb) {
+            if (cb.propertyAlias === null && cb.fieldName !== null) {
+                //its a field error callback
+                var fieldErrors = getFieldErrors(cb.fieldName);
+                var valid = fieldErrors.length === 0;
+                executeCallback(fieldErrors, cb.callback, cb.culture, cb.segment, valid);
+            } else if (cb.propertyAlias != null) {
+                //its a property error
+                var propErrors = getPropertyErrors(cb.propertyAlias, cb.culture, cb.segment, cb.fieldName, cb.options);
+                var _valid = propErrors.length === 0;
+                executeCallback(propErrors, cb.callback, cb.culture, cb.segment, _valid);
+            } else {
+                //its a variant error
+                var variantErrors = getVariantErrors(cb.culture, cb.segment);
+                var _valid2 = variantErrors.length === 0;
+                executeCallback(variantErrors, cb.callback, cb.culture, cb.segment, _valid2);
+            }
+        }
+        /** Call all registered callbacks indicating if the data they are subscribed to is valid or invalid */
+        function notifyCallbacks() {
+            // nothing to call
+            if (errorMsgItems.length === 0) {
+                return;
+            }
+            callbacks.forEach(function (cb) {
+                return notifyCallback(cb);
+            });
+        }
+        /**
+   * Flattens the complex errror result json into an array of the block's id/parent id and it's corresponding validation ModelState
+   * @param {any} errorMsg
+   * @param {any} parentPropertyAlias The parent property alias for the json error 
+   */
+        function parseComplexEditorError(errorMsg, parentPropertyAlias) {
+            var json = Utilities.isArray(errorMsg) ? errorMsg : JSON.parse(errorMsg);
+            var result = [];
+            function extractModelState(validation, parentPath) {
+                if (validation.$id && validation.ModelState) {
+                    var ms = {
+                        validationPath: ''.concat(parentPath, '/').concat(validation.$id),
+                        modelState: validation.ModelState
+                    };
+                    result.push(ms);
+                    return ms;
+                }
+                return null;
+            }
+            function iterateErrorBlocks(blocks, parentPath) {
+                for (var i = 0; i < blocks.length; i++) {
+                    var validation = blocks[i];
+                    var ms = extractModelState(validation, parentPath);
+                    if (!ms) {
+                        continue;
                     }
-                } else if (callbacks[cb].propertyAlias != null) {
-                    //its a property error
-                    var propErrors = getPropertyErrors(self, callbacks[cb].propertyAlias, callbacks[cb].culture, callbacks[cb].fieldName);
-                    if (propErrors.length > 0) {
-                        executeCallback(self, propErrors, callbacks[cb].callback, callbacks[cb].culture);
-                    }
-                } else {
-                    //its a culture error
-                    var cultureErrors = getCultureErrors(self, callbacks[cb].culture);
-                    if (cultureErrors.length > 0) {
-                        executeCallback(self, cultureErrors, callbacks[cb].callback, callbacks[cb].culture);
+                    var nested = _.omit(validation, '$id', '$elementTypeAlias', 'ModelState');
+                    for (var _i = 0, _Object$entries = Object.entries(nested); _i < _Object$entries.length; _i++) {
+                        var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 2), key = _Object$entries$_i[0], value = _Object$entries$_i[1];
+                        if (Array.isArray(value)) {
+                            iterateErrorBlocks(value, ''.concat(ms.validationPath, '/').concat(key));    // recurse
+                        }
                     }
                 }
             }
+            iterateErrorBlocks(json, parentPropertyAlias);
+            return result;
         }
-        return {
+        /**
+   * @ngdoc function
+   * @name getPropertyCallbacks
+   * @methodOf umbraco.services.serverValidationManager
+   * @function
+   *
+   * @description
+   * Gets all callbacks that has been registered using the subscribe method for the propertyAlias + fieldName combo.
+   * This will always return any callbacks registered for just the property (i.e. field name is empty) and for ones with an
+   * explicit field name set.
+   */
+        function getPropertyCallbacks(propertyAlias, culture, fieldName, segment) {
+            //normalize culture to "invariant"
+            if (!culture) {
+                culture = 'invariant';
+            }
+            //normalize segment to null
+            if (!segment) {
+                segment = null;
+            }
+            var found = _.filter(callbacks, function (cb) {
+                if (!cb.options) {
+                    cb.options = defaultMatchOptions;
+                }
+                var matchProp = matchCallbackItemProperty(cb, propertyAlias);
+                //returns any callback that have been registered directly against the field and for only the property
+                return matchProp && cb.culture === culture && cb.segment === segment    // ignore field matching if match options are used
+&& (cb.options.matchType || cb.fieldName === fieldName || cb.fieldName === undefined || cb.fieldName === '');
+            });
+            return found;
+        }
+        /**
+   * Returns true if the callback item's data and match options matches the property validation key 
+   * @param {any} cb
+   * @param {any} propertyValidationKey
+   */
+        function matchCallbackItemProperty(cb, propertyValidationKey) {
+            if (cb.propertyAlias === propertyValidationKey) {
+                return true;
+            }
+            if (cb.options.matchType === 'prefix' && propertyValidationKey.startsWith(cb.propertyAlias + '/')) {
+                return true;
+            }
+            if (cb.options.matchType === 'suffix' && propertyValidationKey.endsWith('/' + cb.propertyAlias)) {
+                return true;
+            }
+            if (cb.options.matchType === 'contains' && propertyValidationKey.includes('/' + cb.propertyAlias + '/')) {
+                return true;
+            }
+            return false;
+        }
+        /**
+   * @ngdoc function
+   * @name getFieldCallbacks
+   * @methodOf umbraco.services.serverValidationManager
+   * @function
+   *
+   * @description
+   * Gets all callbacks that has been registered using the subscribe method for the field.
+   */
+        function getFieldCallbacks(fieldName) {
+            var found = _.filter(callbacks, function (item) {
+                //returns any callback that have been registered directly against the field
+                return item.propertyAlias === null && item.culture === 'invariant' && item.segment === null && item.fieldName === fieldName;
+            });
+            return found;
+        }
+        /**
+   * @ngdoc function
+   * @name getVariantCallbacks
+   * @methodOf umbraco.services.serverValidationManager
+   * @function
+   *
+   * @description
+   * Gets all callbacks that has been registered using the subscribe method for the culture and segment.
+   */
+        function getVariantCallbacks(culture, segment) {
+            var found = _.filter(callbacks, function (item) {
+                //returns any callback that have been registered directly against the given culture and given segment.
+                return item.culture === culture && item.segment === segment && item.propertyAlias === null && item.fieldName === null;
+            });
+            return found;
+        }
+        /**
+   * @ngdoc function
+   * @name addFieldError
+   * @methodOf umbraco.services.serverValidationManager
+   * @function
+   *
+   * @description
+   * Adds an error message for a native content item field (not a user defined property, for Example, 'Name')
+   */
+        function addFieldError(fieldName, errorMsg) {
+            if (!fieldName) {
+                return;
+            }
+            //only add the item if it doesn't exist                
+            if (!hasFieldError(fieldName)) {
+                errorMsgItems.push({
+                    propertyAlias: null,
+                    culture: 'invariant',
+                    segment: null,
+                    fieldName: fieldName,
+                    errorMsg: errorMsg
+                });
+            }
+            //find all errors for this item
+            var errorsForCallback = getFieldErrors(fieldName);
+            //we should now call all of the call backs registered for this error
+            var cbs = getFieldCallbacks(fieldName);
+            //call each callback for this error
+            for (var cb in cbs) {
+                executeCallback(errorsForCallback, cbs[cb].callback, null, null, false);
+            }
+        }
+        /**
+   * @ngdoc function
+   * @name addPropertyError
+   * @methodOf umbraco.services.serverValidationManager
+   * @function
+   *
+   * @description
+   * Adds an error message for the content property
+   */
+        function _addPropertyError(propertyAlias, culture, fieldName, errorMsg, segment) {
+            if (!propertyAlias) {
+                return;
+            }
+            //normalize culture to "invariant"
+            if (!culture) {
+                culture = 'invariant';
+            }
+            //normalize segment to null
+            if (!segment) {
+                segment = null;
+            }
+            //normalize errorMsg to empty
+            if (!errorMsg) {
+                errorMsg = '';
+            }
+            // remove all non printable chars and whitespace from the string
+            // (this can be a json string for complex errors and in some test cases contains odd whitespace)
+            if (Utilities.isString(errorMsg)) {
+                errorMsg = errorMsg.trimStartSpecial().trim();
+            }
+            // if the error message is json it's a complex editor validation response that we need to parse
+            if (Utilities.isString(errorMsg) && errorMsg.startsWith('[') || Utilities.isArray(errorMsg)) {
+                // flatten the json structure, create validation paths for each property and add each as a property error
+                var idsToErrors = parseComplexEditorError(errorMsg, propertyAlias);
+                idsToErrors.forEach(function (x) {
+                    return addErrorsForModelState(x.modelState, x.validationPath);
+                });
+                // We need to clear the error message else it will show up as a giant json block against the property
+                errorMsg = '';
+            }
+            //only add the item if it doesn't exist                
+            if (!hasPropertyError(propertyAlias, culture, fieldName, segment)) {
+                errorMsgItems.push({
+                    propertyAlias: propertyAlias,
+                    culture: culture,
+                    segment: segment,
+                    fieldName: fieldName,
+                    errorMsg: errorMsg
+                });
+            }
+        }
+        /**
+   * @ngdoc function
+   * @name hasPropertyError
+   * @methodOf umbraco.services.serverValidationManager
+   * @function
+   *
+   * @description
+   * Checks if the content property + culture + field name combo has an error
+   */
+        function hasPropertyError(propertyAlias, culture, fieldName, segment) {
+            //normalize culture to null
+            if (!culture) {
+                culture = 'invariant';
+            }
+            //normalize segment to null
+            if (!segment) {
+                segment = null;
+            }
+            var err = _.find(errorMsgItems, function (item) {
+                //return true if the property alias matches and if an empty field name is specified or the field name matches
+                return item.propertyAlias === propertyAlias && item.culture === culture && item.segment === segment && (item.fieldName === fieldName || fieldName === undefined || fieldName === '');
+            });
+            return err ? true : false;
+        }
+        /**
+   * @ngdoc function
+   * @name hasFieldError
+   * @methodOf umbraco.services.serverValidationManager
+   * @function
+   *
+   * @description
+   * Checks if a content field has an error
+   */
+        function hasFieldError(fieldName) {
+            var err = _.find(errorMsgItems, function (item) {
+                //return true if the property alias matches and if an empty field name is specified or the field name matches
+                return item.propertyAlias === null && item.culture === 'invariant' && item.segment === null && item.fieldName === fieldName;
+            });
+            return err ? true : false;
+        }
+        /**
+   * @ngdoc function
+   * @name addErrorsForModelState
+   * @methodOf umbraco.services.serverValidationManager
+   * @param {any} modelState
+   * @param {any} parentValidationPath optional parameter specifying a nested element's UDI for which this property belongs (for complex editors)
+   * @description
+   * This wires up all of the server validation model state so that valServer and valServerField directives work
+   */
+        function addErrorsForModelState(modelState, parentValidationPath) {
+            if (!Utilities.isObject(modelState)) {
+                throw 'modelState is not an object';
+            }
+            for (var _i2 = 0, _Object$entries2 = Object.entries(modelState); _i2 < _Object$entries2.length; _i2++) {
+                var _Object$entries2$_i = _slicedToArray(_Object$entries2[_i2], 2), key = _Object$entries2$_i[0], value = _Object$entries2$_i[1];
+                //This is where things get interesting....
+                // We need to support validation for all editor types such as both the content and content type editors.
+                // The Content editor ModelState is quite specific with the way that Properties are validated especially considering
+                // that each property is a User Developer property editor.
+                // The way that Content Type Editor ModelState is created is simply based on the ASP.Net validation data-annotations 
+                // system. 
+                // So, to do this there's some special ModelState syntax we need to know about.
+                // For Content Properties, which are user defined, we know that they will exist with a prefixed
+                // ModelState of "_Properties.", so if we detect this, then we know it's for a content Property.
+                //the alias in model state can be in dot notation which indicates
+                // * the first part is the content property alias
+                // * the second part is the field to which the valiation msg is associated with
+                //There will always be at least 4 parts for content properties since all model errors for properties are prefixed with "_Properties"
+                //If it is not prefixed with "_Properties" that means the error is for a field of the object directly.
+                // Example: "_Properties.headerImage.en-US.mySegment.myField"
+                // * it's for a property since it has a _Properties prefix
+                // * it's for the headerImage property type
+                // * it's for the en-US culture
+                // * it's for the mySegment segment
+                // * it's for the myField html field (optional)
+                var parts = key.split('.');
+                //Check if this is for content properties - specific to content/media/member editors because those are special 
+                // user defined properties with custom controls.
+                if (parts.length > 1 && parts[0] === '_Properties') {
+                    // create the validation key, might just be the prop alias but if it's nested will be validation path
+                    // like "myBlockEditor/34E3A26C-103D-4A05-AB9D-7E14032309C3/addresses/7170A4DD-2441-4B1B-A8D3-437D75C4CBC9/city"
+                    var propertyValidationKey = createPropertyValidationKey(parts[1], parentValidationPath);
+                    var culture = null;
+                    if (parts.length > 2) {
+                        culture = parts[2];
+                        //special check in case the string is formatted this way
+                        if (culture === 'null') {
+                            culture = null;
+                        }
+                    }
+                    var segment = null;
+                    if (parts.length > 3) {
+                        segment = parts[3];
+                        //special check in case the string is formatted this way
+                        if (segment === 'null') {
+                            segment = null;
+                        }
+                    }
+                    var htmlFieldReference = '';
+                    if (parts.length > 4) {
+                        htmlFieldReference = parts[4] || '';
+                    }
+                    // add a generic error for the property
+                    _addPropertyError(propertyValidationKey, culture, htmlFieldReference, value && Array.isArray(value) && value.length > 0 ? value[0] : null, segment);
+                } else {
+                    //Everthing else is just a 'Field'... the field name could contain any level of 'parts' though, for example:
+                    // Groups[0].Properties[2].Alias
+                    addFieldError(key, value[0]);
+                }
+            }
+            if (hasPropertyError) {
+                // ensure all callbacks are called after property errors are added
+                notifyCallbacks();
+            }
+        }
+        function createPropertyValidationKey(propertyAlias, parentValidationPath) {
+            return parentValidationPath ? parentValidationPath + '/' + propertyAlias : propertyAlias;
+        }
+        /**
+   * @ngdoc function
+   * @name reset
+   * @methodOf umbraco.services.serverValidationManager
+   * @function
+   *
+   * @description
+   * Clears all errors and notifies all callbacks that all server errros are now valid - used when submitting a form
+   */
+        function reset() {
+            clear();
+            for (var cb in callbacks) {
+                callbacks[cb].callback.apply(instance, [
+                    true,
+                    //pass in a value indicating it is VALID
+                    [],
+                    //pass in empty collection
+                    [],
+                    null,
+                    null
+                ]);
+            }
+        }
+        /**
+   * @ngdoc function
+   * @name clear
+   * @methodOf umbraco.services.serverValidationManager
+   * @function
+   *
+   * @description
+   * Clears all errors
+   */
+        function clear() {
+            errorMsgItems = [];
+        }
+        var instance = {
+            addErrorsForModelState: addErrorsForModelState,
+            parseComplexEditorError: parseComplexEditorError,
+            createPropertyValidationKey: createPropertyValidationKey,
             /**
      * @ngdoc function
      * @name notifyAndClearAllSubscriptions
@@ -7578,38 +9184,25 @@ When building a custom infinite editor view you can use the same components as a
      * @function
      *
      * @description
-     *  This method needs to be called once all field and property errors are wired up. 
+     *  This method can be called once all field and property errors are wired up. 
      * 
      *  In some scenarios where the error collection needs to be persisted over a route change 
      *   (i.e. when a content item (or any item) is created and the route redirects to the editor) 
      *   the controller should call this method once the data is bound to the scope
      *   so that any persisted validation errors are re-bound to their controls. Once they are re-binded this then clears the validation
      *   colleciton so that if another route change occurs, the previously persisted validation errors are not re-bound to the new item.
+     *   
+     *  In the case of content with complex editors, variants and different views, those editors don't call this method and instead 
+     *  manage the server validation manually by calling notify when necessary and clear/reset when necessary.
      */
             notifyAndClearAllSubscriptions: function notifyAndClearAllSubscriptions() {
-                var self = this;
                 $timeout(function () {
-                    notifyCallbacks(self);
+                    notifyCallbacks();
                     //now that they are all executed, we're gonna clear all of the errors we have
-                    self.clear();
+                    clear();
                 });
             },
-            /**
-     * @ngdoc function
-     * @name notify
-     * @methodOf umbraco.services.serverValidationManager
-     * @function
-     *
-     * @description
-     * This method isn't used very often but can be used if all subscriptions need to be notified again. This can be
-     * handy if a view needs to be reloaded/rebuild like when switching variants in the content editor.
-     */
-            notify: function notify() {
-                var self = this;
-                $timeout(function () {
-                    notifyCallbacks(self);
-                });
-            },
+            notify: notify,
             /**
      * @ngdoc function
      * @name subscribe
@@ -7623,38 +9216,49 @@ When building a custom infinite editor view you can use the same components as a
      *  field alias to listen for.
      *  If propertyAlias is null, then this subscription is for a field property (not a user defined property).
      */
-            subscribe: function subscribe(propertyAlias, culture, fieldName, callback) {
+            subscribe: function subscribe(propertyAlias, culture, fieldName, callback, segment, options) {
                 if (!callback) {
                     return;
                 }
                 var id = String.CreateGuid();
+                //normalize culture to "invariant"
                 if (!culture) {
                     culture = 'invariant';
                 }
+                //normalize segment to null
+                if (!segment) {
+                    segment = null;
+                }
+                var cb = null;
                 if (propertyAlias === null) {
-                    callbacks.push({
+                    cb = {
                         propertyAlias: null,
                         culture: culture,
+                        segment: segment,
                         fieldName: fieldName,
                         callback: callback,
                         id: id
-                    });
+                    };
                 } else if (propertyAlias !== undefined) {
-                    //normalize culture to null
-                    callbacks.push({
+                    cb = {
                         propertyAlias: propertyAlias,
                         culture: culture,
+                        segment: segment,
                         fieldName: fieldName,
                         callback: callback,
-                        id: id
-                    });
+                        id: id,
+                        options: options
+                    };
                 }
+                callbacks.push(cb);
                 function unsubscribeId() {
                     //remove all callbacks for the content field
                     callbacks = _.reject(callbacks, function (item) {
                         return item.id === id;
                     });
                 }
+                // Notify the new callback            
+                notifyCallback(cb);
                 //return a function to unsubscribe this subscription by uniqueId
                 return unsubscribeId;
             },
@@ -7665,61 +9269,29 @@ When building a custom infinite editor view you can use the same components as a
      * @param {} fieldName 
      * @returns {} 
      */
-            unsubscribe: function unsubscribe(propertyAlias, culture, fieldName) {
-                //normalize culture to null
+            unsubscribe: function unsubscribe(propertyAlias, culture, fieldName, segment) {
+                //normalize culture to "invariant"
                 if (!culture) {
                     culture = 'invariant';
+                }
+                //normalize segment to null
+                if (!segment) {
+                    segment = null;
                 }
                 if (propertyAlias === null) {
                     //remove all callbacks for the content field
                     callbacks = _.reject(callbacks, function (item) {
-                        return item.propertyAlias === null && item.culture === culture && item.fieldName === fieldName;
+                        return item.propertyAlias === null && item.culture === culture && item.segment === segment && item.fieldName === fieldName;
                     });
                 } else if (propertyAlias !== undefined) {
                     //remove all callbacks for the content property
                     callbacks = _.reject(callbacks, function (item) {
-                        return item.propertyAlias === propertyAlias && item.culture === culture && (item.fieldName === fieldName || (item.fieldName === undefined || item.fieldName === '') && (fieldName === undefined || fieldName === ''));
+                        return item.propertyAlias === propertyAlias && item.culture === culture && item.segment === segment && (item.fieldName === fieldName || (item.fieldName === undefined || item.fieldName === '') && (fieldName === undefined || fieldName === ''));
                     });
                 }
             },
-            /**
-     * @ngdoc function
-     * @name getPropertyCallbacks
-     * @methodOf umbraco.services.serverValidationManager
-     * @function
-     *
-     * @description
-     * Gets all callbacks that has been registered using the subscribe method for the propertyAlias + fieldName combo.
-     * This will always return any callbacks registered for just the property (i.e. field name is empty) and for ones with an 
-     * explicit field name set.
-     */
-            getPropertyCallbacks: function getPropertyCallbacks(propertyAlias, culture, fieldName) {
-                //normalize culture to null
-                if (!culture) {
-                    culture = 'invariant';
-                }
-                var found = _.filter(callbacks, function (item) {
-                    //returns any callback that have been registered directly against the field and for only the property
-                    return item.propertyAlias === propertyAlias && item.culture === culture && (item.fieldName === fieldName || item.fieldName === undefined || item.fieldName === '');
-                });
-                return found;
-            },
-            /**
-     * @ngdoc function
-     * @name getFieldCallbacks
-     * @methodOf umbraco.services.serverValidationManager
-     * @function
-     *
-     * @description
-     * Gets all callbacks that has been registered using the subscribe method for the field.         
-     */
-            getFieldCallbacks: function getFieldCallbacks(fieldName) {
-                var found = _.filter(callbacks, function (item) {
-                    //returns any callback that have been registered directly against the field
-                    return item.propertyAlias === null && item.culture === 'invariant' && item.fieldName === fieldName;
-                });
-                return found;
-            },
+            getPropertyCallbacks: getPropertyCallbacks,
+            getFieldCallbacks: getFieldCallbacks,
             /**
      * @ngdoc function
      * @name getCultureCallbacks
@@ -7727,86 +9299,20 @@ When building a custom infinite editor view you can use the same components as a
      * @function
      *
      * @description
-     * Gets all callbacks that has been registered using the subscribe method for the culture.         
+     * Gets all callbacks that has been registered using the subscribe method for the culture. Not including segments.
      */
             getCultureCallbacks: function getCultureCallbacks(culture) {
                 var found = _.filter(callbacks, function (item) {
                     //returns any callback that have been registered directly/ONLY against the culture
-                    return item.culture === culture && item.propertyAlias === null && item.fieldName === null;
+                    return item.culture === culture && item.segment === null && item.propertyAlias === null && item.fieldName === null;
                 });
                 return found;
             },
-            /**
-     * @ngdoc function
-     * @name addFieldError
-     * @methodOf umbraco.services.serverValidationManager
-     * @function
-     *
-     * @description
-     * Adds an error message for a native content item field (not a user defined property, for Example, 'Name')
-     */
-            addFieldError: function addFieldError(fieldName, errorMsg) {
-                if (!fieldName) {
-                    return;
-                }
-                //only add the item if it doesn't exist                
-                if (!this.hasFieldError(fieldName)) {
-                    this.items.push({
-                        propertyAlias: null,
-                        culture: 'invariant',
-                        fieldName: fieldName,
-                        errorMsg: errorMsg
-                    });
-                }
-                //find all errors for this item
-                var errorsForCallback = getFieldErrors(this, fieldName);
-                //we should now call all of the call backs registered for this error
-                var cbs = this.getFieldCallbacks(fieldName);
-                //call each callback for this error
-                for (var cb in cbs) {
-                    executeCallback(this, errorsForCallback, cbs[cb].callback, null);
-                }
-            },
-            /**
-     * @ngdoc function
-     * @name addPropertyError
-     * @methodOf umbraco.services.serverValidationManager
-     * @function
-     *
-     * @description
-     * Adds an error message for the content property
-     */
-            addPropertyError: function addPropertyError(propertyAlias, culture, fieldName, errorMsg) {
-                if (!propertyAlias) {
-                    return;
-                }
-                //normalize culture to "invariant"
-                if (!culture) {
-                    culture = 'invariant';
-                }
-                //only add the item if it doesn't exist                
-                if (!this.hasPropertyError(propertyAlias, culture, fieldName)) {
-                    this.items.push({
-                        propertyAlias: propertyAlias,
-                        culture: culture,
-                        fieldName: fieldName,
-                        errorMsg: errorMsg
-                    });
-                }
-                //find all errors for this item
-                var errorsForCallback = getPropertyErrors(this, propertyAlias, culture, fieldName);
-                //we should now call all of the call backs registered for this error
-                var cbs = this.getPropertyCallbacks(propertyAlias, culture, fieldName);
-                //call each callback for this error
-                for (var cb in cbs) {
-                    executeCallback(this, errorsForCallback, cbs[cb].callback, culture);
-                }
-                //execute culture specific callbacks here too when a propery error is added
-                var cultureCbs = this.getCultureCallbacks(culture);
-                //call each callback for this error
-                for (var cb in cultureCbs) {
-                    executeCallback(this, errorsForCallback, cultureCbs[cb].callback, culture);
-                }
+            getVariantCallbacks: getVariantCallbacks,
+            addFieldError: addFieldError,
+            addPropertyError: function addPropertyError(propertyAlias, culture, fieldName, errorMsg, segment) {
+                _addPropertyError(propertyAlias, culture, fieldName, errorMsg, segment);
+                notifyCallbacks();    // ensure all callbacks are called
             },
             /**
      * @ngdoc function
@@ -7817,52 +9323,18 @@ When building a custom infinite editor view you can use the same components as a
      * @description
      * Removes an error message for the content property
      */
-            removePropertyError: function removePropertyError(propertyAlias, culture, fieldName) {
-                if (!propertyAlias) {
-                    return;
-                }
-                //normalize culture to null
-                if (!culture) {
-                    culture = 'invariant';
-                }
-                //remove the item
-                this.items = _.reject(this.items, function (item) {
-                    return item.propertyAlias === propertyAlias && item.culture === culture && (item.fieldName === fieldName || fieldName === undefined || fieldName === '');
+            removePropertyError: function removePropertyError(propertyAlias, culture, fieldName, segment, options) {
+                var errors = getPropertyErrors(propertyAlias, culture, segment, fieldName, options);
+                errorMsgItems = errorMsgItems.filter(function (v) {
+                    return errors.indexOf(v) === -1;
                 });
-            },
-            /**
-     * @ngdoc function
-     * @name reset
-     * @methodOf umbraco.services.serverValidationManager
-     * @function
-     *
-     * @description
-     * Clears all errors and notifies all callbacks that all server errros are now valid - used when submitting a form
-     */
-            reset: function reset() {
-                this.clear();
-                for (var cb in callbacks) {
-                    callbacks[cb].callback.apply(this, [
-                        true,
-                        //pass in a value indicating it is VALID
-                        [],
-                        //pass in empty collection
-                        []
-                    ]);    //pass in empty collection
+                if (errors.length > 0) {
+                    // removal was successful, re-notify all subscribers
+                    notifyCallbacks();
                 }
             },
-            /**
-     * @ngdoc function
-     * @name clear
-     * @methodOf umbraco.services.serverValidationManager
-     * @function
-     *
-     * @description
-     * Clears all errors
-     */
-            clear: function clear() {
-                this.items = [];
-            },
+            reset: reset,
+            clear: clear,
             /**
      * @ngdoc function
      * @name getPropertyError
@@ -7872,16 +9344,16 @@ When building a custom infinite editor view you can use the same components as a
      * @description
      * Gets the error message for the content property
      */
-            getPropertyError: function getPropertyError(propertyAlias, culture, fieldName) {
-                //normalize culture to null
-                if (!culture) {
-                    culture = 'invariant';
+            getPropertyError: function getPropertyError(propertyAlias, culture, fieldName, segment) {
+                var errors = getPropertyErrors(propertyAlias, culture, segment, fieldName);
+                if (errors.length > 0) {
+                    // should only ever contain one
+                    return errors[0];
                 }
-                var err = _.find(this.items, function (item) {
-                    //return true if the property alias matches and if an empty field name is specified or the field name matches
-                    return item.propertyAlias === propertyAlias && item.culture === culture && (item.fieldName === fieldName || fieldName === undefined || fieldName === '');
-                });
-                return err;
+                return undefined;
+            },
+            getPropertyErrorsByValidationPath: function getPropertyErrorsByValidationPath(propertyValidationPath, culture, segment, options) {
+                return getPropertyErrors(propertyValidationPath, culture, segment, '', options);
             },
             /**
      * @ngdoc function
@@ -7893,48 +9365,14 @@ When building a custom infinite editor view you can use the same components as a
      * Gets the error message for a content field
      */
             getFieldError: function getFieldError(fieldName) {
-                var err = _.find(this.items, function (item) {
+                var err = _.find(errorMsgItems, function (item) {
                     //return true if the property alias matches and if an empty field name is specified or the field name matches
-                    return item.propertyAlias === null && item.culture === 'invariant' && item.fieldName === fieldName;
+                    return item.propertyAlias === null && item.culture === 'invariant' && item.segment === null && item.fieldName === fieldName;
                 });
                 return err;
             },
-            /**
-     * @ngdoc function
-     * @name hasPropertyError
-     * @methodOf umbraco.services.serverValidationManager
-     * @function
-     *
-     * @description
-     * Checks if the content property + culture + field name combo has an error
-     */
-            hasPropertyError: function hasPropertyError(propertyAlias, culture, fieldName) {
-                //normalize culture to null
-                if (!culture) {
-                    culture = 'invariant';
-                }
-                var err = _.find(this.items, function (item) {
-                    //return true if the property alias matches and if an empty field name is specified or the field name matches
-                    return item.propertyAlias === propertyAlias && item.culture === culture && (item.fieldName === fieldName || fieldName === undefined || fieldName === '');
-                });
-                return err ? true : false;
-            },
-            /**
-     * @ngdoc function
-     * @name hasFieldError
-     * @methodOf umbraco.services.serverValidationManager
-     * @function
-     *
-     * @description
-     * Checks if a content field has an error
-     */
-            hasFieldError: function hasFieldError(fieldName) {
-                var err = _.find(this.items, function (item) {
-                    //return true if the property alias matches and if an empty field name is specified or the field name matches
-                    return item.propertyAlias === null && item.culture === 'invariant' && item.fieldName === fieldName;
-                });
-                return err ? true : false;
-            },
+            hasPropertyError: hasPropertyError,
+            hasFieldError: hasFieldError,
             /**
      * @ngdoc function
      * @name hasCultureError
@@ -7945,18 +9383,49 @@ When building a custom infinite editor view you can use the same components as a
      * Checks if the given culture has an error
      */
             hasCultureError: function hasCultureError(culture) {
-                //normalize culture to null
+                //normalize culture to "invariant"
                 if (!culture) {
                     culture = 'invariant';
                 }
-                var err = _.find(this.items, function (item) {
-                    return item.culture === culture;
+                var err = _.find(errorMsgItems, function (item) {
+                    return item.culture === culture && item.segment === null;
                 });
                 return err ? true : false;
             },
-            /** The array of error messages */
-            items: []
+            /**
+     * @ngdoc function
+     * @name hasVariantError
+     * @methodOf umbraco.services.serverValidationManager
+     * @function
+     *
+     * @description
+     * Checks if the given culture has an error
+     */
+            hasVariantError: function hasVariantError(culture, segment) {
+                //normalize culture to "invariant"
+                if (!culture) {
+                    culture = 'invariant';
+                }
+                //normalize segment to null
+                if (!segment) {
+                    segment = null;
+                }
+                var err = _.find(errorMsgItems, function (item) {
+                    return item.culture === culture && item.segment === segment;
+                });
+                return err ? true : false;
+            }
         };
+        // Used to return the 'items' array as a reference/getter
+        Object.defineProperty(instance, 'items', {
+            get: function get() {
+                return errorMsgItems;
+            },
+            set: function set(value) {
+                throw 'Cannot set the items array';
+            }
+        });
+        return instance;
     }
     angular.module('umbraco.services').factory('serverValidationManager', serverValidationManager);
     'use strict';
@@ -8505,25 +9974,85 @@ When building a custom infinite editor view you can use the same components as a
         ];
         // these languages are available for localization
         var availableLanguages = [
+            'ar',
+            'ar_SA',
+            'hy',
+            'az',
+            'eu',
+            'be',
+            'bn_BD',
+            'bs',
+            'bg_BG',
+            'ca',
+            'zh_CN',
+            'zh_TW',
+            'hr',
+            'cs',
             'da',
-            'de',
-            'en',
-            'en_us',
+            'dv',
+            'nl',
+            'en_CA',
+            'en_GB',
+            'et',
+            'fo',
             'fi',
-            'fr',
-            'he',
+            'fr_FR',
+            'gd',
+            'gl',
+            'ka_GE',
+            'de',
+            'de_AT',
+            'el',
+            'he_IL',
+            'hi_IN',
+            'hu_HU',
+            'is_IS',
+            'id',
             'it',
             'ja',
-            'nl',
-            'no',
+            'kab',
+            'kk',
+            'km_KH',
+            'ko_KR',
+            'ku',
+            'ku_IQ',
+            'lv',
+            'lt',
+            'lb',
+            'ml',
+            'ml_IN',
+            'mn_MN',
+            'nb_NO',
+            'fa',
+            'fa_IR',
             'pl',
-            'pt',
+            'pt_BR',
+            'pt_PT',
+            'ro',
             'ru',
-            'sv',
-            'zh'
+            'sr',
+            'si_LK',
+            'sk',
+            'sl_SI',
+            'es',
+            'es_MX',
+            'sv_SE',
+            'tg',
+            'ta',
+            'ta_IN',
+            'tt',
+            'th_TH',
+            'tr',
+            'tr_TR',
+            'ug',
+            'uk',
+            'uk_UA',
+            'vi',
+            'vi_VN',
+            'cy'
         ];
         //define fallback language
-        var defaultLanguage = 'en_us';
+        var defaultLanguage = 'en_US';
         /**
    * Returns a promise of an object containing the stylesheets and styleFormats collections
    * @param {any} configuredStylesheets
@@ -8556,7 +10085,7 @@ When building a custom infinite editor view you can use the same components as a
                             } else if (rule.selector[0] !== '.' && rule.selector.indexOf('.') > -1) {
                                 var split = rule.selector.split('.');
                                 r.block = split[0];
-                                r.classes = rule.selector.substring(rule.selector.indexOf('.') + 1).replace('.', ' ');
+                                r.classes = rule.selector.substring(rule.selector.indexOf('.') + 1).replace(/\./g, ' ');
                             } else if (rule.selector[0] != '#' && rule.selector.indexOf('#') > -1) {
                                 var split = rule.selector.split('#');
                                 r.block = split[0];
@@ -8589,7 +10118,7 @@ When building a custom infinite editor view you can use the same components as a
             var localeId = $locale.id.replace('-', '_');
             //try matching the language using full locale format
             var languageMatch = _.find(availableLanguages, function (o) {
-                return o === localeId;
+                return o.toLowerCase() === localeId;
             });
             //if no matches, try matching using only the language
             if (languageMatch === undefined) {
@@ -8695,6 +10224,7 @@ When building a custom infinite editor view you can use the same components as a
                     var src = imgUrl + '?width=' + newSize.width + '&height=' + newSize.height;
                     editor.dom.setAttrib(imageDomElement, 'data-mce-src', src);
                 }
+                editor.execCommand('mceAutoResize', false, null, null);
             }
         }
         function isMediaPickerEnabled(toolbarItemArray) {
@@ -8831,7 +10361,7 @@ When building a custom infinite editor view you can use the same components as a
                                         //now we need to check if this custom config key is defined in our baseline, if it is we don't want to
                                         //overwrite the baseline config item if it is an array, we want to concat the items in the array, otherwise
                                         //if it's an object it will overwrite the baseline
-                                        if (angular.isArray(config[i]) && angular.isArray(tinyMceConfig.customConfig[i])) {
+                                        if (Utilities.isArray(config[i]) && Utilities.isArray(tinyMceConfig.customConfig[i])) {
                                             //concat it and below this concat'd array will overwrite the baseline in angular.extend
                                             tinyMceConfig.customConfig[i] = config[i].concat(tinyMceConfig.customConfig[i]);
                                         }
@@ -9796,8 +11326,8 @@ When building a custom infinite editor view you can use the same components as a
             function registerAllTours() {
                 tours = [];
                 return tourResource.getTours().then(function (tourFiles) {
-                    angular.forEach(tourFiles, function (tourFile) {
-                        angular.forEach(tourFile.tours, function (newTour) {
+                    Utilities.forEach(tourFiles, function (tourFile) {
+                        Utilities.forEach(tourFile.tours, function (newTour) {
                             validateTour(newTour);
                             validateTourRegistration(newTour);
                             tours.push(newTour);
@@ -10006,7 +11536,7 @@ When building a custom infinite editor view you can use the same components as a
      */
             function validateTourRegistration(tour) {
                 // check for existing tours with the same alias
-                angular.forEach(tours, function (existingTour) {
+                Utilities.forEach(tours, function (existingTour) {
                     if (existingTour.alias === tour.alias) {
                         throw 'A tour with the alias ' + tour.alias + ' is already registered';
                     }
@@ -10019,16 +11549,16 @@ When building a custom infinite editor view you can use the same components as a
             function setTourStatuses(tours) {
                 var deferred = $q.defer();
                 currentUserResource.getTours().then(function (storedTours) {
-                    angular.forEach(storedTours, function (storedTour) {
+                    Utilities.forEach(storedTours, function (storedTour) {
                         if (storedTour.completed === true) {
-                            angular.forEach(tours, function (tour) {
+                            Utilities.forEach(tours, function (tour) {
                                 if (storedTour.alias === tour.alias) {
                                     tour.completed = true;
                                 }
                             });
                         }
                         if (storedTour.disabled === true) {
-                            angular.forEach(tours, function (tour) {
+                            Utilities.forEach(tours, function (tour) {
                                 if (storedTour.alias === tour.alias) {
                                     tour.disabled = true;
                                 }
@@ -10093,7 +11623,7 @@ When building a custom infinite editor view you can use the same components as a
             },
             /** Internal method to track expanded paths on a tree */
             _trackExpandedPaths: function _trackExpandedPaths(node, expandedPaths) {
-                if (!node.children || !angular.isArray(node.children) || node.children.length == 0) {
+                if (!node.children || !Utilities.isArray(node.children) || node.children.length == 0) {
                     return;
                 }
                 //take the last child
@@ -10198,7 +11728,7 @@ When building a custom infinite editor view you can use the same components as a
      */
             getTreePackageFolder: function getTreePackageFolder(treeAlias) {
                 //we determine this based on the server variables
-                if (Umbraco.Sys.ServerVariables.umbracoPlugins && Umbraco.Sys.ServerVariables.umbracoPlugins.trees && angular.isArray(Umbraco.Sys.ServerVariables.umbracoPlugins.trees)) {
+                if (Umbraco.Sys.ServerVariables.umbracoPlugins && Umbraco.Sys.ServerVariables.umbracoPlugins.trees && Utilities.isArray(Umbraco.Sys.ServerVariables.umbracoPlugins.trees)) {
                     var found = _.find(Umbraco.Sys.ServerVariables.umbracoPlugins.trees, function (item) {
                         return invariantEquals(item.alias, treeAlias);
                     });
@@ -10454,7 +11984,7 @@ When building a custom infinite editor view you can use the same components as a
                 }
                 for (var i = 0; i < treeNode.children.length; i++) {
                     var child = treeNode.children[i];
-                    if (child.children && angular.isArray(child.children) && child.children.length > 0) {
+                    if (child.children && Utilities.isArray(child.children) && child.children.length > 0) {
                         //recurse
                         found = this.getDescendantNode(child, id);
                         if (found) {
@@ -10717,7 +12247,7 @@ When building a custom infinite editor view you can use the same components as a
                 if (!args.path) {
                     throw 'No path defined on args object for syncTree';
                 }
-                if (!angular.isArray(args.path)) {
+                if (!Utilities.isArray(args.path)) {
                     throw 'Path must be an array';
                 }
                 if (args.path.length < 1) {
@@ -10819,6 +12349,52 @@ When building a custom infinite editor view you can use the same components as a
         'use strict';
         /**
   * @ngdoc service
+  * @name umbraco.services.udiService
+  * @description A service for UDIs
+  **/
+        function udiService() {
+            return {
+                /**
+       * @ngdoc method
+       * @name umbraco.services.udiService#create
+       * @methodOf umbraco.services.udiService
+       * @function
+       *
+       * @description
+       * Generates a Udi string with a new ID
+       *
+       * @param {string} entityType The entityType as a string.
+       * @returns {string} The generated UDI
+       */
+                create: function create(entityType) {
+                    return this.build(entityType, String.CreateGuid());
+                },
+                build: function build(entityType, guid) {
+                    return 'umb://' + entityType + '/' + guid.replace(/-/g, '');
+                },
+                getKey: function getKey(udi) {
+                    if (!Utilities.isString(udi)) {
+                        throw 'udi is not a string';
+                    }
+                    if (!udi.startsWith('umb://')) {
+                        throw 'udi does not start with umb://';
+                    }
+                    var withoutScheme = udi.substr('umb://'.length);
+                    var withoutHost = withoutScheme.substr(withoutScheme.indexOf('/') + 1).trim();
+                    if (withoutHost.length !== 32) {
+                        throw 'udi is not 32 chars';
+                    }
+                    return ''.concat(withoutHost.substr(0, 8), '-').concat(withoutHost.substr(8, 4), '-').concat(withoutHost.substr(12, 4), '-').concat(withoutHost.substr(16, 4), '-').concat(withoutHost.substr(20));
+                }
+            };
+        }
+        angular.module('umbraco.services').factory('udiService', udiService);
+    }());
+    'use strict';
+    (function () {
+        'use strict';
+        /**
+  * @ngdoc service
   * @name umbraco.services.udiParser
   * @description A object used to parse UDIs
   **/
@@ -10908,7 +12484,7 @@ When building a custom infinite editor view you can use the same components as a
                 },
                 formatContentTypePostData: function formatContentTypePostData(displayModel, action) {
                     //create the save model from the display model
-                    var saveModel = _.pick(displayModel, 'compositeContentTypes', 'isContainer', 'allowAsRoot', 'allowedTemplates', 'allowedContentTypes', 'alias', 'description', 'thumbnail', 'name', 'id', 'icon', 'trashed', 'key', 'parentId', 'alias', 'path', 'allowCultureVariant', 'isElement');
+                    var saveModel = _.pick(displayModel, 'compositeContentTypes', 'isContainer', 'allowAsRoot', 'allowedTemplates', 'allowedContentTypes', 'alias', 'description', 'thumbnail', 'name', 'id', 'icon', 'trashed', 'key', 'parentId', 'alias', 'path', 'allowCultureVariant', 'allowSegmentVariant', 'isElement');
                     // TODO: Map these
                     saveModel.allowedTemplates = _.map(displayModel.allowedTemplates, function (t) {
                         return t.alias;
@@ -10925,7 +12501,7 @@ When building a custom infinite editor view you can use the same components as a
                             return p.propertyState === 'init' || p.inherited === true;
                         });
                         var saveProperties = _.map(realProperties, function (p) {
-                            var saveProperty = _.pick(p, 'id', 'alias', 'description', 'validation', 'label', 'sortOrder', 'dataTypeId', 'groupId', 'memberCanEdit', 'showOnMemberProfile', 'isSensitiveData', 'allowCultureVariant');
+                            var saveProperty = _.pick(p, 'id', 'alias', 'description', 'validation', 'label', 'sortOrder', 'dataTypeId', 'groupId', 'memberCanEdit', 'showOnMemberProfile', 'isSensitiveData', 'allowCultureVariant', 'allowSegmentVariant');
                             return saveProperty;
                         });
                         saveGroup.properties = saveProperties;
@@ -10982,13 +12558,12 @@ When building a custom infinite editor view you can use the same components as a
                 /** formats the display model used to display the user to the model used to save the user */
                 formatUserPostData: function formatUserPostData(displayModel) {
                     //create the save model from the display model
-                    var saveModel = _.pick(displayModel, 'id', 'parentId', 'name', 'username', 'culture', 'email', 'startContentIds', 'startMediaIds', 'userGroups', 'message', 'changePassword');
-                    saveModel.changePassword = this.formatChangePasswordModel(saveModel.changePassword);
+                    var saveModel = _.pick(displayModel, 'id', 'parentId', 'name', 'username', 'culture', 'email', 'startContentIds', 'startMediaIds', 'userGroups', 'message');
                     //make sure the userGroups are just a string array
                     var currGroups = saveModel.userGroups;
                     var formattedGroups = [];
                     for (var i = 0; i < currGroups.length; i++) {
-                        if (!angular.isString(currGroups[i])) {
+                        if (!Utilities.isString(currGroups[i])) {
                             formattedGroups.push(currGroups[i].alias);
                         } else {
                             formattedGroups.push(currGroups[i]);
@@ -11052,7 +12627,7 @@ When building a custom infinite editor view you can use the same components as a
                     var currSections = saveModel.sections;
                     var formattedSections = [];
                     for (var i = 0; i < currSections.length; i++) {
-                        if (!angular.isString(currSections[i])) {
+                        if (!Utilities.isString(currSections[i])) {
                             formattedSections.push(currSections[i].alias);
                         } else {
                             formattedSections.push(currSections[i]);
@@ -11063,7 +12638,7 @@ When building a custom infinite editor view you can use the same components as a
                     var currUsers = saveModel.users;
                     var formattedUsers = [];
                     for (var j = 0; j < currUsers.length; j++) {
-                        if (!angular.isNumber(currUsers[j])) {
+                        if (!Utilities.isNumber(currUsers[j])) {
                             formattedUsers.push(currUsers[j].id);
                         } else {
                             formattedUsers.push(currUsers[j]);
@@ -11174,6 +12749,7 @@ When building a custom infinite editor view you can use the same components as a
                                 //if its null/empty,we must pass up an empty string else we get json converter errors
                                 properties: getContentProperties(v.tabs),
                                 culture: v.language ? v.language.culture : null,
+                                segment: v.segment,
                                 publish: v.publish,
                                 save: v.save,
                                 releaseDate: v.releaseDate,
@@ -11195,32 +12771,51 @@ When building a custom infinite editor view you can use the same components as a
        * @returns {}
        */
                 formatContentGetData: function formatContentGetData(displayModel) {
-                    //We need to check for invariant properties among the variant variants.
-                    //When we detect this, we want to make sure that the property object instance is the
-                    //same reference object between all variants instead of a copy (which it will be when
-                    //return from the JSON structure).
+                    // We need to check for invariant properties among the variant variants,
+                    // as the value of an invariant property is shared between different variants.
+                    // A property can be culture invariant, segment invariant, or both.
+                    // When we detect this, we want to make sure that the property object instance is the
+                    // same reference object between all variants instead of a copy (which it will be when
+                    // return from the JSON structure).
                     if (displayModel.variants && displayModel.variants.length > 1) {
-                        var invariantProperties = [];
-                        //collect all invariant properties on the first first variant
-                        var firstVariant = displayModel.variants[0];
-                        _.each(firstVariant.tabs, function (tab, tabIndex) {
-                            _.each(tab.properties, function (property, propIndex) {
-                                //in theory if there's more than 1 variant, that means they would all have a language
-                                //but we'll do our safety checks anyways here
-                                if (firstVariant.language && !property.culture) {
-                                    invariantProperties.push({
-                                        tabIndex: tabIndex,
-                                        propIndex: propIndex,
-                                        property: property
-                                    });
-                                }
-                            });
+                        // Collect all invariant properties from the variants that are either the
+                        // default language variant or the default segment variant.
+                        var defaultVariants = _.filter(displayModel.variants, function (variant) {
+                            var isDefaultLanguage = variant.language && variant.language.isDefault;
+                            var isDefaultSegment = variant.segment == null;
+                            return isDefaultLanguage || isDefaultSegment;
                         });
-                        //now assign this same invariant property instance to the same index of the other variants property array
-                        for (var j = 1; j < displayModel.variants.length; j++) {
-                            var variant = displayModel.variants[j];
-                            _.each(invariantProperties, function (invProp) {
-                                variant.tabs[invProp.tabIndex].properties[invProp.propIndex] = invProp.property;
+                        if (defaultVariants.length > 0) {
+                            _.each(defaultVariants, function (defaultVariant) {
+                                var invariantProps = [];
+                                _.each(defaultVariant.tabs, function (tab, tabIndex) {
+                                    _.each(tab.properties, function (property, propIndex) {
+                                        // culture == null -> property is culture invariant
+                                        // segment == null -> property is *possibly* segment invariant
+                                        if (!property.culture || !property.segment) {
+                                            invariantProps.push({
+                                                tabIndex: tabIndex,
+                                                propIndex: propIndex,
+                                                property: property
+                                            });
+                                        }
+                                    });
+                                });
+                                var otherVariants = _.filter(displayModel.variants, function (variant) {
+                                    return variant !== defaultVariant;
+                                });
+                                // now assign this same invariant property instance to the same index of the other variants property array                            
+                                _.each(otherVariants, function (variant) {
+                                    _.each(invariantProps, function (invProp) {
+                                        var tab = variant.tabs[invProp.tabIndex];
+                                        var prop = tab.properties[invProp.propIndex];
+                                        var inheritsCulture = prop.culture === invProp.property.culture && prop.segment == null && invProp.property.segment == null;
+                                        var inheritsSegment = prop.segment === invProp.property.segment && !prop.culture;
+                                        if (inheritsCulture || inheritsSegment) {
+                                            tab.properties[invProp.propIndex] = invProp.property;
+                                        }
+                                    });
+                                });
                             });
                         }
                     }
@@ -11274,7 +12869,7 @@ When building a custom infinite editor view you can use the same components as a
      *
      * @description
      * This will convert a virtual path (i.e. ~/App_Plugins/Blah/Test.html ) to an absolute path
-     * 
+     *
      * @param {string} a virtual path, if this is already an absolute path it will just be returned, if this is a relative path an exception will be thrown
      */
             convertVirtualToAbsolutePath: function convertVirtualToAbsolutePath(virtualPath) {
@@ -11297,11 +12892,11 @@ When building a custom infinite editor view you can use the same components as a
      *
      * @description
      * This will turn an array of key/value pairs or a standard dictionary into a query string
-     * 
+     *
      * @param {Array} queryStrings An array of key/value pairs
      */
             dictionaryToQueryString: function dictionaryToQueryString(queryStrings) {
-                if (angular.isArray(queryStrings)) {
+                if (Utilities.isArray(queryStrings)) {
                     return _.map(queryStrings, function (item) {
                         var key = null;
                         var val = null;
@@ -11315,7 +12910,7 @@ When building a custom infinite editor view you can use the same components as a
                         }
                         return encodeURIComponent(key) + '=' + encodeURIComponent(val);
                     }).join('&');
-                } else if (angular.isObject(queryStrings)) {
+                } else if (Utilities.isObject(queryStrings)) {
                     //this allows for a normal object to be passed in (ie. a dictionary)
                     return decodeURIComponent($.param(queryStrings));
                 }
@@ -11329,9 +12924,9 @@ When building a custom infinite editor view you can use the same components as a
      *
      * @description
      * This will return the webapi Url for the requested key based on the servervariables collection
-     * 
+     *
      * @param {string} apiName The webapi name that is found in the servervariables["umbracoUrls"] dictionary
-     * @param {string} actionName The webapi action name 
+     * @param {string} actionName The webapi action name
      * @param {object} queryStrings Can be either a string or an array containing key/value pairs
      */
             getApiUrl: function getApiUrl(apiName, actionName, queryStrings) {
@@ -11341,7 +12936,7 @@ When building a custom infinite editor view you can use the same components as a
                 if (!Umbraco.Sys.ServerVariables['umbracoUrls'][apiName]) {
                     throw 'No url found for api name ' + apiName;
                 }
-                return Umbraco.Sys.ServerVariables['umbracoUrls'][apiName] + actionName + (!queryStrings ? '' : '?' + (angular.isString(queryStrings) ? queryStrings : this.dictionaryToQueryString(queryStrings)));
+                return Umbraco.Sys.ServerVariables['umbracoUrls'][apiName] + actionName + (!queryStrings ? '' : '?' + (Utilities.isString(queryStrings) ? queryStrings : this.dictionaryToQueryString(queryStrings)));
             },
             /**
      * @ngdoc function
@@ -11351,7 +12946,7 @@ When building a custom infinite editor view you can use the same components as a
      *
      * @description
      * This returns a promise with an underlying http call, it is a helper method to reduce
-     *  the amount of duplicate code needed to query http resources and automatically handle any 
+     *  the amount of duplicate code needed to query http resources and automatically handle any
      *  Http errors. See /docs/source/using-promises-resources.md
      *
      * @param {object} opts A mixed object which can either be a string representing the error message to be
@@ -11374,7 +12969,7 @@ When building a custom infinite editor view you can use the same components as a
                 function defaultError(data, status, headers, config) {
                     var err = {
                         //NOTE: the default error message here should never be used based on the above docs!
-                        errorMsg: angular.isString(opts) ? opts : 'An error occurred!',
+                        errorMsg: Utilities.isString(opts) ? opts : 'An error occurred!',
                         data: data,
                         status: status
                     };
@@ -11390,7 +12985,7 @@ When building a custom infinite editor view you can use the same components as a
                     error: !opts || !opts.error ? defaultError : opts.error
                 };
                 return httpPromise.then(function (response) {
-                    //invoke the callback 
+                    //invoke the callback
                     var result = callbacks.success.apply(this, [
                         response.data,
                         response.status,
@@ -11404,9 +12999,9 @@ When building a custom infinite editor view you can use the same components as a
                     if (!response) {
                         return;    //sometimes oddly this happens, nothing we can do
                     }
-                    if (!response.status && response.message && response.stack) {
-                        //this is a JS/angular error that we should deal with
-                        return $q.reject({ errorMsg: response.message });
+                    if (!response.status) {
+                        //this is a JS/angular error
+                        return $q.reject(response);
                     }
                     //invoke the callback
                     var result = callbacks.error.apply(this, [
@@ -11426,7 +13021,7 @@ When building a custom infinite editor view you can use the same components as a
                             // TODO: All YSOD handling should be done with an interceptor
                             overlayService.ysod(error);
                         } else {
-                            //show a simple error notification                         
+                            //show a simple error notification
                             notificationsService.error('Server error', 'Contact administrator, see log for full details.<br/><i>' + result.errorMsg + '</i>');
                         }
                     } else {
@@ -11447,7 +13042,7 @@ When building a custom infinite editor view you can use the same components as a
      *
      * @description
      * Used for saving content/media/members specifically
-     * 
+     *
      * @param {Object} args arguments object
      * @returns {Promise} http promise object.
      */
@@ -11485,11 +13080,12 @@ When building a custom infinite editor view you can use the same components as a
                     for (var f in args.files) {
                         //each item has a property alias and the file object, we'll ensure that the alias is suffixed to the key
                         // so we know which property it belongs to on the server side
-                        var fileKey = 'file_' + args.files[f].alias + '_' + (args.files[f].culture ? args.files[f].culture : '');
-                        if (angular.isArray(args.files[f].metaData) && args.files[f].metaData.length > 0) {
-                            fileKey += '_' + args.files[f].metaData.join('_');
+                        var file = args.files[f];
+                        var fileKey = 'file_' + file.alias + '_' + (file.culture ? file.culture : '') + '_' + (file.segment ? file.segment : '');
+                        if (Utilities.isArray(file.metaData) && file.metaData.length > 0) {
+                            fileKey += '_' + file.metaData.join('_');
                         }
-                        formData.append(fileKey, args.files[f].file);
+                        formData.append(fileKey, file.file);
                     }
                 }).then(function (response) {
                     //success callback
@@ -11507,7 +13103,10 @@ When building a custom infinite editor view you can use the same components as a
                     //the data returned is the up-to-date data so the UI will refresh
                     return $q.resolve(response.data);
                 }, function (response) {
-                    //failure callback
+                    if (!response.status) {
+                        //this is a JS/angular error
+                        return $q.reject(response);
+                    }
                     //when there's a 500 (unhandled) error show a YSOD overlay if debugging is enabled.
                     if (response.status >= 500 && response.status < 600) {
                         //This is a bit of a hack to check if the error is due to a file being uploaded that is too large,
@@ -11524,7 +13123,7 @@ When building a custom infinite editor view you can use the same components as a
                             // TODO: All YSOD handling should be done with an interceptor
                             overlayService.ysod(error);
                         } else {
-                            //show a simple error notification                         
+                            //show a simple error notification
                             notificationsService.error('Server error', 'Contact administrator, see log for full details.<br/><i>' + response.data.ExceptionMessage + '</i>');
                         }
                     } else if (args.showNotifications) {
@@ -11544,7 +13143,7 @@ When building a custom infinite editor view you can use the same components as a
                 if (!jsonData) {
                     throw 'jsonData cannot be null';
                 }
-                if (angular.isArray(jsonData)) {
+                if (Utilities.isArray(jsonData)) {
                     _.each(jsonData, function (item) {
                         if (!item.key || !item.value) {
                             throw 'jsonData array item must have both a key and a value property';
@@ -11564,12 +13163,12 @@ When building a custom infinite editor view you can use the same components as a
                     transformRequest: function transformRequest(data) {
                         var formData = new FormData();
                         //add the json data
-                        if (angular.isArray(data)) {
+                        if (Utilities.isArray(data)) {
                             _.each(data, function (item) {
-                                formData.append(item.key, !angular.isString(item.value) ? angular.toJson(item.value) : item.value);
+                                formData.append(item.key, !Utilities.isString(item.value) ? Utilities.toJson(item.value) : item.value);
                             });
                         } else {
-                            formData.append(data.key, !angular.isString(data.value) ? angular.toJson(data.value) : data.value);
+                            formData.append(data.key, !Utilities.isString(data.value) ? Utilities.toJson(data.value) : data.value);
                         }
                         //call the callback
                         if (transformCallback) {
@@ -11588,11 +13187,21 @@ When building a custom infinite editor view you can use the same components as a
                 });
             },
             /**
+     * @ngdoc method
+     * @name umbraco.resources.contentResource#downloadFile
+     * @methodOf umbraco.resources.contentResource
+     *
+     * @description
      * Downloads a file to the client using AJAX/XHR
-     * Based on an implementation here: web.student.tuwien.ac.at/~e0427417/jsdownload.html
-     * See https://stackoverflow.com/a/24129082/694494
+     *
+     * @param {string} httpPath the path (url) to the resource being downloaded
+     * @returns {Promise} http promise object.
      */
             downloadFile: function downloadFile(httpPath) {
+                /**
+       * Based on an implementation here: web.student.tuwien.ac.at/~e0427417/jsdownload.html
+       * See https://stackoverflow.com/a/24129082/694494
+       */
                 // Use an arraybuffer
                 return $http.get(httpPath, { responseType: 'arraybuffer' }).then(function (response) {
                     var octetStreamMime = 'application/octet-stream';
@@ -11881,7 +13490,7 @@ When building a custom infinite editor view you can use the same components as a
         /** Called to update the current user's timeout */
         function setUserTimeoutInternal(newTimeout) {
             var asNumber = parseFloat(newTimeout);
-            if (!isNaN(asNumber) && currentUser && angular.isNumber(asNumber)) {
+            if (!isNaN(asNumber) && currentUser && Utilities.isNumber(asNumber)) {
                 currentUser.remainingAuthSeconds = newTimeout;
                 lastServerTimeoutSet = new Date();
             }
@@ -11926,7 +13535,22 @@ When building a custom infinite editor view you can use the same components as a
             },
             /** Returns a promise, sends a request to the server to validate the credentials  */
             authenticate: function authenticate(login, password) {
-                return authResource.performLogin(login, password).then(this.setAuthenticationSuccessful);
+                return authResource.performLogin(login, password).then(function (data) {
+                    // Check if user has a start node set.
+                    if (data.startContentIds.length === 0 && data.startMediaIds.length === 0) {
+                        var errorMsg = 'User has no start-nodes';
+                        var result = {
+                            errorMsg: errorMsg,
+                            user: data,
+                            authenticated: false,
+                            lastUserId: lastUserId,
+                            loginType: 'credentials'
+                        };
+                        eventsService.emit('app.notAuthenticated', result);
+                        throw result;
+                    }
+                    return data;
+                }).then(this.setAuthenticationSuccessful);
             },
             setAuthenticationSuccessful: function setAuthenticationSuccessful(data) {
                 //when it's successful, return the user data
@@ -12261,10 +13885,10 @@ When building a custom infinite editor view you can use the same components as a
         var storage = $window['sessionStorage'] ? $window['sessionStorage'] : {};
         return {
             get: function get(key) {
-                return angular.fromJson(storage['umb_' + key]);
+                return Utilities.fromJson(storage['umb_' + key]);
             },
             set: function set(key, value) {
-                storage['umb_' + key] = angular.toJson(value);
+                storage['umb_' + key] = Utilities.toJson(value);
             }
         };
     }
@@ -12747,4 +14371,162 @@ When building a custom infinite editor view you can use the same components as a
         };
     }
     angular.module('umbraco.services').factory('xmlhelper', xmlhelper);
+    'use strict';
+    function _typeof(obj) {
+        if (typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol') {
+            _typeof = function _typeof(obj) {
+                return typeof obj;
+            };
+        } else {
+            _typeof = function _typeof(obj) {
+                return obj && typeof Symbol === 'function' && obj.constructor === Symbol && obj !== Symbol.prototype ? 'symbol' : typeof obj;
+            };
+        }
+        return _typeof(obj);
+    }
+    /**
+ * A friendly utility collection to replace AngularJs' ng-functions
+ * If it doesn't exist here, it's probably available as vanilla JS
+ * 
+ * Still carries a dependency on underscore, but if usages of underscore from 
+ * elsewhere in the codebase can instead use these methods, the underscore
+ * dependency will be nicely abstracted and can be removed/swapped later
+ * 
+ * This collection is open to extension...
+ */
+    (function (window) {
+        /**
+   * Equivalent to angular.noop
+   */
+        var noop = function noop() {
+        };
+        /**
+   * Facade to angular.copy
+   */
+        var copy = function copy(src, dst) {
+            return angular.copy(src, dst);
+        };
+        /**
+   * Equivalent to angular.isArray
+   */
+        var isArray = function isArray(val) {
+            return Array.isArray(val) || val instanceof Array;
+        };
+        /**
+   * Facade to angular.equals
+   */
+        var equals = function equals(a, b) {
+            return angular.equals(a, b);
+        };
+        /**
+   * Facade to angular.extend
+   * Use this with Angular objects, for vanilla JS objects, use Object.assign()
+   */
+        var extend = function extend(dst, src) {
+            return angular.extend(dst, src);
+        };
+        /**
+   * Equivalent to angular.isFunction
+   */
+        var isFunction = function isFunction(val) {
+            return typeof val === 'function';
+        };
+        /**
+   * Equivalent to angular.isUndefined
+   */
+        var isUndefined = function isUndefined(val) {
+            return typeof val === 'undefined';
+        };
+        /**
+   * Equivalent to angular.isDefined. Inverts result of const isUndefined
+   */
+        var isDefined = function isDefined(val) {
+            return !isUndefined(val);
+        };
+        /**
+   * Equivalent to angular.isString
+   */
+        var isString = function isString(val) {
+            return typeof val === 'string';
+        };
+        /**
+   * Equivalent to angular.isNumber
+   */
+        var isNumber = function isNumber(val) {
+            return typeof val === 'number';
+        };
+        /**
+   * Equivalent to angular.isObject
+   */
+        var isObject = function isObject(val) {
+            return val !== null && _typeof(val) === 'object';
+        };
+        var isWindow = function isWindow(obj) {
+            return obj && obj.window === obj;
+        };
+        var isScope = function isScope(obj) {
+            return obj && obj.$evalAsync && obj.$watch;
+        };
+        var toJsonReplacer = function toJsonReplacer(key, value) {
+            var val = value;
+            if (typeof key === 'string' && key.charAt(0) === '$' && key.charAt(1) === '$') {
+                val = undefined;
+            } else if (isWindow(value)) {
+                val = '$WINDOW';
+            } else if (value && window.document === value) {
+                val = '$DOCUMENT';
+            } else if (isScope(value)) {
+                val = '$SCOPE';
+            }
+            return val;
+        };
+        /**
+   * Equivalent to angular.toJson
+   */
+        var toJson = function toJson(obj, pretty) {
+            if (isUndefined(obj))
+                return undefined;
+            if (!isNumber(pretty)) {
+                pretty = pretty ? 2 : null;
+            }
+            return JSON.stringify(obj, toJsonReplacer, pretty);
+        };
+        /**
+   * Equivalent to angular.fromJson
+   */
+        var fromJson = function fromJson(val) {
+            if (!isString(val)) {
+                return val;
+            }
+            return JSON.parse(val);
+        };
+        /**
+   * Not equivalent to angular.forEach. But like the angularJS method this does not fail on null or undefined.
+   */
+        var forEach = function forEach(obj, iterator) {
+            if (obj) {
+                return obj.forEach(iterator);
+            }
+            return obj;
+        };
+        var _utilities = {
+            noop: noop,
+            copy: copy,
+            isArray: isArray,
+            equals: equals,
+            extend: extend,
+            isFunction: isFunction,
+            isUndefined: isUndefined,
+            isDefined: isDefined,
+            isString: isString,
+            isNumber: isNumber,
+            isObject: isObject,
+            fromJson: fromJson,
+            toJson: toJson,
+            forEach: forEach
+        };
+        if (typeof window.Utilities === 'undefined') {
+            window.Utilities = _utilities;
+        }
+    }(window));
 }());
