@@ -26,10 +26,10 @@ namespace UmbracoContentApi.Core.Converters
 
             if (value is IEnumerable<IPublishedContent> ar)
             {
-                return ar.Select(t => _contentResolver.Value.ResolveContent(t)).ToList();
+                return ar.Select(t => _contentResolver.Value.ResolveContent(t, options)).ToList();
             }
 
-            return _contentResolver.Value.ResolveContent((IPublishedElement)value);
+            return _contentResolver.Value.ResolveContent((IPublishedElement)value, options);
         }
     }
 }
