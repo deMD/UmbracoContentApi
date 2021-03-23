@@ -47,7 +47,7 @@ namespace UmbracoContentApi.Core.Converters
                                 Areas = r.Areas.Select(
                                     a => new Area
                                     {
-                                        ColumnWidth = int.Parse(s.Grid),
+                                        ColumnWidth = int.Parse(a.Grid),
                                         Controls = a.Controls.Select(_gridControlResolver.Value.ResolveControl)
                                     })
                             })
