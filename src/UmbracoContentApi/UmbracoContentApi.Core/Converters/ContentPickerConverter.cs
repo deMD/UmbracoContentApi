@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using Umbraco.Core;
-using Umbraco.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.Models.PublishedContent;
 using UmbracoContentApi.Core.Enums;
 using UmbracoContentApi.Core.Models;
 using UmbracoContentApi.Core.Resolvers;
@@ -34,7 +31,7 @@ namespace UmbracoContentApi.Core.Converters
             {
                 return new LinkModel
                 {
-                    Id = ((IPublishedContent)value).Key,
+                    Id = ((IPublishedContent) value).Key,
                     LinkType = LinkType.Content.ToString()
                 };
             }
@@ -42,16 +39,16 @@ namespace UmbracoContentApi.Core.Converters
             if (options.ContainsKey("level"))
             {
                 var level = options["level"];
-                if (int.TryParse(level.ToString(), out int levelNum) && levelNum > 0)
+                if (int.TryParse(level.ToString(), out var levelNum) && levelNum > 0)
                 {
                     options["level"] = levelNum - 1;
-                    return _contentResolver.Value.ResolveContent((IPublishedElement)value, options);
+                    return _contentResolver.Value.ResolveContent((IPublishedElement) value, options);
                 }
             }
 
             return new LinkModel
             {
-                Id = ((IPublishedContent)value).Key,
+                Id = ((IPublishedContent) value).Key,
                 LinkType = LinkType.Content.ToString()
             };
         }

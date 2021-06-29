@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Umbraco.Core.Models.Blocks;
+using Umbraco.Cms.Core.Models.Blocks;
 using UmbracoContentApi.Core.Converters.BlockList;
 
 namespace UmbracoContentApi.Core.Resolvers

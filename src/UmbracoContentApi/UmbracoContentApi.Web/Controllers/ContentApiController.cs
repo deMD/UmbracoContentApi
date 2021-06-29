@@ -1,34 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Web.Http;
-using System.Web.Http.Description;
-using Umbraco.Core.Models.PublishedContent;
-using Umbraco.Web.WebApi;
-using UmbracoContentApi.Core.Models;
+using Microsoft.AspNetCore.Mvc;
+using Umbraco.Cms.Core;
+using Umbraco.Cms.Web.Common.Controllers;
 using UmbracoContentApi.Core.Resolvers;
 
 namespace UmbracoContentApi.Web.Controllers
 {
-    [RoutePrefix("api/content")]
+    [Route("api/content")]
     public class ContentApiController : UmbracoApiController
     {
         private readonly Lazy<IContentResolver> _contentResolver;
+        private readonly IPublishedContentQuery _publishedContent;
 
         public ContentApiController(
-            Lazy<IContentResolver> contentResolver)
+            Lazy<IContentResolver> contentResolver, IPublishedContentQuery publishedContent)
         {
             _contentResolver = contentResolver;
+            _publishedContent = publishedContent;
         }
 
         [Route("{id:guid}")]
-        [ResponseType(typeof(ContentModel))]
-        public IHttpActionResult Get(Guid id, int level = 0)
+        public IActionResult Get(Guid id, int level = 0)
         {
-            IPublishedContent content = Umbraco.Content(id);
+            var content = _publishedContent.Content(id);
             var dictionary = new Dictionary<string, object>
             {
-                { "addUrl", true },
-                { "flattenGrid", true }
+                {"addUrl", true},
+                {"flattenGrid", true}
             };
 
             if (level <= 0)

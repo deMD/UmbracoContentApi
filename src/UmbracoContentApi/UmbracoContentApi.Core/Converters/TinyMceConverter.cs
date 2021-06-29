@@ -15,10 +15,10 @@ namespace UmbracoContentApi.Core.Converters
                 throw new ArgumentNullException(nameof(value), $"A value for {EditorAlias} is required.");
             }
 
-            if (value is IHtmlString htmlString)
-            {
-                return htmlString.ToHtmlString();
-            }
+            //if (value is IHtmlString htmlString)
+            //{
+            //    return htmlString.ToHtmlString();
+            //}
 
             return default;
         }

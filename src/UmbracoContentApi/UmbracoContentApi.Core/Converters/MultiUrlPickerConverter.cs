@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using Umbraco.Web.Models;
+using Umbraco.Cms.Core.Models;
 using UmbracoContentApi.Core.Models;
 
 namespace UmbracoContentApi.Core.Converters

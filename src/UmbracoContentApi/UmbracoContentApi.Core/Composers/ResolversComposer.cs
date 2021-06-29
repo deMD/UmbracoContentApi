@@ -1,5 +1,6 @@
-﻿using Umbraco.Core;
-using Umbraco.Core.Composing;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Umbraco.Cms.Core.Composing;
+using Umbraco.Cms.Core.DependencyInjection;
 using UmbracoContentApi.Core.Resolvers;
 
 namespace UmbracoContentApi.Core.Composers
@@ -7,12 +8,13 @@ namespace UmbracoContentApi.Core.Composers
     // ReSharper disable once UnusedMember.Global
     internal class ResolversComposer : IUserComposer
     {
-        public void Compose(Composition composition)
+        public void Compose(IUmbracoBuilder builder)
         {
-            composition.Register<IContentResolver, ContentResolver>();
-            composition.Register<IGridControlResolver, GridControlResolver>();
-            composition.Register<IBlockListResolver, BlockListResolver>();
-            composition.Register<IMediaResolver, MediaResolver>();
+            builder.Services.AddScoped<IContentResolver, ContentResolver>();
+            builder.Services.AddScoped<IGridControlResolver, GridControlResolver>();
+            builder.Services.AddScoped<IBlockListResolver, BlockListResolver>();
+            builder.Services.AddScoped<IMediaResolver, MediaResolver>();
+
         }
     }
 }

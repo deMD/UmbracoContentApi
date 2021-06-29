@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Umbraco.Core.Logging;
-using Umbraco.Core.Models.PublishedContent;
-using Umbraco.Core.Services;
-using Umbraco.Web;
+using Microsoft.Extensions.Logging;
+using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Extensions;
+using UmbracoContentApi.Core.Builder;
 using UmbracoContentApi.Core.Converters;
 using UmbracoContentApi.Core.Models;
 
@@ -12,22 +12,21 @@ namespace UmbracoContentApi.Core.Resolvers
 {
     public class ContentResolver : IContentResolver
     {
-        private readonly IContentService _contentService;
-
-        private readonly IEnumerable<IConverter> _converters;
-        private readonly ILogger _logger;
+        private readonly ConverterCollection _converters;
+        private readonly ILogger<ContentResolver> _logger;
+        private readonly IPublishedValueFallback _publishedValueFallback;
         private readonly IVariationContextAccessor _variationContextAccessor;
 
         public ContentResolver(
             IVariationContextAccessor variationContextAccessor,
-            IEnumerable<IConverter> converters,
-            IContentService contentService,
-            ILogger logger)
+            ConverterCollection converters,
+            ILogger<ContentResolver> logger,
+            IPublishedValueFallback publishedValueFallback)
         {
             _variationContextAccessor = variationContextAccessor;
             _converters = converters;
-            _contentService = contentService;
             _logger = logger;
+            _publishedValueFallback = publishedValueFallback;
         }
 
         public ContentModel ResolveContent(IPublishedElement content, Dictionary<string, object> options = null)
@@ -62,20 +61,20 @@ namespace UmbracoContentApi.Core.Resolvers
 
                     if (options != null &&
                         options.ContainsKey("addUrl") &&
-                        bool.TryParse(options["addUrl"].ToString(), out bool addUrl) &&
+                        bool.TryParse(options["addUrl"].ToString(), out var addUrl) &&
                         addUrl)
                     {
                         contentModel.System.Url = publishedContent.Url(mode: UrlMode.Absolute);
                     }
                 }
 
-                foreach (IPublishedProperty property in content.Properties)
+                foreach (var property in content.Properties)
                 {
-                    IConverter converter =
+                    var converter =
                         _converters.FirstOrDefault(x => x.EditorAlias.Equals(property.PropertyType.EditorAlias));
                     if (converter != null)
                     {
-                        object prop = property.Value();
+                        var prop = property.Value(_publishedValueFallback);
 
                         if (prop == null)
                         {
@@ -100,7 +99,7 @@ namespace UmbracoContentApi.Core.Resolvers
             }
             catch (Exception e)
             {
-                _logger.Error<ContentResolver>(e);
+                _logger.LogError(e, "An exceptional exception happened, see the inner exception for details.");
                 throw;
             }
         }

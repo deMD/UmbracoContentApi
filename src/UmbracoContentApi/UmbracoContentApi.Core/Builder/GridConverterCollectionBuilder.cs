@@ -1,4 +1,4 @@
-﻿using Umbraco.Core.Composing;
+﻿using Umbraco.Cms.Core.Composing;
 using UmbracoContentApi.Core.Converters.Grid;
 
 namespace UmbracoContentApi.Core.Builder

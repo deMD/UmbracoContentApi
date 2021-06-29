@@ -1,13 +1,13 @@
-﻿using Umbraco.Core.Composing;
+﻿using Umbraco.Cms.Core.DependencyInjection;
 using UmbracoContentApi.Core.Builder;
 
 namespace UmbracoContentApi.Core
 {
     public static class BlockConverterCompositionExtensions
     {
-        public static BlockConverterCollectionBuilder BlockConverters(this Composition composition)
+        public static BlockConverterCollectionBuilder BlockConverters(this IUmbracoBuilder builder)
         {
-            return composition.WithCollectionBuilder<BlockConverterCollectionBuilder>();
+            return builder.WithCollectionBuilder<BlockConverterCollectionBuilder>();
         }
     }
 }

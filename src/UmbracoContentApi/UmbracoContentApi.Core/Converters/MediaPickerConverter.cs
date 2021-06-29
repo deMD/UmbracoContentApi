@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Umbraco.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.Models.PublishedContent;
 using UmbracoContentApi.Core.Resolvers;
 
 namespace UmbracoContentApi.Core.Converters

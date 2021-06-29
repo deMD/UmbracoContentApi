@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using Umbraco.Core.Models.Blocks;
-using Umbraco.Core.Models.PublishedContent;
-using UmbracoContentApi.Core.Models;
+using Umbraco.Cms.Core.Models.Blocks;
 
 namespace UmbracoContentApi.Core.Resolvers
 {

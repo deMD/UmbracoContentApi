@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Umbraco.Core.Composing;
+using Umbraco.Cms.Core.Composing;
 using UmbracoContentApi.Core.Converters;
 
 namespace UmbracoContentApi.Core.Builder
