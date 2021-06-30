@@ -42,3 +42,7 @@
 **/bin/*
 **/obj/*
 **/*.nupkg
+
+**/Logs
+**/mediacache
+**/TEMP

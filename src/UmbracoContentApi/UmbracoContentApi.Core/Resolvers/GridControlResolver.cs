@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using UmbracoContentApi.Core.Builder;
 using UmbracoContentApi.Core.Converters.Grid;
 using UmbracoContentApi.Core.Models.Grid;
 
@@ -8,10 +9,10 @@ namespace UmbracoContentApi.Core.Resolvers
 {
     public class GridControlResolver : IGridControlResolver
     {
-        private readonly IEnumerable<IGridConverter> _gridConverters;
+        private readonly GridConverterCollection _gridConverters;
 
         public GridControlResolver(
-            IEnumerable<IGridConverter> gridConverters)
+            GridConverterCollection gridConverters)
         {
             _gridConverters = gridConverters;
         }

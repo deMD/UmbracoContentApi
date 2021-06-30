@@ -1,4 +1,6 @@
 ﻿using System;
+using Newtonsoft.Json;
+using UmbracoContentApi.Core.Models;
 
 namespace UmbracoContentApi.Core.Converters.Grid
 {
@@ -10,10 +12,10 @@ namespace UmbracoContentApi.Core.Converters.Grid
         {
             if (value == null)
             {
-                throw new ArgumentException(nameof(value));
+                throw new ArgumentNullException(nameof(value));
             }
 
-            return value;
+            return JsonConvert.DeserializeObject<EmbedModel>(value.ToString());
         }
     }
 }

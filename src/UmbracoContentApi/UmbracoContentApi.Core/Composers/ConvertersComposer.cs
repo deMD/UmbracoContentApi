@@ -19,6 +19,8 @@ namespace UmbracoContentApi.Core.Composers
             {
                 builder.Converters().Append(converter);
             }
+
+            builder.BlockConverters();
         }
     }
 }

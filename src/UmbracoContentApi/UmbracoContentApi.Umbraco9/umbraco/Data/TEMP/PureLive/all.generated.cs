@@ -5,7 +5,7 @@ using  Umbraco.Cms.Core.PublishedCache;
 using  Umbraco.Cms.Infrastructure.ModelsBuilder;
 using  Umbraco.Cms.Core;
 using  Umbraco.Extensions;
-[assembly:ModelsBuilderAssembly(IsInMemory = true, SourceHash = "010ef36f29133606849444804820980a2eb7c595")]
+[assembly:ModelsBuilderAssembly(IsInMemory = true, SourceHash = "b468b2247705cd899bf0e558a27dea861c7f9336")]
 [assembly:System.Reflection.AssemblyVersion("0.0.0.1")]
 
 
@@ -64,11 +64,272 @@ namespace Umbraco.Cms.Web.Common.PublishedModels
 		// properties
 
 		///<summary>
+		/// Block list
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("blockList")]
+		public virtual global::Umbraco.Cms.Core.Models.Blocks.BlockListModel BlockList => this.Value<global::Umbraco.Cms.Core.Models.Blocks.BlockListModel>(_publishedValueFallback, "blockList");
+
+		///<summary>
+		/// Checkbox list
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("checkboxList")]
+		public virtual global::System.Collections.Generic.IEnumerable<string> CheckboxList => this.Value<global::System.Collections.Generic.IEnumerable<string>>(_publishedValueFallback, "checkboxList");
+
+		///<summary>
+		/// Color picker
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("colorPicker")]
+		public virtual string ColorPicker => this.Value<string>(_publishedValueFallback, "colorPicker");
+
+		///<summary>
+		/// Content Picker
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("contentPicker")]
+		public virtual global::Umbraco.Cms.Core.Models.PublishedContent.IPublishedContent ContentPicker => this.Value<global::Umbraco.Cms.Core.Models.PublishedContent.IPublishedContent>(_publishedValueFallback, "contentPicker");
+
+		///<summary>
+		/// DateTime - Date
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("dateTimeDate")]
+		public virtual global::System.DateTime DateTimeDate => this.Value<global::System.DateTime>(_publishedValueFallback, "dateTimeDate");
+
+		///<summary>
+		/// DateTime - Time
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("dateTimeTime")]
+		public virtual global::System.DateTime DateTimeTime => this.Value<global::System.DateTime>(_publishedValueFallback, "dateTimeTime");
+
+		///<summary>
+		/// Decimal
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("decimal")]
+		public virtual decimal Decimal => this.Value<decimal>(_publishedValueFallback, "decimal");
+
+		///<summary>
+		/// Dropdown multiple
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("dropdown")]
+		public virtual global::System.Collections.Generic.IEnumerable<string> Dropdown => this.Value<global::System.Collections.Generic.IEnumerable<string>>(_publishedValueFallback, "dropdown");
+
+		///<summary>
+		/// Email address
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("emailAddress")]
+		public virtual string EmailAddress => this.Value<string>(_publishedValueFallback, "emailAddress");
+
+		///<summary>
+		/// Eye drop color picker
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("eyeDropColorPicker")]
+		public virtual object EyeDropColorPicker => this.Value(_publishedValueFallback, "eyeDropColorPicker");
+
+		///<summary>
+		/// Grid
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("grid")]
+		public virtual global::Newtonsoft.Json.Linq.JToken Grid => this.Value<global::Newtonsoft.Json.Linq.JToken>(_publishedValueFallback, "grid");
+
+		///<summary>
+		/// Image cropper
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("imageCropper")]
+		public virtual global::Umbraco.Cms.Core.PropertyEditors.ValueConverters.ImageCropperValue ImageCropper => this.Value<global::Umbraco.Cms.Core.PropertyEditors.ValueConverters.ImageCropperValue>(_publishedValueFallback, "imageCropper");
+
+		///<summary>
+		/// Label
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("label")]
+		public virtual string Label => this.Value<string>(_publishedValueFallback, "label");
+
+		///<summary>
+		/// List view
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("listView")]
+		public virtual object ListView => this.Value(_publishedValueFallback, "listView");
+
+		///<summary>
+		/// Markdown
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("markdown")]
+		public virtual global::Umbraco.Cms.Core.Strings.IHtmlEncodedString Markdown => this.Value<global::Umbraco.Cms.Core.Strings.IHtmlEncodedString>(_publishedValueFallback, "markdown");
+
+		///<summary>
+		/// Media picker
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("mediaPicker")]
+		public virtual global::System.Collections.Generic.IEnumerable<global::Umbraco.Core.Models.MediaWithCrops> MediaPicker => this.Value<global::System.Collections.Generic.IEnumerable<global::Umbraco.Core.Models.MediaWithCrops>>(_publishedValueFallback, "mediaPicker");
+
+		///<summary>
+		/// Media picker single
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("mediaPickerSingle")]
+		public virtual global::Umbraco.Core.Models.MediaWithCrops MediaPickerSingle => this.Value<global::Umbraco.Core.Models.MediaWithCrops>(_publishedValueFallback, "mediaPickerSingle");
+
+		///<summary>
+		/// Member
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("member")]
+		public virtual global::Umbraco.Cms.Core.Models.PublishedContent.IPublishedContent Member => this.Value<global::Umbraco.Cms.Core.Models.PublishedContent.IPublishedContent>(_publishedValueFallback, "member");
+
+		///<summary>
+		/// Member group
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("memberGroup")]
+		public virtual string MemberGroup => this.Value<string>(_publishedValueFallback, "memberGroup");
+
+		///<summary>
+		/// Multinode Treepicker
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("multinodeTreepicker")]
+		public virtual global::System.Collections.Generic.IEnumerable<global::Umbraco.Cms.Core.Models.PublishedContent.IPublishedContent> MultinodeTreepicker => this.Value<global::System.Collections.Generic.IEnumerable<global::Umbraco.Cms.Core.Models.PublishedContent.IPublishedContent>>(_publishedValueFallback, "multinodeTreepicker");
+
+		///<summary>
+		/// Multi url picker
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("multiUrlPicker")]
+		public virtual global::System.Collections.Generic.IEnumerable<global::Umbraco.Cms.Core.Models.Link> MultiUrlPicker => this.Value<global::System.Collections.Generic.IEnumerable<global::Umbraco.Cms.Core.Models.Link>>(_publishedValueFallback, "multiUrlPicker");
+
+		///<summary>
+		/// Nested content
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("nestedContent")]
+		public virtual global::System.Collections.Generic.IEnumerable<global::Umbraco.Cms.Web.Common.PublishedModels.Block1> NestedContent => this.Value<global::System.Collections.Generic.IEnumerable<global::Umbraco.Cms.Web.Common.PublishedModels.Block1>>(_publishedValueFallback, "nestedContent");
+
+		///<summary>
+		/// Numeric
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("numeric")]
+		public virtual int Numeric => this.Value<int>(_publishedValueFallback, "numeric");
+
+		///<summary>
+		/// Radiobutton list
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("radiobuttonList")]
+		public virtual string RadiobuttonList => this.Value<string>(_publishedValueFallback, "radiobuttonList");
+
+		///<summary>
+		/// Repeatable textstrings
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("repeatableTextstrings")]
+		public virtual global::System.Collections.Generic.IEnumerable<string> RepeatableTextstrings => this.Value<global::System.Collections.Generic.IEnumerable<string>>(_publishedValueFallback, "repeatableTextstrings");
+
+		///<summary>
+		/// Rich text
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("richText")]
+		public virtual global::Umbraco.Cms.Core.Strings.IHtmlEncodedString RichText => this.Value<global::Umbraco.Cms.Core.Strings.IHtmlEncodedString>(_publishedValueFallback, "richText");
+
+		///<summary>
+		/// Slider
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("slider")]
+		public virtual decimal Slider => this.Value<decimal>(_publishedValueFallback, "slider");
+
+		///<summary>
+		/// Tags
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("tags")]
+		public virtual global::System.Collections.Generic.IEnumerable<string> Tags => this.Value<global::System.Collections.Generic.IEnumerable<string>>(_publishedValueFallback, "tags");
+
+		///<summary>
+		/// Textarea
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("textarea")]
+		public virtual string Textarea => this.Value<string>(_publishedValueFallback, "textarea");
+
+		///<summary>
 		/// Textstring
 		///</summary>
 		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
 		[ImplementPropertyType("textstring")]
 		public virtual string Textstring => this.Value<string>(_publishedValueFallback, "textstring");
+
+		///<summary>
+		/// Toggle
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("toggle")]
+		public virtual bool Toggle => this.Value<bool>(_publishedValueFallback, "toggle");
+
+		///<summary>
+		/// Upload
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("upload")]
+		public virtual string Upload => this.Value<string>(_publishedValueFallback, "upload");
+
+		///<summary>
+		/// User
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("user")]
+		public virtual object User => this.Value(_publishedValueFallback, "user");
+	}
+
+	/// <summary>Block 1</summary>
+	[PublishedModel("block1")]
+	public partial class Block1 : PublishedElementModel
+	{
+		// helpers
+#pragma warning disable 0109 // new is redundant
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		public new const string ModelTypeAlias = "block1";
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		public new const PublishedItemType ModelItemType = PublishedItemType.Content;
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		public new static IPublishedContentType GetModelContentType(IPublishedSnapshotAccessor publishedSnapshotAccessor)
+			=> PublishedModelUtility.GetModelContentType(publishedSnapshotAccessor, ModelItemType, ModelTypeAlias);
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		public static IPublishedPropertyType GetModelPropertyType<TValue>(IPublishedSnapshotAccessor publishedSnapshotAccessor, Expression<Func<Block1, TValue>> selector)
+			=> PublishedModelUtility.GetModelPropertyType(GetModelContentType(publishedSnapshotAccessor), selector);
+#pragma warning restore 0109
+
+		private IPublishedValueFallback _publishedValueFallback;
+
+		// ctor
+		public Block1(IPublishedElement content, IPublishedValueFallback publishedValueFallback)
+			: base(content, publishedValueFallback)
+		{
+			_publishedValueFallback = publishedValueFallback;
+		}
+
+		// properties
+
+		///<summary>
+		/// Text
+		///</summary>
+		[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Umbraco.ModelsBuilder.Embedded", "9.0.0-beta004+c41d05f6a67e1d217d565d055a85231792520f88")]
+		[ImplementPropertyType("text")]
+		public virtual string Text => this.Value<string>(_publishedValueFallback, "text");
 	}
 
 	/// <summary>Folder</summary>

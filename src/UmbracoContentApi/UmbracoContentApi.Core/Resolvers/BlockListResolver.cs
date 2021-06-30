@@ -1,15 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Umbraco.Cms.Core.Models.Blocks;
+using UmbracoContentApi.Core.Builder;
 using UmbracoContentApi.Core.Converters.BlockList;
 
 namespace UmbracoContentApi.Core.Resolvers
 {
     public class BlockListResolver : IBlockListResolver
     {
-        private readonly IEnumerable<IBlockConverter> _blockConverters;
+        private readonly BlockConverterCollection _blockConverters;
 
-        public BlockListResolver(IEnumerable<IBlockConverter> blockConverters)
+        public BlockListResolver(BlockConverterCollection blockConverters)
         {
             _blockConverters = blockConverters;
         }

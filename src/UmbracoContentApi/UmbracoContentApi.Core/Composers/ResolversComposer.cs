@@ -10,10 +10,10 @@ namespace UmbracoContentApi.Core.Composers
     {
         public void Compose(IUmbracoBuilder builder)
         {
-            builder.Services.AddScoped<IContentResolver, ContentResolver>();
-            builder.Services.AddScoped<IGridControlResolver, GridControlResolver>();
-            builder.Services.AddScoped<IBlockListResolver, BlockListResolver>();
-            builder.Services.AddScoped<IMediaResolver, MediaResolver>();
+            builder.Services.AddTransient<IContentResolver, ContentResolver>();
+            builder.Services.AddTransient<IGridControlResolver, GridControlResolver>();
+            builder.Services.AddTransient<IBlockListResolver, BlockListResolver>();
+            builder.Services.AddTransient<IMediaResolver, MediaResolver>();
 
         }
     }

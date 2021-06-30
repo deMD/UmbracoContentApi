@@ -20,7 +20,7 @@ namespace UmbracoContentApi.Core.Converters
             //    return htmlString.ToHtmlString();
             //}
 
-            return default;
+            return value.ToString();
         }
     }
 }

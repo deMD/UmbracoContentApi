@@ -10,7 +10,7 @@ namespace UmbracoContentApi.Core.Converters
         /// <inheritdoc />
         public object Convert(object value, Dictionary<string, object> options = null)
         {
-            return value;
+            return value.ToString();
         }
     }
 }
