@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Umbraco.Core.Logging;
-using Umbraco.Core.Models.PublishedContent;
-using Umbraco.Core.Services;
-using Umbraco.Web;
+using Microsoft.Extensions.Logging;
+using Umbraco.Cms.Core.Logging;
+using Umbraco.Cms.Core.Models.PublishedContent;
+using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Web;
+using Umbraco.Extensions;
 using UmbracoContentApi.Core.Converters;
 using UmbracoContentApi.Core.Enums;
 using UmbracoContentApi.Core.Models;
@@ -15,19 +17,22 @@ namespace UmbracoContentApi.Core.Resolvers
     {
         private readonly IContentService _contentService;
         private readonly IEnumerable<IConverter> _converters;
-        private readonly ILogger _logger;
+        private readonly ILogger<MediaResolver> _logger;
+        private readonly IPublishedValueFallback _publishedValueFallback;
         private readonly IVariationContextAccessor _variationContextAccessor;
 
         public MediaResolver(
             IVariationContextAccessor variationContextAccessor,
             IContentService contentService,
             IEnumerable<IConverter> converters,
-            ILogger logger)
+            ILogger<MediaResolver> logger,
+            IPublishedValueFallback publishedValueFallback)
         {
             _variationContextAccessor = variationContextAccessor;
             _contentService = contentService;
             _converters = converters;
             _logger = logger;
+            _publishedValueFallback = publishedValueFallback;
         }
 
         public AssetModel ResolveMedia(IPublishedContent media)
@@ -58,7 +63,7 @@ namespace UmbracoContentApi.Core.Resolvers
                         _converters.FirstOrDefault(x => x.EditorAlias.Equals(property.PropertyType.EditorAlias));
                     if (converter != null)
                     {
-                        object prop = property.Value();
+                        object prop = property.Value(_publishedValueFallback);
                         prop = converter.Convert(prop);
                         dict.Add(property.Alias, prop);
                     }
@@ -76,7 +81,7 @@ namespace UmbracoContentApi.Core.Resolvers
             }
             catch (Exception e)
             {
-                _logger.Error<MediaResolver>(e);
+                _logger.LogError(e, "Something went wrong, see the inner exception for details.");
                 throw;
             }
         }

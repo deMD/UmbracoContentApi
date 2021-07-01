@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
-using Umbraco.Core.Services;
+using System.Linq;
+using Umbraco.Cms.Core.Models;
+using Umbraco.Cms.Core.Services;
 
 namespace UmbracoContentApi.Core.Converters
 {
@@ -16,12 +18,8 @@ namespace UmbracoContentApi.Core.Converters
 
         public object Convert(object value, Dictionary<string, object> options = null)
         {
-            if (int.TryParse(value.ToString(), out var id))
-            {
-                return _memberGroupService.GetById(id).Name;
-            }
-
-            return null;
+            var values = value.ToString().Split(',').Select(int.Parse);
+            return _memberGroupService.GetByIds(values).Select(x => x.Name);
         }
     }
 }

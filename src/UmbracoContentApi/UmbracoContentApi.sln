@@ -5,17 +5,28 @@ VisualStudioVersion = 16.0.28803.156
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbracoContentApi.Umbraco", "UmbracoContentApi.Umbraco\UmbracoContentApi.Umbraco.csproj", "{D0A77B9C-BF57-467E-902D-87E9F357FEBE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbracoContentApi.Core", "UmbracoContentApi.Core\UmbracoContentApi.Core.csproj", "{3BB9FCC0-1DD7-4D48-9831-DD4D1E8C49F1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbracoContentApi.Core.Old", "UmbracoContentApi.Core.Old\UmbracoContentApi.Core.Old.csproj", "{3BB9FCC0-1DD7-4D48-9831-DD4D1E8C49F1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{E12B378D-9B5E-47B6-9250-A48FE337B26F}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\.gitignore = ..\..\.gitignore
+		..\..\azure-pipelines.yml = ..\..\azure-pipelines.yml
 		..\..\GitVersion.yml = ..\..\GitVersion.yml
 		..\..\License.txt = ..\..\License.txt
 		..\..\README.md = ..\..\README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbracoContentApi.Web", "UmbracoContentApi.Web\UmbracoContentApi.Web.csproj", "{5D0DBE6A-82E2-45C9-B5E6-D5F1EC9BCA16}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbracoContentApi.Web.Old", "UmbracoContentApi.Web.Old\UmbracoContentApi.Web.Old.csproj", "{5D0DBE6A-82E2-45C9-B5E6-D5F1EC9BCA16}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UmbracoContentApi.Umbraco9", "UmbracoContentApi.Umbraco9\UmbracoContentApi.Umbraco9.csproj", "{FB2A2C89-94B8-456C-9EFA-C9464FB2837F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UmbracoContentApi.Core", "UmbracoContentApi.Core\UmbracoContentApi.Core.csproj", "{FF4DA0AD-C2AD-49FE-9E78-1087F390961E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UmbracoContentApi.Web", "UmbracoContentApi.Web\UmbracoContentApi.Web.csproj", "{39C677E5-FB45-43CA-B943-9A90D0DE618E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Umbraco 8", "Umbraco 8", "{BA39802A-2E3A-46F9-982D-4CF4C8F27E9E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Umbraco 9", "Umbraco 9", "{ED25CE6F-82DF-499E-9597-7CEF5238B4E7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,9 +46,29 @@ Global
 		{5D0DBE6A-82E2-45C9-B5E6-D5F1EC9BCA16}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D0DBE6A-82E2-45C9-B5E6-D5F1EC9BCA16}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D0DBE6A-82E2-45C9-B5E6-D5F1EC9BCA16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB2A2C89-94B8-456C-9EFA-C9464FB2837F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB2A2C89-94B8-456C-9EFA-C9464FB2837F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB2A2C89-94B8-456C-9EFA-C9464FB2837F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB2A2C89-94B8-456C-9EFA-C9464FB2837F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF4DA0AD-C2AD-49FE-9E78-1087F390961E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF4DA0AD-C2AD-49FE-9E78-1087F390961E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF4DA0AD-C2AD-49FE-9E78-1087F390961E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF4DA0AD-C2AD-49FE-9E78-1087F390961E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{39C677E5-FB45-43CA-B943-9A90D0DE618E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39C677E5-FB45-43CA-B943-9A90D0DE618E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39C677E5-FB45-43CA-B943-9A90D0DE618E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39C677E5-FB45-43CA-B943-9A90D0DE618E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D0A77B9C-BF57-467E-902D-87E9F357FEBE} = {BA39802A-2E3A-46F9-982D-4CF4C8F27E9E}
+		{3BB9FCC0-1DD7-4D48-9831-DD4D1E8C49F1} = {BA39802A-2E3A-46F9-982D-4CF4C8F27E9E}
+		{5D0DBE6A-82E2-45C9-B5E6-D5F1EC9BCA16} = {BA39802A-2E3A-46F9-982D-4CF4C8F27E9E}
+		{FB2A2C89-94B8-456C-9EFA-C9464FB2837F} = {ED25CE6F-82DF-499E-9597-7CEF5238B4E7}
+		{FF4DA0AD-C2AD-49FE-9E78-1087F390961E} = {ED25CE6F-82DF-499E-9597-7CEF5238B4E7}
+		{39C677E5-FB45-43CA-B943-9A90D0DE618E} = {ED25CE6F-82DF-499E-9597-7CEF5238B4E7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31FCEA73-DB07-453E-978A-834176E90BD5}

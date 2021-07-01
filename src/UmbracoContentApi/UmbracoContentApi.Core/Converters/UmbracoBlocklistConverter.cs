@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Umbraco.Core.Models.Blocks;
+using Umbraco.Cms.Core.Models.Blocks;
 using UmbracoContentApi.Core.Resolvers;
 
 namespace UmbracoContentApi.Core.Converters

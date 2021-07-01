@@ -477,9 +477,9 @@
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.2.6.1\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\UmbracoContentApi.Web\UmbracoContentApi.Web.csproj">
+    <ProjectReference Include="..\UmbracoContentApi.Web.Old\UmbracoContentApi.Web.Old.csproj">
       <Project>{5d0dbe6a-82e2-45c9-b5e6-d5f1ec9bca16}</Project>
-      <Name>UmbracoContentApi.Web</Name>
+      <Name>UmbracoContentApi.Web.Old</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

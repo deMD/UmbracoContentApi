@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Umbraco.Core.Services;
+using Umbraco.Cms.Core.Services;
 
 namespace UmbracoContentApi.Core.Converters
 {

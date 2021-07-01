@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Web.Http;
-using System.Web.Http.Description;
-using Umbraco.Core.Models.PublishedContent;
-using Umbraco.Core.Services;
-using Umbraco.Web.PublishedCache;
-using Umbraco.Web.WebApi;
-using UmbracoContentApi.Core.Models;
+using System.Net;
+using Microsoft.AspNetCore.Mvc;
+using Umbraco.Cms.Core.PublishedCache;
+using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Web.Common.Controllers;
 using UmbracoContentApi.Core.Resolvers;
 
 namespace UmbracoContentApi.Web.Controllers
 {
-    [RoutePrefix("api/preview")]
+    [Route("api/preview")]
     public class PreviewApiController : UmbracoApiController
     {
         private readonly Lazy<IContentResolver> _contentResolver;
@@ -31,17 +29,17 @@ namespace UmbracoContentApi.Web.Controllers
         }
 
         [Route("{id:guid}")]
-        [ResponseType(typeof(ContentModel))]
-        public IHttpActionResult Get(Guid id)
+        public IActionResult Get(Guid id)
         {
-            IPublishedContent content = _publishedSnapshotService.CreatePublishedSnapshot(
-                    _publishedSnapshotService.EnterPreview(
-                        _userService.GetUserById(-1),
-                        _contentService.GetById(id).Id))
-                .Content.GetById(id);
+            //IPublishedContent content = _publishedSnapshotService.CreatePublishedSnapshot(
+            //        _publishedSnapshotService.EnterPreview(
+            //            _userService.GetUserById(-1),
+            //            _contentService.GetById(id).Id))
+            //    .Content.GetById(id);
 
-            ContentModel contentModel = _contentResolver.Value.ResolveContent(content);
-            return Ok(contentModel);
+            //ContentModel contentModel = _contentResolver.Value.ResolveContent(content);
+            //return Ok(contentModel);
+            return StatusCode((int) HttpStatusCode.Gone);
         }
     }
 }
