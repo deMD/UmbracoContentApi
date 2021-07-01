@@ -19,9 +19,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbracoContentApi.Web.Old",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UmbracoContentApi.Umbraco9", "UmbracoContentApi.Umbraco9\UmbracoContentApi.Umbraco9.csproj", "{FB2A2C89-94B8-456C-9EFA-C9464FB2837F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbracoContentApi.Core", "UmbracoContentApi.Core\UmbracoContentApi.Core.csproj", "{FF4DA0AD-C2AD-49FE-9E78-1087F390961E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UmbracoContentApi.Core", "UmbracoContentApi.Core\UmbracoContentApi.Core.csproj", "{FF4DA0AD-C2AD-49FE-9E78-1087F390961E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbracoContentApi.Web", "UmbracoContentApi.Web\UmbracoContentApi.Web.csproj", "{39C677E5-FB45-43CA-B943-9A90D0DE618E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UmbracoContentApi.Web", "UmbracoContentApi.Web\UmbracoContentApi.Web.csproj", "{39C677E5-FB45-43CA-B943-9A90D0DE618E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Umbraco 8", "Umbraco 8", "{BA39802A-2E3A-46F9-982D-4CF4C8F27E9E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Umbraco 9", "Umbraco 9", "{ED25CE6F-82DF-499E-9597-7CEF5238B4E7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -56,6 +60,14 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D0A77B9C-BF57-467E-902D-87E9F357FEBE} = {BA39802A-2E3A-46F9-982D-4CF4C8F27E9E}
+		{3BB9FCC0-1DD7-4D48-9831-DD4D1E8C49F1} = {BA39802A-2E3A-46F9-982D-4CF4C8F27E9E}
+		{5D0DBE6A-82E2-45C9-B5E6-D5F1EC9BCA16} = {BA39802A-2E3A-46F9-982D-4CF4C8F27E9E}
+		{FB2A2C89-94B8-456C-9EFA-C9464FB2837F} = {ED25CE6F-82DF-499E-9597-7CEF5238B4E7}
+		{FF4DA0AD-C2AD-49FE-9E78-1087F390961E} = {ED25CE6F-82DF-499E-9597-7CEF5238B4E7}
+		{39C677E5-FB45-43CA-B943-9A90D0DE618E} = {ED25CE6F-82DF-499E-9597-7CEF5238B4E7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31FCEA73-DB07-453E-978A-834176E90BD5}

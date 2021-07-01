@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Web;
 
 namespace UmbracoContentApi.Core.Converters
 {
@@ -10,7 +11,12 @@ namespace UmbracoContentApi.Core.Converters
         /// <inheritdoc />
         public object Convert(object value, Dictionary<string, object> options = null)
         {
-            return value;
+            if (value is IHtmlString htmlString)
+            {
+                return htmlString.ToHtmlString();
+            }
+
+            return default;
         }
     }
 }

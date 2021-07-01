@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Umbraco.Core.Logging;
@@ -16,14 +15,14 @@ namespace UmbracoContentApi.Core.Resolvers
         private readonly IContentService _contentService;
 
         private readonly IEnumerable<IConverter> _converters;
-        private readonly ILogger<ContentResolver> _logger;
+        private readonly ILogger _logger;
         private readonly IVariationContextAccessor _variationContextAccessor;
 
         public ContentResolver(
             IVariationContextAccessor variationContextAccessor,
             IEnumerable<IConverter> converters,
             IContentService contentService,
-            ILogger<ContentResolver> logger)
+            ILogger logger)
         {
             _variationContextAccessor = variationContextAccessor;
             _converters = converters;
@@ -101,7 +100,7 @@ namespace UmbracoContentApi.Core.Resolvers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Something went wrong, see the inner exception for details.");
+                _logger.Error<ContentResolver>(e, "Something went wrong, see the inner exception for details.");
                 throw;
             }
         }
