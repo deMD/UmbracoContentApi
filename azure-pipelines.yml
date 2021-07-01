@@ -36,7 +36,7 @@ steps:
 - task: NuGetCommand@2
   inputs:
     command: 'pack'
-    packagesToPack: '**/*.Core.csproj'
+    packagesToPack: '**/*.Core.Old.csproj'
     versioningScheme: 'byBuildNumber'
 
 - task: PublishBuildArtifacts@1
