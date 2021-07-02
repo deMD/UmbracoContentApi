@@ -16,6 +16,9 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
+- checkout: self
+  persistCredentials: true
+
 - task: gitversion/setup@0
   inputs:
     versionSpec: '5.x'
