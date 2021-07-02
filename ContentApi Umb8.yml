@@ -2,6 +2,7 @@
 # Build and test ASP.NET projects.
 # Add steps that publish symbols, save build artifacts, deploy, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
+name: "Umbraco 8 build"
 
 trigger:
 - master
@@ -15,6 +16,11 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
+- task: GitVersion@5
+  inputs:
+    runtime: 'full'
+    configFilePath: 'src/UmbracoContentApi.Core.Old/GitVerion.yml'
+
 - task: NuGetToolInstaller@1
 
 - task: NuGetCommand@2
