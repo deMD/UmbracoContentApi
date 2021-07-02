@@ -2,13 +2,21 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Web.Mvc;
+using Umbraco.Core.Models;
 using Umbraco.Core.PropertyEditors.ValueConverters;
 
 namespace UmbracoContentApi.Core.Converters
 {
     public class ImageCropperConverter : IConverter
     {
+        private readonly IImageUrlGenerator _imageUrlGenerator;
         public string EditorAlias => "Umbraco.ImageCropper";
+
+        public ImageCropperConverter(IImageUrlGenerator imageUrlGenerator)
+        {
+            _imageUrlGenerator = imageUrlGenerator;
+        }
 
         public object Convert(object value, Dictionary<string, object> options = null)
         {
@@ -33,7 +41,7 @@ namespace UmbracoContentApi.Core.Converters
                     {
                         cropUrls.Add(
                             crop.Alias,
-                            new Uri(ctn.Src + ctn.GetCropUrl(crop.Alias), UriKind.Relative).ToString());
+                            new Uri(ctn.Src + ctn.GetCropUrl(crop.Alias, _imageUrlGenerator), UriKind.Relative).ToString());
                     }
                 }
                 else
@@ -42,7 +50,7 @@ namespace UmbracoContentApi.Core.Converters
                     {
                         cropUrls.Add(
                             crop.Alias,
-                            new Uri(new Uri(cdnUrl), ctn.Src + ctn.GetCropUrl(crop.Alias)).ToString());
+                            new Uri(new Uri(cdnUrl), ctn.Src + ctn.GetCropUrl(crop.Alias, _imageUrlGenerator)).ToString());
                     }
                 }
             }

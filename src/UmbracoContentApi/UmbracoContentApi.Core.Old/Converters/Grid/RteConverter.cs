@@ -6,10 +6,12 @@ namespace UmbracoContentApi.Core.Converters.Grid
     public class RteConverter : IGridConverter
     {
         private readonly IUmbracoContextFactory _umbracoContextFactory;
+        private readonly HtmlLocalLinkParser _localLinkParser;
 
-        public RteConverter(IUmbracoContextFactory umbracoContextFactory)
+        public RteConverter(IUmbracoContextFactory umbracoContextFactory, HtmlLocalLinkParser localLinkParser)
         {
             _umbracoContextFactory = umbracoContextFactory;
+            _localLinkParser = localLinkParser;
         }
 
         public string EditorAlias => "rte";
@@ -18,9 +20,7 @@ namespace UmbracoContentApi.Core.Converters.Grid
         {
             using (var cRef = _umbracoContextFactory.EnsureUmbracoContext())
             {
-                var parsedHtml = TemplateUtilities.ParseInternalLinks(
-                    value.ToString(),
-                    cRef.UmbracoContext.UrlProvider);
+                var parsedHtml = _localLinkParser.EnsureInternalLinks(value.ToString(), false);
                 return parsedHtml;
             }
         }
