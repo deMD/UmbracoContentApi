@@ -17,6 +17,7 @@ variables:
 
 steps:
 - checkout: self
+  clean: true
   persistCredentials: true
 
 - task: gitversion/setup@0
