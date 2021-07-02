@@ -1,5 +1,5 @@
 mode: Mainline
-next-version: 1.0.0
+next-version: 9.0.0
 branches:
   feature:
     tag: alpha

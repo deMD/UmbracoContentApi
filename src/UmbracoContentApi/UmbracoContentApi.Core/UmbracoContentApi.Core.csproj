@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="GitVersion.yml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Umbraco.Cms.Core" Version="9.0.0-beta004" />
     <PackageReference Include="Umbraco.Cms.Infrastructure" Version="9.0.0-beta004" />
