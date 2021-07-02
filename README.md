@@ -10,6 +10,7 @@ Out of the box easy to use, full DI support and fast.
 #### Compatibility
 - The Umbraco Content Api 2.0.10 works with Umbraco 8.1.3+
 - The Umbraco Content Api 3.0.0+ works with Umbraco 8.7.0+
+- The Umbraco Content Api 4.0.0+ works with Umbraco 8.14.0+
 
 #### Basic Usage:
 1. Download the package from [NuGet](https://www.nuget.org/packages/UmbracoContentApi.Core/)
@@ -83,3 +84,7 @@ Added options params to all converters.
 #### 2.0.10
 
 Added grid editor converters.
+
+#### 4.0.0
+
+Added support for Umbraco MediaPicker 3
