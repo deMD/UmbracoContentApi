@@ -11,8 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 	ProjectSection(SolutionItems) = preProject
 		..\..\.gitattributes = ..\..\.gitattributes
 		..\..\.gitignore = ..\..\.gitignore
-		..\..\azure-pipelines.yml = ..\..\azure-pipelines.yml
-		..\..\GitVersion.yml = ..\..\GitVersion.yml
+		..\..\ContentApi Umb8.yml = ..\..\ContentApi Umb8.yml
+		..\..\ContentApi Umb9.yml = ..\..\ContentApi Umb9.yml
 		..\..\License.txt = ..\..\License.txt
 		..\..\README.md = ..\..\README.md
 	EndProjectSection
@@ -26,8 +26,14 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UmbracoContentApi.Web", "UmbracoContentApi.Web\UmbracoContentApi.Web.csproj", "{39C677E5-FB45-43CA-B943-9A90D0DE618E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Umbraco 8", "Umbraco 8", "{BA39802A-2E3A-46F9-982D-4CF4C8F27E9E}"
+	ProjectSection(SolutionItems) = preProject
+		UmbracoContentApi.Core.Old\GitVersion.yml = UmbracoContentApi.Core.Old\GitVersion.yml
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Umbraco 9", "Umbraco 9", "{ED25CE6F-82DF-499E-9597-7CEF5238B4E7}"
+	ProjectSection(SolutionItems) = preProject
+		UmbracoContentApi.Core\GitVersion.yml = UmbracoContentApi.Core\GitVersion.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
