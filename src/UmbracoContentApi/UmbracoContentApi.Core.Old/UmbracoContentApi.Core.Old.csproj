@@ -257,6 +257,7 @@
     <Compile Include="Converters\Grid\IGridConverter.cs" />
     <Compile Include="Converters\Grid\MediaConverter.cs" />
     <Compile Include="Converters\Grid\RteConverter.cs" />
+    <Compile Include="Converters\MediaPicker3Converter.cs" />
     <Compile Include="Converters\UmbracoBlocklistConverter.cs" />
     <Compile Include="Converters\UmbracoGridConverter.cs" />
     <Compile Include="ConvertsCompositionExtensions.cs" />
