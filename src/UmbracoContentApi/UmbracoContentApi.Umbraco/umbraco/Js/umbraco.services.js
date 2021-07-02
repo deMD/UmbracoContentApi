@@ -24,6 +24,10 @@
             '$pending'
         ];
         function collectAllFormErrorsRecursively(formCtrl, allErrors) {
+            // skip if the control is already added to the array
+            if (allErrors.indexOf(formCtrl) !== -1) {
+                return;
+            }
             // loop over the error dictionary (see https://docs.angularjs.org/api/ng/type/form.FormController#$error)
             var keys = Object.keys(formCtrl.$error);
             if (keys.length === 0) {
@@ -94,21 +98,21 @@
             },
             /**
      * Method used to re-run the $parsers for a given ngModel
-     * @param {} scope 
-     * @param {} ngModel 
-     * @returns {} 
+     * @param {} scope
+     * @param {} ngModel
+     * @returns {}
      */
             revalidateNgModel: function revalidateNgModel(scope, ngModel) {
                 this.safeApply(scope, function () {
-                    angular.forEach(ngModel.$parsers, function (parser) {
+                    ngModel.$parsers.forEach(function (parser) {
                         parser(ngModel.$viewValue);
                     });
                 });
             },
             /**
      * Execute a list of promises sequentially. Unlike $q.all which executes all promises at once, this will execute them in sequence.
-     * @param {} promises 
-     * @returns {} 
+     * @param {} promises
+     * @returns {}
      */
             executeSequentialPromises: function executeSequentialPromises(promises) {
                 //this is sequential promise chaining, it's not pretty but we need to do it this way.
@@ -145,11 +149,11 @@
      */
             safeApply: function safeApply(scope, fn) {
                 if (scope.$$phase || scope.$root && scope.$root.$$phase) {
-                    if (angular.isFunction(fn)) {
+                    if (Utilities.isFunction(fn)) {
                         fn();
                     }
                 } else {
-                    if (angular.isFunction(fn)) {
+                    if (Utilities.isFunction(fn)) {
                         scope.$apply(fn);
                     } else {
                         scope.$apply();
@@ -170,7 +174,7 @@
                 //NOTE: There isn't a way in angular to get a reference to the current form object since the form object
                 // is just defined as a property of the scope when it is named but you'll always need to know the name which
                 // isn't very convenient. If we want to watch for validation changes we need to get a form reference.
-                // The way that we detect the form object is a bit hackerific in that we detect all of the required properties 
+                // The way that we detect the form object is a bit hackerific in that we detect all of the required properties
                 // that exist on a form object.
                 //
                 //The other way to do it in a directive is to require "^form", but in a controller the only other way to do it
@@ -759,7 +763,7 @@
                 //blocking
                 var promises = [];
                 var assets = [];
-                _.each(nonEmpty, function (path) {
+                nonEmpty.forEach(function (path) {
                     path = convertVirtualPath(path);
                     var asset = service._getAssetPromise(path);
                     //if not previously loaded, add to list of promises
@@ -803,23 +807,23 @@
                         scope = $rootScope;
                     }
                     angularHelper.safeApply(scope, function () {
-                        asset.deferred.resolve(true);
+                        return asset.deferred.resolve(true);
                     });
                 }
                 if (cssAssets.length > 0) {
-                    var cssPaths = _.map(cssAssets, function (asset) {
-                        return appendRnd(asset.path);
+                    var cssPaths = cssAssets.map(function (css) {
+                        return appendRnd(css.path);
                     });
                     LazyLoad.css(cssPaths, function () {
-                        _.each(cssAssets, assetLoaded);
+                        return cssAssets.forEach(assetLoaded);
                     });
                 }
                 if (jsAssets.length > 0) {
-                    var jsPaths = _.map(jsAssets, function (asset) {
-                        return appendRnd(asset.path);
+                    var jsPaths = jsAssets.map(function (js) {
+                        return appendRnd(js.path);
                     });
                     LazyLoad.js(jsPaths, function () {
-                        _.each(jsAssets, assetLoaded);
+                        return jsAssets.forEach(assetLoaded);
                     });
                 }
                 return promise;
@@ -982,41 +986,72 @@
                         } else {
                             // lets crawl through all properties of layout to make sure get captured all `contentUdi` and `settingsUdi` properties.
                             var propType = _typeof(obj[k]);
-                            if (propType === 'object' || propType === 'array') {
+                            if (propType != null && (propType === 'object' || propType === 'array')) {
                                 replaceUdisOfObject(obj[k], propValue);
                             }
                         }
                     }
                 }
-                function replaceElementTypeBlockListUDIsResolver(obj, propClearingMethod) {
-                    replaceRawBlockListUDIsResolver(obj.value, propClearingMethod);
+                function removeBlockReferences(obj) {
+                    for (var k in obj) {
+                        if (k === 'contentUdi') {
+                            delete obj[k];
+                        } else if (k === 'settingsUdi') {
+                            delete obj[k];
+                        } else {
+                            // lets crawl through all properties of layout to make sure get captured all `contentUdi` and `settingsUdi` properties.
+                            var propType = _typeof(obj[k]);
+                            if (propType != null && (propType === 'object' || propType === 'array')) {
+                                removeBlockReferences(obj[k]);
+                            }
+                        }
+                    }
                 }
-                clipboardService.registerPastePropertyResolver(replaceElementTypeBlockListUDIsResolver, clipboardService.TYPES.ELEMENT_TYPE);
-                function replaceRawBlockListUDIsResolver(value, propClearingMethod) {
-                    if (_typeof(value) === 'object') {
+                function elementTypeBlockResolver(obj, propPasteResolverMethod) {
+                    // we could filter for specific Property Editor Aliases, but as the Block Editor structure can be used by many Property Editor we do not in this code know a good way to detect that this is a Block Editor and will therefor leave it to the value structure to determin this.
+                    rawBlockResolver(obj.value, propPasteResolverMethod);
+                }
+                clipboardService.registerPastePropertyResolver(elementTypeBlockResolver, clipboardService.TYPES.ELEMENT_TYPE);
+                function rawBlockResolver(value, propPasteResolverMethod) {
+                    if (value != null && _typeof(value) === 'object') {
                         // we got an object, and it has these three props then we are most likely dealing with a Block Editor.
                         if (value.layout !== undefined && value.contentData !== undefined && value.settingsData !== undefined) {
                             replaceUdisOfObject(value.layout, value);
-                            // replace UDIs for inner properties of this Block Editors content data.
+                            // run resolvers for inner properties of this Blocks content data.
                             if (value.contentData.length > 0) {
                                 value.contentData.forEach(function (item) {
                                     for (var k in item) {
-                                        propClearingMethod(item[k], clipboardService.TYPES.RAW);
+                                        propPasteResolverMethod(item[k], clipboardService.TYPES.RAW);
                                     }
                                 });
                             }
-                            // replace UDIs for inner properties of this Block Editors settings data.
+                            // run resolvers for inner properties of this Blocks settings data.
                             if (value.settingsData.length > 0) {
                                 value.settingsData.forEach(function (item) {
                                     for (var k in item) {
-                                        propClearingMethod(item[k], clipboardService.TYPES.RAW);
+                                        propPasteResolverMethod(item[k], clipboardService.TYPES.RAW);
                                     }
                                 });
                             }
                         }
                     }
                 }
-                clipboardService.registerPastePropertyResolver(replaceRawBlockListUDIsResolver, clipboardService.TYPES.RAW);
+                clipboardService.registerPastePropertyResolver(rawBlockResolver, clipboardService.TYPES.RAW);
+                function provideNewUdisForBlockResolver(block, propPasteResolverMethod) {
+                    if (block.layout) {
+                        // We do not support layout child blocks currently, these should be stripped out as we only will be copying a single entry.
+                        removeBlockReferences(block.layout);
+                    }
+                    if (block.data) {
+                        // Make new UDI for content-element
+                        block.data.udi = block.layout.contentUdi = udiService.create('element');
+                    }
+                    if (block.settingsData) {
+                        // Make new UDI for settings-element
+                        block.settingsData.udi = block.layout.settingsUdi = udiService.create('element');
+                    }
+                }
+                clipboardService.registerPastePropertyResolver(provideNewUdisForBlockResolver, clipboardService.TYPES.BLOCK);
             }
         ]);
         function blockEditorService(blockEditorModelObject) {
@@ -1059,7 +1094,7 @@
  */
     (function () {
         'use strict';
-        function blockEditorModelObjectFactory($interpolate, $q, udiService, contentResource, localizationService, umbRequestHelper, clipboardService) {
+        function blockEditorModelObjectFactory($interpolate, $q, udiService, contentResource, localizationService, umbRequestHelper, clipboardService, notificationsService) {
             /**
      * Simple mapping from property model content entry to editing model,
      * needs to stay simple to avoid deep watching.
@@ -1135,8 +1170,12 @@
      */
             function getBlockLabel(blockObject) {
                 if (blockObject.labelInterpolator !== undefined) {
-                    // We are just using the data model, since its a key/value object that is live synced. (if we need to add additional vars, we could make a shallow copy and apply those.)
-                    return blockObject.labelInterpolator(blockObject.data);
+                    var labelVars = Object.assign({
+                        '$settings': blockObject.settingsData || {},
+                        '$layout': blockObject.layout || {},
+                        '$index': (blockObject.index || 0) + 1
+                    }, blockObject.data);
+                    return blockObject.labelInterpolator(labelVars);
                 }
                 return blockObject.content.contentTypeName;
             }
@@ -1418,6 +1457,7 @@
                             if (self.scaffolds) {
                                 self.scaffolds.push(formatScaffoldData(scaffold));
                             }
+                        }).catch(function () {
                         }));
                     });
                     return $q.all(tasks);
@@ -1432,7 +1472,10 @@
                 getAvailableAliasesForBlockContent: function getAvailableAliasesForBlockContent() {
                     var _this = this;
                     return this.blockConfigurations.map(function (blockConfiguration) {
-                        return _this.getScaffoldFromKey(blockConfiguration.contentElementTypeKey).contentTypeAlias;
+                        var scaffold = _this.getScaffoldFromKey(blockConfiguration.contentElementTypeKey);
+                        if (scaffold) {
+                            return scaffold.contentTypeAlias;
+                        }
                     });
                 },
                 /**
@@ -1508,7 +1551,7 @@
                     var contentUdi = layoutEntry.contentUdi;
                     var dataModel = getDataByUdi(contentUdi, this.value.contentData);
                     if (dataModel === null) {
-                        console.error('Couldn\'t find content model of ' + contentUdi);
+                        console.error('Couldn\'t find content data of ' + contentUdi);
                         return null;
                     }
                     var blockConfiguration = this.getBlockConfiguration(dataModel.contentTypeKey);
@@ -1567,7 +1610,7 @@
                             var settingsUdi = layoutEntry.settingsUdi;
                             var settingsData = getDataByUdi(settingsUdi, this.value.settingsData);
                             if (settingsData === null) {
-                                console.error('Couldnt find content settings data of ' + settingsUdi);
+                                console.error('Couldnt find settings data of ' + settingsUdi);
                                 return null;
                             }
                             blockObject.settingsData = settingsData;
@@ -1710,6 +1753,49 @@
                 },
                 /**
        * @ngdoc method
+       * @name createFromBlockData
+       * @methodOf umbraco.services.blockEditorModelObject
+       * @description Insert data from raw models
+       * @return {Object | null} Layout entry object, to be inserted at a decired location in the layout object. Or ´null´ if the given ElementType isnt supported by the block configuration.
+       */
+                createFromBlockData: function createFromBlockData(blockData) {
+                    blockData = clipboardService.parseContentForPaste(blockData, clipboardService.TYPES.BLOCK);
+                    // As the blockData is a cloned object we can use its layout part for our layout entry.
+                    var layoutEntry = blockData.layout;
+                    if (layoutEntry === null) {
+                        return null;
+                    }
+                    var blockConfiguration;
+                    if (blockData.data) {
+                        // Ensure that we support the alias:
+                        blockConfiguration = this.getBlockConfiguration(blockData.data.contentTypeKey);
+                        if (blockConfiguration === null) {
+                            return null;
+                        }
+                        this.value.contentData.push(blockData.data);
+                    } else {
+                        // We do not have data, this cannot be succesful paste.
+                        return null;
+                    }
+                    if (blockData.settingsData) {
+                        // Ensure that we support the alias:
+                        if (blockConfiguration.settingsElementTypeKey) {
+                            // If we have settings for this Block Configuration, we need to check that they align, if we dont we do not want to fail.
+                            if (blockConfiguration.settingsElementTypeKey === blockData.settingsData.contentTypeKey) {
+                                this.value.settingsData.push(blockData.settingsData);
+                            } else {
+                                notificationsService.error('Clipboard', 'Couldn\'t paste because settings-data is not compatible.');
+                                return null;
+                            }
+                        } else {
+                            // We do not have settings currently, so lets get rid of the settings part and move on with the paste.
+                            delete layoutEntry.settingUdi;
+                        }
+                    }
+                    return layoutEntry;
+                },
+                /**
+       * @ngdoc method
        * @name sync
        * @methodOf umbraco.services.blockEditorModelObject
        * @description Force immidiate update of the blockobject models to the property model.
@@ -1791,26 +1877,59 @@
  * The service has a set way for defining a data-set by a entryType and alias, which later will be used to retrive the posible entries for a paste scenario.
  *
  */
-    function clipboardService(notificationsService, eventsService, localStorageService, iconHelper) {
+    function clipboardService($window, notificationsService, eventsService, localStorageService, iconHelper) {
         var TYPES = {};
         TYPES.ELEMENT_TYPE = 'elementType';
+        TYPES.BLOCK = 'block';
         TYPES.RAW = 'raw';
+        TYPES.MEDIA = 'media';
         var clearPropertyResolvers = {};
         var pastePropertyResolvers = {};
         var clipboardTypeResolvers = {};
-        clipboardTypeResolvers[TYPES.ELEMENT_TYPE] = function (data, propMethod) {
-            for (var t = 0; t < data.variants[0].tabs.length; t++) {
-                var tab = data.variants[0].tabs[t];
+        clipboardTypeResolvers[TYPES.ELEMENT_TYPE] = function (element, propMethod) {
+            for (var t = 0; t < element.variants[0].tabs.length; t++) {
+                var tab = element.variants[0].tabs[t];
                 for (var p = 0; p < tab.properties.length; p++) {
                     var prop = tab.properties[p];
                     propMethod(prop, TYPES.ELEMENT_TYPE);
                 }
             }
         };
+        clipboardTypeResolvers[TYPES.BLOCK] = function (block, propMethod) {
+            propMethod(block, TYPES.BLOCK);
+            if (block.data) {
+                Object.keys(block.data).forEach(function (key) {
+                    if (key === 'udi' || key === 'contentTypeKey') {
+                        return;
+                    }
+                    propMethod(block.data[key], TYPES.RAW);
+                });
+            }
+            if (block.settingsData) {
+                Object.keys(block.settingsData).forEach(function (key) {
+                    if (key === 'udi' || key === 'contentTypeKey') {
+                        return;
+                    }
+                    propMethod(block.settingsData[key], TYPES.RAW);
+                });
+            }    /*
+    // Concept for supporting Block that contains other Blocks.
+    // Missing clarifications:
+    // How do we ensure that the inner blocks of a block is supported in the new scenario. Not that likely but still relevant, so considerations should be made.
+    if(block.references) {
+        // A Block clipboard entry can contain other Block Clipboard Entries, here we will make sure to resolve those identical to the main entry.
+        for (var r = 0; r < block.references.length; r++) {
+            clipboardTypeResolvers[TYPES.BLOCK](block.references[r], propMethod);
+        }
+    }
+    */
+        };
         clipboardTypeResolvers[TYPES.RAW] = function (data, propMethod) {
             for (var p = 0; p < data.length; p++) {
                 propMethod(data[p], TYPES.RAW);
             }
+        };
+        clipboardTypeResolvers[TYPES.MEDIA] = function (data, propMethod) {
         };
         var STORAGE_KEY = 'umbClipboardService';
         var retriveStorage = function retriveStorage() {
@@ -1833,7 +1952,9 @@
         var saveStorage = function saveStorage(storage) {
             var storageString = JSON.stringify(storage);
             try {
+                // Check that we can parse the JSON:
                 var storageJSON = JSON.parse(storageString);
+                // Store the string:
                 localStorageService.set(STORAGE_KEY, storageString);
                 eventsService.emit('clipboardService.storageUpdate');
                 return true;
@@ -1845,8 +1966,10 @@
         function resolvePropertyForStorage(prop, type) {
             type = type || 'raw';
             var resolvers = clearPropertyResolvers[type];
-            for (var i = 0; i < resolvers.length; i++) {
-                resolvers[i](prop, resolvePropertyForStorage);
+            if (resolvers) {
+                for (var i = 0; i < resolvers.length; i++) {
+                    resolvers[i](prop, resolvePropertyForStorage);
+                }
             }
         }
         var prepareEntryForStorage = function prepareEntryForStorage(type, entryData, firstLevelClearupMethod) {
@@ -1863,7 +1986,7 @@
             return cloneData;
         };
         var isEntryCompatible = function isEntryCompatible(entry, type, allowedAliases) {
-            return entry.type === type && (entry.alias && allowedAliases.filter(function (allowedAlias) {
+            return entry.type === type && (allowedAliases === null || entry.alias && allowedAliases.filter(function (allowedAlias) {
                 return allowedAlias === entry.alias;
             }).length > 0 || entry.aliases && entry.aliases.filter(function (entryAlias) {
                 return allowedAliases.filter(function (allowedAlias) {
@@ -1874,8 +1997,10 @@
         function resolvePropertyForPaste(prop, type) {
             type = type || 'raw';
             var resolvers = pastePropertyResolvers[type];
-            for (var i = 0; i < resolvers.length; i++) {
-                resolvers[i](prop, resolvePropertyForPaste);
+            if (resolvers) {
+                for (var i = 0; i < resolvers.length; i++) {
+                    resolvers[i](prop, resolvePropertyForPaste);
+                }
             }
         }
         var service = {};
@@ -2141,10 +2266,66 @@
             storage.entries = filteretEntries;
             saveStorage(storage);
         };
+        var emitClipboardStorageUpdate = _.debounce(function (e) {
+            eventsService.emit('clipboardService.storageUpdate');
+        }, 1000);
+        // Fires if LocalStorage was changed from another tab than this one.
+        $window.addEventListener('storage', emitClipboardStorageUpdate);
         return service;
     }
     angular.module('umbraco.services').factory('clipboardService', clipboardService);
     'use strict';
+    /**
+* @ngdoc service
+* @name umbraco.services.contentAppHelper
+* @description A helper service for content app related functions.
+**/
+    function contentAppHelper() {
+        var service = {};
+        /**
+   * Default known content based apps.
+   */
+        service.CONTENT_BASED_APPS = [
+            'umbContent',
+            'umbInfo',
+            'umbListView'
+        ];
+        /**
+  * @ngdoc method
+  * @name umbraco.services.contentAppHelper#isContentBasedApp
+  * @methodOf umbraco.services.contentAppHelper
+  *
+  * @param {object} app A content app to check
+  *
+  * @description
+  * Determines whether the supplied content app is a known content based app
+  *
+  */
+        service.isContentBasedApp = function (app) {
+            return service.CONTENT_BASED_APPS.indexOf(app.alias) !== -1;
+        };
+        return service;
+    }
+    angular.module('umbraco.services').factory('contentAppHelper', contentAppHelper);
+    'use strict';
+    function _toConsumableArray(arr) {
+        return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
+    }
+    function _nonIterableSpread() {
+        throw new TypeError('Invalid attempt to spread non-iterable instance');
+    }
+    function _iterableToArray(iter) {
+        if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === '[object Arguments]')
+            return Array.from(iter);
+    }
+    function _arrayWithoutHoles(arr) {
+        if (Array.isArray(arr)) {
+            for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) {
+                arr2[i] = arr[i];
+            }
+            return arr2;
+        }
+    }
     function _slicedToArray(arr, i) {
         return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();
     }
@@ -2210,7 +2391,8 @@
             }
             return true;
         }
-        function showNotificationsForModelsState(ms) {
+        function showNotificationsForModelsState(ms, messageType) {
+            messageType = messageType || 2;
             for (var _i = 0, _Object$entries = Object.entries(ms); _i < _Object$entries.length; _i++) {
                 var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 2), key = _Object$entries$_i[0], value = _Object$entries$_i[1];
                 var errorMsg = value[0];
@@ -2220,11 +2402,15 @@
                     var idsToErrors = serverValidationManager.parseComplexEditorError(errorMsg, '');
                     idsToErrors.forEach(function (x) {
                         if (x.modelState) {
-                            showNotificationsForModelsState(x.modelState);
+                            showNotificationsForModelsState(x.modelState, messageType);
                         }
                     });
                 } else if (value[0]) {
-                    notificationsService.error('Validation', value[0]);
+                    notificationsService.showNotification({
+                        type: messageType,
+                        header: 'Validation',
+                        message: value[0]
+                    });
                 }
             }
         }
@@ -2263,10 +2449,15 @@
                 var self = this;
                 //we will use the default one for content if not specified
                 var _rebindCallback = args.rebindCallback === undefined ? self.reBindChangedProperties : args.rebindCallback;
-                if (formHelper.submitForm({
-                        scope: args.scope,
-                        action: args.action
-                    })) {
+                var formSubmitOptions = {
+                    scope: args.scope,
+                    action: args.action
+                };
+                if (args.skipValidation === true) {
+                    formSubmitOptions.skipValidation = true;
+                    formSubmitOptions.keepServerValidation = true;
+                }
+                if (formHelper.submitForm(formSubmitOptions)) {
                     return args.saveMethod(args.content, args.create, fileManager.getFiles(), args.showNotifications).then(function (data) {
                         formHelper.resetForm({ scope: args.scope });
                         if (!args.infiniteMode) {
@@ -2294,11 +2485,15 @@
                             showNotifications: args.showNotifications,
                             softRedirect: args.softRedirect,
                             err: err,
+                            action: args.action,
                             rebindCallback: function rebindCallback() {
-                                _rebindCallback.apply(self, [
-                                    args.content,
-                                    err.data
-                                ]);
+                                // if the error contains data, we want to map that back as we want to continue editing this save. Especially important when the content is new as the returned data will contain ID etc.
+                                if (err.data) {
+                                    _rebindCallback.apply(self, [
+                                        args.content,
+                                        err.data
+                                    ]);
+                                }
                             }
                         });
                         //update editor state to what is current
@@ -2319,7 +2514,7 @@
                 };
                 // first check if tab is already added
                 var foundInfoTab = false;
-                angular.forEach(tabs, function (tab) {
+                tabs.forEach(function (tab) {
                     if (tab.id === infoTab.id && tab.alias === infoTab.alias) {
                         foundInfoTab = true;
                     }
@@ -2458,7 +2653,7 @@
                         }
                     }
                     // if publishing is allowed also allow schedule publish
-                    // we add this manually becuase it doesn't have a permission so it wont 
+                    // we add this manually becuase it doesn't have a permission so it wont
                     // get picked up by the loop through permissions
                     if (_.contains(args.content.allowedActions, 'U')) {
                         buttons.subButtons.push(createButtonDefinition('SCHEDULE'));
@@ -2710,7 +2905,7 @@
                             //instead of having a property editor $watch their expression to check if it has
                             // been updated, instead we'll check for the existence of a special method on their model
                             // and just call it.
-                            if (angular.isFunction(origProp.onValueChanged)) {
+                            if (Utilities.isFunction(origProp.onValueChanged)) {
                                 //send the newVal + oldVal
                                 origProp.onValueChanged(origProp.value, origVal);
                             }
@@ -2744,15 +2939,20 @@
                     if (args.err.data && args.err.data.ModelState) {
                         //wire up the server validation errs
                         formHelper.handleServerValidation(args.err.data.ModelState);
+                        var messageType = 2;
+                        //error
+                        if (args.action === 'save') {
+                            messageType = 4;    //warning
+                        }
                         //add model state errors to notifications
                         if (args.showNotifications) {
-                            showNotificationsForModelsState(args.err.data.ModelState);
+                            showNotificationsForModelsState(args.err.data.ModelState, messageType);
                         }
                         if (!this.redirectToCreatedContent(args.err.data.id, args.softRedirect) || args.softRedirect) {
                             // If we are not redirecting it's because this is not newly created content, else in some cases we are
-                            // soft-redirecting which means the URL will change but the route wont (i.e. creating content). 
+                            // soft-redirecting which means the URL will change but the route wont (i.e. creating content).
                             // In this case we need to detect what properties have changed and re-bind them with the server data.
-                            if (args.rebindCallback && angular.isFunction(args.rebindCallback)) {
+                            if (args.rebindCallback && Utilities.isFunction(args.rebindCallback)) {
                                 args.rebindCallback();
                             }
                             // In this case notify all validators (don't clear the server validations though since we need to maintain their state because of
@@ -2788,9 +2988,9 @@
                 }
                 if (!this.redirectToCreatedContent(args.redirectId ? args.redirectId : args.savedContent.id, args.softRedirect) || args.softRedirect) {
                     // If we are not redirecting it's because this is not newly created content, else in some cases we are
-                    // soft-redirecting which means the URL will change but the route wont (i.e. creating content). 
+                    // soft-redirecting which means the URL will change but the route wont (i.e. creating content).
                     // In this case we need to detect what properties have changed and re-bind them with the server data.
-                    if (args.rebindCallback && angular.isFunction(args.rebindCallback)) {
+                    if (args.rebindCallback && Utilities.isFunction(args.rebindCallback)) {
                         args.rebindCallback();
                     }
                 }
@@ -2849,6 +3049,75 @@
                 //don't add a browser history for this
                 $location.replace();
                 return true;
+            },
+            /**
+     * @ngdoc function
+     * @name umbraco.services.contentEditingHelper#sortVariants
+     * @methodOf umbraco.services.contentEditingHelper
+     * @function
+     *
+     * @description
+     * Sorts the variants so default language is shown first. Mandatory languages are shown next and all other underneath. Both Mandatory and non mandatory languages are
+     * sorted in the following groups 'Published', 'Draft', 'Not Created'. Within each of those groups the variants are
+     * sorted by the language display name.
+     *
+     */
+            sortVariants: function sortVariants(a, b) {
+                var statesOrder = {
+                    'PublishedPendingChanges': 1,
+                    'Published': 1,
+                    'Draft': 2,
+                    'NotCreated': 3
+                };
+                var compareDefault = function compareDefault(a, b) {
+                    return (a.language && a.language.isDefault ? -1 : 1) - (b.language && b.language.isDefault ? -1 : 1);
+                };
+                // Make sure mandatory variants goes on top, unless they are published, cause then they already goes to the top and then we want to mix them with other published variants.
+                var compareMandatory = function compareMandatory(a, b) {
+                    return a.state === 'PublishedPendingChanges' || a.state === 'Published' ? 0 : (a.language && a.language.isMandatory ? -1 : 1) - (b.language && b.language.isMandatory ? -1 : 1);
+                };
+                var compareState = function compareState(a, b) {
+                    return (statesOrder[a.state] || 99) - (statesOrder[b.state] || 99);
+                };
+                var compareName = function compareName(a, b) {
+                    return a.displayName.localeCompare(b.displayName);
+                };
+                return compareDefault(a, b) || compareMandatory(a, b) || compareState(a, b) || compareName(a, b);
+            },
+            /**
+     * @ngdoc function
+     * @name umbraco.services.contentEditingHelper#getSortedVariantsAndSegments
+     * @methodOf umbraco.services.contentEditingHelper
+     * @function
+     *
+     * @description
+     * Returns an array of variants and segments sorted by the rules in the sortVariants method.
+     * A variant language is followed by its segments in the array. If a segment doesn't have a parent variant it is
+     * added to the end of the array.
+     *
+     */
+            getSortedVariantsAndSegments: function getSortedVariantsAndSegments(variantsAndSegments) {
+                var _this = this;
+                var sortedVariants = variantsAndSegments.filter(function (variant) {
+                    return !variant.segment;
+                }).sort(this.sortVariants);
+                var variantsWithSegments = variantsAndSegments.filter(function (variant) {
+                    return variant.segment;
+                });
+                var sortedAvailableVariants = [];
+                sortedVariants.forEach(function (variant) {
+                    var sortedMatchedSegments = variantsWithSegments.filter(function (segment) {
+                        return segment.language && variant.language && segment.language.culture === variant.language.culture;
+                    }).sort(_this.sortVariants);
+                    // remove variants for this culture
+                    variantsWithSegments = variantsWithSegments.filter(function (segment) {
+                        return !segment.language || segment.language && variant.language && segment.language.culture !== variant.language.culture;
+                    });
+                    sortedAvailableVariants = [].concat(_toConsumableArray(sortedAvailableVariants), [variant], _toConsumableArray(sortedMatchedSegments));
+                });
+                // if we have segments without a parent language variant we need to add the remaining variantsWithSegments to the array
+                sortedAvailableVariants = [].concat(_toConsumableArray(sortedAvailableVariants), _toConsumableArray(variantsWithSegments.sort(this.sortVariants)));
+                return sortedAvailableVariants;
             }
         };
     }
@@ -2863,7 +3132,7 @@
         var contentTypeHelperService = {
             createIdArray: function createIdArray(array) {
                 var newArray = [];
-                angular.forEach(array, function (arrayItem) {
+                array.forEach(function (arrayItem) {
                     if (Utilities.isObject(arrayItem)) {
                         newArray.push(arrayItem.id);
                     } else {
@@ -2944,11 +3213,11 @@
                 if (overlappingAliases.length > 0) {
                     throw new Error('Cannot add this composition, these properties already exist on the content type: ' + overlappingAliases.join());
                 }
-                angular.forEach(compositeContentType.groups, function (compositionGroup) {
+                compositeContentType.groups.forEach(function (compositionGroup) {
                     // order composition groups based on sort order
                     compositionGroup.properties = $filter('orderBy')(compositionGroup.properties, 'sortOrder');
                     // get data type details
-                    angular.forEach(compositionGroup.properties, function (property) {
+                    compositionGroup.properties.forEach(function (property) {
                         dataTypeResource.getById(property.dataTypeId).then(function (dataType) {
                             property.dataTypeIcon = dataType.icon;
                             property.dataTypeName = dataType.name;
@@ -2957,13 +3226,13 @@
                     // set inherited state on tab
                     compositionGroup.inherited = true;
                     // set inherited state on properties
-                    angular.forEach(compositionGroup.properties, function (compositionProperty) {
+                    compositionGroup.properties.forEach(function (compositionProperty) {
                         compositionProperty.inherited = true;
                     });
                     // set tab state
                     compositionGroup.tabState = 'inActive';
                     // if groups are named the same - merge the groups
-                    angular.forEach(contentType.groups, function (contentTypeGroup) {
+                    contentType.groups.forEach(function (contentTypeGroup) {
                         if (contentTypeGroup.name === compositionGroup.name) {
                             // set flag to show if properties has been merged into a tab
                             compositionGroup.groupIsMerged = true;
@@ -3018,7 +3287,7 @@
             },
             splitCompositeContentType: function splitCompositeContentType(contentType, compositeContentType) {
                 var groups = [];
-                angular.forEach(contentType.groups, function (contentTypeGroup) {
+                contentType.groups.forEach(function (contentTypeGroup) {
                     if (contentTypeGroup.tabState !== 'init') {
                         var idIndex = contentTypeGroup.parentTabContentTypes.indexOf(compositeContentType.id);
                         var nameIndex = contentTypeGroup.parentTabContentTypeNames.indexOf(compositeContentType.name);
@@ -3026,7 +3295,7 @@
                         if (idIndex !== -1) {
                             var properties = [];
                             // remove all properties from composite content type
-                            angular.forEach(contentTypeGroup.properties, function (property) {
+                            contentTypeGroup.properties.forEach(function (property) {
                                 if (property.contentTypeId !== compositeContentType.id) {
                                     properties.push(property);
                                 }
@@ -3058,7 +3327,7 @@
             },
             updatePropertiesSortOrder: function updatePropertiesSortOrder(properties) {
                 var sortOrder = 0;
-                angular.forEach(properties, function (property) {
+                properties.forEach(function (property) {
                     if (!property.inherited && property.propertyState !== 'init') {
                         property.sortOrder = sortOrder;
                     }
@@ -3146,25 +3415,19 @@
                     ratio: ratio
                 };
             },
-            scaleToMaxSize: function scaleToMaxSize(srcWidth, srcHeight, maxSize) {
-                var retVal = {
-                    height: srcHeight,
-                    width: srcWidth
+            scaleToMaxSize: function scaleToMaxSize(srcWidth, srcHeight, maxWidth, maxHeight) {
+                // fallback to maxHeight:
+                maxHeight = maxHeight || maxWidth;
+                // get smallest ratio, if ratio exceeds 1 we will not scale(hence we parse 1 as the maximum allowed ratio)
+                var ratio = Math.min(maxWidth / srcWidth, maxHeight / srcHeight, 1);
+                return {
+                    width: srcWidth * ratio,
+                    height: srcHeight * ratio
                 };
-                if (srcWidth > maxSize || srcHeight > maxSize) {
-                    var ratio = [
-                        maxSize / srcWidth,
-                        maxSize / srcHeight
-                    ];
-                    ratio = Math.min(ratio[0], ratio[1]);
-                    retVal.height = srcHeight * ratio;
-                    retVal.width = srcWidth * ratio;
-                }
-                return retVal;
             },
             //returns a ng-style object with top,left,width,height pixel measurements
             //expects {left,right,top,bottom} - {width,height}, {width,height}, int
-            //offset is just to push the image position a number of pixels from top,left    
+            //offset is just to push the image position a number of pixels from top,left
             convertToStyle: function convertToStyle(coordinates, originalSize, viewPort, offset) {
                 var coordinates_px = service.coordinatesToPixels(coordinates, originalSize, offset);
                 var _offset = offset || 0;
@@ -3199,15 +3462,10 @@
                 var y2_px = image.height - (y1_px + height);
                 //crop coordinates in %
                 var crop = {};
-                crop.x1 = x1_px / image.width;
-                crop.y1 = y1_px / image.height;
-                crop.x2 = x2_px / image.width;
-                crop.y2 = y2_px / image.height;
-                for (var coord in crop) {
-                    if (crop[coord] < 0) {
-                        crop[coord] = 0;
-                    }
-                }
+                crop.x1 = Math.max(x1_px / image.width, 0);
+                crop.y1 = Math.max(y1_px / image.height, 0);
+                crop.x2 = Math.max(x2_px / image.width, 0);
+                crop.y2 = Math.max(y2_px / image.height, 0);
                 return crop;
             },
             alignToCoordinates: function alignToCoordinates(image, center, viewport) {
@@ -3512,7 +3770,7 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Method to return all open editors
+     * Method to return all open editors.
      */
             function getEditors() {
                 return editors;
@@ -3524,7 +3782,7 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Method to return the number of open editors
+     * Method to return the number of open editors.
      */
             function getNumberOfEditors() {
                 return editors.length;
@@ -3570,11 +3828,11 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Method to open a new editor in infinite editing
+     * Method to open a new editor in infinite editing.
      *
-     * @param {Object} editor rendering options
-     * @param {String} editor.view Path to view
-     * @param {String} editor.size Sets the size of the editor ("small" || "medium"). If nothing is set it will use full width.
+     * @param {object} editor rendering options.
+     * @param {string} editor.view URL to view.
+     * @param {string} editor.size Sets the size of the editor (`small` or `medium`). If nothing is set it will use full width.
      */
             function open(editor) {
                 /* keyboard shortcuts will be overwritten by the new infinite editor
@@ -3602,7 +3860,7 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Method to close the latest opened editor
+     * Method to close the latest opened editor.
      */
             function close() {
                 // close last opened editor
@@ -3630,7 +3888,7 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Method to close all open editors
+     * Method to close all open editors.
      */
             function closeAll() {
                 editors = [];
@@ -3646,18 +3904,18 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens a content editor in infinite editing, the submit callback returns the updated content item
-     * @param {Object} editor rendering options
-     * @param {String} editor.id The id of the content item
-     * @param {Boolean} editor.create Create new content item
-     * @param {Function} editor.submit Callback function when the publish and close button is clicked. Returns the editor model object
-     * @param {Function} editor.close Callback function when the close button is clicked.
-     * @param {String} editor.parentId If editor.create is true, provide parentId for the creation of the content item
-     * @param {String} editor.documentTypeAlias If editor.create is true, provide document type alias for the creation of the content item
-     * @param {Boolean} editor.allowSaveAndClose If editor is being used in infinite editing allows the editor to close when the save action is performed
-     * @param {Boolean} editor.allowPublishAndClose If editor is being used in infinite editing allows the editor to close when the publish action is performed
-     * 
-     * @returns {Object} editor object
+     * Opens a content editor in infinite editing, the submit callback returns the updated content item.
+     *
+     * @param {object} editor rendering options.
+     * @param {string} editor.id The id of the content item.
+     * @param {boolean} editor.create Create new content item.
+     * @param {function} editor.submit Callback function when the publish and close button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @param {string} editor.parentId If editor.create is true, provide parentId for the creation of the content item.
+     * @param {string} editor.documentTypeAlias If editor.create is true, provide document type alias for the creation of the content item.
+     * @param {boolean} editor.allowSaveAndClose If editor is being used in infinite editing allows the editor to close when the save action is performed.
+     * @param {boolean} editor.allowPublishAndClose If editor is being used in infinite editing allows the editor to close when the publish action is performed.
+     * @returns {object} editor object
      */
             function contentEditor(editor) {
                 editor.view = 'views/content/edit.html';
@@ -3669,15 +3927,15 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens a content picker in infinite editing, the submit callback returns an array of selected items
+     * Opens a content picker in infinite editing, the submit callback returns an array of selected items.
      *
-     * @param {Object} editor rendering options
-     * @param {Boolean} editor.multiPicker Pick one or multiple items
-     * @param {Int} editor.startNodeId Set the startnode of the picker (optional)
-     * @param {Function} editor.submit Callback function when the submit button is clicked. Returns the editor model object
-     * @param {Function} editor.close Callback function when the close button is clicked.
+     * @param {object} editor rendering options.
+     * @param {boolean} editor.multiPicker Pick one or multiple items.
+     * @param {number} editor.startNodeId Set the startnode of the picker (optional).
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
      *
-     * @returns {Object} editor object
+     * @returns {object} editor object.
      */
             function contentPicker(editor) {
                 editor.view = 'views/common/infiniteeditors/treepicker/treepicker.html';
@@ -3695,12 +3953,11 @@ When building a custom infinite editor view you can use the same components as a
      * @description
      * Opens a content type picker in infinite editing, the submit callback returns an array of selected items
      *
-     * @param {Object} editor rendering options
-     * @param {Boolean} editor.multiPicker Pick one or multiple items
-     * @param {Function} editor.submit Callback function when the submit button is clicked. Returns the editor model object
-     * @param {Function} editor.close Callback function when the close button is clicked.
-     *
-     * @returns {Object} editor object
+     * @param {object} editor rendering options.
+     * @param {boolean} editor.multiPicker Pick one or multiple items.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object
      */
             function contentTypePicker(editor) {
                 editor.view = 'views/common/infiniteeditors/treepicker/treepicker.html';
@@ -3716,14 +3973,13 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens a media type picker in infinite editing, the submit callback returns an array of selected items
+     * Opens a media type picker in infinite editing, the submit callback returns an array of selected items.
      *
-     * @param {Object} editor rendering options
-     * @param {Boolean} editor.multiPicker Pick one or multiple items
-     * @param {Function} editor.submit Callback function when the submit button is clicked. Returns the editor model object
-     * @param {Function} editor.close Callback function when the close button is clicked.
-     *
-     * @returns {Object} editor object
+     * @param {object} editor rendering options.
+     * @param {boolean} editor.multiPicker Pick one or multiple items.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function mediaTypePicker(editor) {
                 editor.view = 'views/common/infiniteeditors/treepicker/treepicker.html';
@@ -3739,14 +3995,14 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens a member type picker in infinite editing, the submit callback returns an array of selected items
+     * Opens a member type picker in infinite editing, the submit callback returns an array of selected items.
      *
-     * @param {Object} editor rendering options
-     * @param {Boolean} editor.multiPicker Pick one or multiple items
-     * @param {Function} editor.submit Callback function when the submit button is clicked. Returns the editor model object
-     * @param {Function} editor.close Callback function when the close button is clicked.
+     * @param {object} editor rendering options.
+     * @param {boolean} editor.multiPicker Pick one or multiple items.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
      *
-     * @returns {Object} editor object
+     * @returns {object} editor object.
      */
             function memberTypePicker(editor) {
                 editor.view = 'views/common/infiniteeditors/treepicker/treepicker.html';
@@ -3762,12 +4018,14 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens a copy editor in infinite editing, the submit callback returns an array of selected items
-     * @param {String} editor.section The node entity type
-     * @param {String} editor.currentNode The current node id
-     * @param {Callback} editor.submit Saves, submits, and closes the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     * Opens a copy editor in infinite editing, the submit callback returns an array of selected items.
+     *
+     * @param {object} editor rendering options.
+     * @param {string} editor.section The node entity type.
+     * @param {string} editor.currentNode The current node id.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function copy(editor) {
                 editor.view = 'views/common/infiniteeditors/copy/copy.html';
@@ -3782,11 +4040,13 @@ When building a custom infinite editor view you can use the same components as a
      *
      * @description
      * Opens a move editor in infinite editing.
-     * @param {String} editor.section The node entity type
-     * @param {String} editor.currentNode The current node id
-     * @param {Callback} editor.submit Saves, submits, and closes the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     *
+     * @param {object} editor rendering options.
+     * @param {string} editor.section The node entity type.
+     * @param {string} editor.currentNode The current node id.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function move(editor) {
                 editor.view = 'views/common/infiniteeditors/move/move.html';
@@ -3801,9 +4061,11 @@ When building a custom infinite editor view you can use the same components as a
      *
      * @description
      * Opens an embed editor in infinite editing.
-     * @param {Callback} editor.submit Saves, submits, and closes the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     *
+     * @param {object} editor rendering options.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function embed(editor) {
                 editor.view = 'views/common/infiniteeditors/embed/embed.html';
@@ -3818,10 +4080,12 @@ When building a custom infinite editor view you can use the same components as a
      *
      * @description
      * Opens a rollback editor in infinite editing.
-     * @param {String} editor.node The node to rollback
-     * @param {Callback} editor.submit Saves, submits, and closes the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     *
+     * @param {object} editor rendering options.
+     * @param {string} editor.node The node to rollback.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function rollback(editor) {
                 editor.view = 'views/common/infiniteeditors/rollback/rollback.html';
@@ -3836,12 +4100,13 @@ When building a custom infinite editor view you can use the same components as a
      *
      * @description
      * Opens an embed editor in infinite editing.
-     * @param {Object} editor rendering options
-     * @param {String} editor.icon The icon class
-     * @param {String} editor.color The color class
-     * @param {Callback} editor.submit Saves, submits, and closes the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     *
+     * @param {object} editor rendering options.
+     * @param {string} editor.icon The icon class.
+     * @param {string} editor.color The color class.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function linkPicker(editor) {
                 editor.view = 'views/common/infiniteeditors/linkpicker/linkpicker.html';
@@ -3855,13 +4120,14 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens a media editor in infinite editing, the submit callback returns the updated media item
-     * @param {Object} editor rendering options
-     * @param {String} editor.id The id of the media item
-     * @param {Boolean} editor.create Create new media item
-     * @param {Callback} editor.submit Saves, submits, and closes the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     * Opens a media editor in infinite editing, the submit callback returns the updated media item.
+     *
+     * @param {object} editor rendering options.
+     * @param {string} editor.id The id of the media item.
+     * @param {boolean} editor.create Create new media item.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function mediaEditor(editor) {
                 editor.view = 'views/media/edit.html';
@@ -3873,17 +4139,18 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens a media picker in infinite editing, the submit callback returns an array of selected media items
-     * @param {Object} editor rendering options
-     * @param {Int} editor.startNodeId Set the startnode of the picker (optional)
-     * @param {Boolean} editor.multiPicker Pick one or multiple items
-     * @param {Boolean} editor.onlyImages Only display files that have an image file-extension
-     * @param {Boolean} editor.disableFolderSelect Disable folder selection
-     * @param {Boolean} editor.disableFocalPoint Disable focal point editor for selected media
-     * @param {Array} editor.updatedMediaNodes A list of ids for media items that have been updated through the media picker
-     * @param {Callback} editor.submit Submits the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     * Opens a media picker in infinite editing, the submit callback returns an array of selected media items.
+     *
+     * @param {object} editor rendering options.
+     * @param {number} editor.startNodeId Set the startnode of the picker (optional).
+     * @param {boolean} editor.multiPicker Pick one or multiple items.
+     * @param {boolean} editor.onlyImages Only display files that have an image file-extension.
+     * @param {boolean} editor.disableFolderSelect Disable folder selection.
+     * @param {boolean} editor.disableFocalPoint Disable focal point editor for selected media.
+     * @param {array} editor.updatedMediaNodes A list of ids for media items that have been updated through the media picker.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function mediaPicker(editor) {
                 editor.view = 'views/common/infiniteeditors/mediapicker/mediapicker.html';
@@ -3894,17 +4161,35 @@ When building a custom infinite editor view you can use the same components as a
             }
             /**
      * @ngdoc method
+     * @name umbraco.services.editorService#mediaCropDetails
+     * @methodOf umbraco.services.editorService
+     *
+     * @description
+     * Opens the media crop details editor in infinite editing, the submit callback returns the updated media object.
+     *
+     * @param {object} editor rendering options.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
+     */
+            function mediaCropDetails(editor) {
+                editor.view = 'views/common/infiniteeditors/mediapicker/overlays/mediacropdetails.html';
+                open(editor);
+            }
+            /**
+     * @ngdoc method
      * @name umbraco.services.editorService#iconPicker
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens an icon picker in infinite editing, the submit callback returns the selected icon
-     * @param {Object} editor rendering options
-     * @param {String} editor.icon The CSS class representing the icon - eg. "icon-autofill".
-     * @param {String} editor.color The CSS class representing the color - eg. "color-red".
-     * @param {Callback} editor.submit Submits the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     * Opens an icon picker in infinite editing, the submit callback returns the selected icon.
+     *
+     * @param {object} editor rendering options.
+     * @param {string} editor.icon The CSS class representing the icon - eg. `icon-autofill.
+     * @param {string} editor.color The CSS class representing the color - eg. color-red.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function iconPicker(editor) {
                 editor.view = 'views/common/infiniteeditors/iconpicker/iconpicker.html';
@@ -3919,15 +4204,16 @@ When building a custom infinite editor view you can use the same components as a
      *
      * @description
      * Opens the document type editor in infinite editing, the submit callback returns the alias of the saved document type.
-     * @param {Object} editor rendering options
-     * @param {Number} editor.id Indicates the ID of the document type to be edited. Alternatively the ID may be set to `-1` in combination with `create` being set to `true` to open the document type editor for creating a new document type.
-     * @param {Boolean} editor.create Set to `true` to open the document type editor for creating a new document type.
-     * @param {Boolean} editor.noTemplate If `true` and in combination with `create` being set to `true`, the document type editor will not create a corresponding template by default. This is similar to selecting the "Document Type without a template" in the Create dialog.
-     * @param {Boolean} editor.isElement If `true` and in combination with `create` being set to `true`, the "Is an Element type" option will be selected by default in the document type editor.
-     * @param {Boolean} editor.allowVaryByCulture If `true` and in combination with `create`, the "Allow varying by culture" option will be selected by default in the document type editor.
-     * @param {Callback} editor.submit Submits the editor.
-     * @param {Callback} editor.close Closes the editor.
-     * @returns {Object} editor object
+     *
+     * @param {object} editor rendering options.
+     * @param {number} editor.id Indicates the ID of the document type to be edited. Alternatively the ID may be set to `-1` in combination with `create` being set to `true` to open the document type editor for creating a new document type.
+     * @param {boolean} editor.create Set to `true` to open the document type editor for creating a new document type.
+     * @param {boolean} editor.noTemplate If `true` and in combination with `create` being set to `true`, the document type editor will not create a corresponding template by default. This is similar to selecting the "Document Type without a template" in the Create dialog.
+     * @param {boolean} editor.isElement If `true` and in combination with `create` being set to `true`, the "Is an Element type" option will be selected by default in the document type editor.
+     * @param {boolean} editor.allowVaryByCulture If `true` and in combination with `create`, the "Allow varying by culture" option will be selected by default in the document type editor.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function documentTypeEditor(editor) {
                 editor.view = 'views/documenttypes/edit.html';
@@ -3939,11 +4225,12 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens the media type editor in infinite editing, the submit callback returns the saved media type
-     * @param {Object} editor rendering options
-     * @param {Callback} editor.submit Submits the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     * Opens the media type editor in infinite editing, the submit callback returns the saved media type.
+     *
+     * @param {object} editor rendering options.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function mediaTypeEditor(editor) {
                 editor.view = 'views/mediatypes/edit.html';
@@ -3955,27 +4242,12 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens the member type editor in infinite editing, the submit callback returns the saved member type
-     * @param {Object} editor rendering options
-     * @param {Callback} editor.submit Submits the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
-     */
-            function memberTypeEditor(editor) {
-                editor.view = 'views/membertypes/edit.html';
-                open(editor);
-            }
-            /**
-     * @ngdoc method
-     * @name umbraco.services.editorService#memberTypeEditor
-     * @methodOf umbraco.services.editorService
+     * Opens the member type editor in infinite editing, the submit callback returns the saved member type.
      *
-     * @description
-     * Opens the member type editor in infinite editing, the submit callback returns the saved member type
-     * @param {Object} editor rendering options
-     * @param {Callback} editor.submit Submits the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     * @param {object} editor rendering options.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function memberTypeEditor(editor) {
                 editor.view = 'views/membertypes/edit.html';
@@ -3987,11 +4259,12 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens the query builder in infinite editing, the submit callback returns the generted query
-     * @param {Object} editor rendering options
-     * @param {Callback} editor.submit Submits the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     * Opens the query builder in infinite editing, the submit callback returns the generated query.
+     *
+     * @param {object} editor rendering options.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function queryBuilder(editor) {
                 editor.view = 'views/common/infiniteeditors/querybuilder/querybuilder.html';
@@ -4003,14 +4276,15 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens the query builder in infinite editing, the submit callback returns the generted query
-     * @param {Object} editor rendering options
-     * @param {String} options.section tree section to display
-     * @param {String} options.treeAlias specific tree to display
-     * @param {Boolean} options.multiPicker should the tree pick one or multiple items before returning
-     * @param {Callback} editor.submit Submits the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     * Opens the query builder in infinite editing, the submit callback returns the generted query.
+     *
+     * @param {object} editor rendering options.
+     * @param {string} options.section tree section to display.
+     * @param {string} options.treeAlias specific tree to display.
+     * @param {boolean} options.multiPicker should the tree pick one or multiple items before returning.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function treePicker(editor) {
                 editor.view = 'views/common/infiniteeditors/treepicker/treepicker.html';
@@ -4025,10 +4299,11 @@ When building a custom infinite editor view you can use the same components as a
      *
      * @description
      * Opens the an editor to set node permissions.
-     * @param {Object} editor rendering options
-     * @param {Callback} editor.submit Submits the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     *
+     * @param {object} editor rendering options.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function nodePermissions(editor) {
                 editor.view = 'views/common/infiniteeditors/nodepermissions/nodepermissions.html';
@@ -4042,11 +4317,12 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Open an editor to insert code snippets into the code editor
-     * @param {Object} editor rendering options
-     * @param {Callback} editor.submit Submits the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     * Open an editor to insert code snippets into the code editor.
+     *
+     * @param {object} editor rendering options.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function insertCodeSnippet(editor) {
                 editor.view = 'views/common/infiniteeditors/insertcodesnippet/insertcodesnippet.html';
@@ -4060,11 +4336,12 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens the user group picker in infinite editing, the submit callback returns an array of the selected user groups
-     * @param {Object} editor rendering options
-     * @param {Callback} editor.submit Submits the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     * Opens the user group picker in infinite editing, the submit callback returns an array of the selected user groups.
+     *
+     * @param {object} editor rendering options.
+     * @param {function} editor.submit Submits the editor.
+     * @param {function} editor.close Closes the editor.
+     * @returns {object} editor object.
      */
             function userGroupPicker(editor) {
                 editor.view = 'views/common/infiniteeditors/usergrouppicker/usergrouppicker.html';
@@ -4074,16 +4351,34 @@ When building a custom infinite editor view you can use the same components as a
             }
             /**
      * @ngdoc method
+     * @name umbraco.services.editorService#userGroupEditor
+     * @methodOf umbraco.services.editorService
+     *
+     * @description
+     * Opens the user group picker in infinite editing, the submit callback returns the saved user group.
+     *
+     * @param {object} editor rendering options.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
+     */
+            function userGroupEditor(editor) {
+                editor.view = 'views/users/group.html';
+                open(editor);
+            }
+            /**
+     * @ngdoc method
      * @name umbraco.services.editorService#templateEditor
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens the template editor in infinite editing, the submit callback returns the saved template
-     * @param {Object} editor rendering options
-     * @param {String} editor.id The template id
-     * @param {Callback} editor.submit Submits the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     * Opens the template editor in infinite editing, the submit callback returns the saved template.
+     *
+     * @param {object} editor rendering options.
+     * @param {string} editor.id The template id.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function templateEditor(editor) {
                 editor.view = 'views/templates/edit.html';
@@ -4095,11 +4390,12 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens the section picker in infinite editing, the submit callback returns an array of the selected sections¨
-     * @param {Object} editor rendering options
-     * @param {Callback} editor.submit Submits the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     * Opens the section picker in infinite editing, the submit callback returns an array of the selected sections.
+     *
+     * @param {object} editor rendering options.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function sectionPicker(editor) {
                 editor.view = 'views/common/infiniteeditors/sectionpicker/sectionpicker.html';
@@ -4113,11 +4409,12 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens the insert field editor in infinite editing, the submit callback returns the code snippet
-     * @param {Object} editor rendering options
-     * @param {Callback} editor.submit Submits the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     * Opens the insert field editor in infinite editing, the submit callback returns the code snippet.
+     *
+     * @param {object} editor rendering options.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function insertField(editor) {
                 editor.view = 'views/common/infiniteeditors/insertfield/insertfield.html';
@@ -4131,11 +4428,12 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens the template sections editor in infinite editing, the submit callback returns the type to insert
-     * @param {Object} editor rendering options
-     * @param {Callback} editor.submit Submits the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     * Opens the template sections editor in infinite editing, the submit callback returns the type to insert.
+     *
+     * @param {object} editor rendering options.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function templateSections(editor) {
                 editor.view = 'views/common/infiniteeditors/templatesections/templatesections.html';
@@ -4149,11 +4447,12 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens the section picker in infinite editing, the submit callback returns an array of the selected users
-     * @param {Object} editor rendering options
-     * @param {Callback} editor.submit Submits the editor
-     * @param {Callback} editor.close Closes the editor
-     * @returns {Object} editor object
+     * Opens the section picker in infinite editing, the submit callback returns an array of the selected users.
+     *
+     * @param {object} editor rendering options.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function userPicker(editor) {
                 editor.view = 'views/common/infiniteeditors/userpicker/userpicker.html';
@@ -4167,15 +4466,15 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens the section picker in infinite editing, the submit callback returns an array of the selected items
+     * Opens the section picker in infinite editing, the submit callback returns an array of the selected items.
      *
-     * @param {Object} editor rendering options
-     * @param {Array} editor.availableItems Array of available items.
-     * @param {Array} editor.selectedItems Array of selected items. When passed in the selected items will be filtered from the available items.
-     * @param {Boolean} editor.filter Set to false to hide the filter.
-     * @param {Callback} editor.submit Submits the editor.
-     * @param {Callback} editor.close Closes the editor.
-     * @returns {Object} editor object
+     * @param {object} editor rendering options.
+     * @param {array} editor.availableItems Array of available items.
+     * @param {array} editor.selectedItems Array of selected items. When passed in the selected items will be filtered from the available items.
+     * @param {boolean} editor.filter Set to false to hide the filter.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function itemPicker(editor) {
                 editor.view = 'views/common/infiniteeditors/itempicker/itempicker.html';
@@ -4189,11 +4488,12 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens a macro picker in infinite editing, the submit callback returns an array of the selected items
+     * Opens a macro picker in infinite editing, the submit callback returns an array of the selected items.
      *
-     * @param {Callback} editor.submit Submits the editor.
-     * @param {Callback} editor.close Closes the editor.
-     * @returns {Object} editor object
+     * @param {object} editor rendering options.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function macroPicker(editor) {
                 editor.view = 'views/common/infiniteeditors/macropicker/macropicker.html';
@@ -4209,11 +4509,11 @@ When building a custom infinite editor view you can use the same components as a
      * @description
      * Opens a member group picker in infinite editing.
      *
-     * @param {Object} editor rendering options
-     * @param {Object} editor.multiPicker Pick one or multiple items.
-     * @param {Callback} editor.submit Submits the editor.
-     * @param {Callback} editor.close Closes the editor.
-     * @returns {Object} editor object
+     * @param {object} editor rendering options.
+     * @param {object} editor.multiPicker Pick one or multiple items.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @returns {object} editor object.
      */
             function memberGroupPicker(editor) {
                 editor.view = 'views/common/infiniteeditors/membergrouppicker/membergrouppicker.html';
@@ -4227,14 +4527,13 @@ When building a custom infinite editor view you can use the same components as a
     * @methodOf umbraco.services.editorService
     *
     * @description
-    * Opens a member picker in infinite editing, the submit callback returns an array of selected items
+    * Opens a member picker in infinite editing, the submit callback returns an array of selected items.
     * 
-    * @param {Object} editor rendering options
-    * @param {Boolean} editor.multiPicker Pick one or multiple items
-    * @param {Function} editor.submit Callback function when the submit button is clicked. Returns the editor model object
-    * @param {Function} editor.close Callback function when the close button is clicked.
-    * 
-    * @returns {Object} editor object
+    * @param {object} editor rendering options.
+    * @param {boolean} editor.multiPicker Pick one or multiple items.
+    * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+    * @param {function} editor.close Callback function when the close button is clicked.
+    * @returns {object} editor object.
     */
             function memberPicker(editor) {
                 editor.view = 'views/common/infiniteeditors/treepicker/treepicker.html';
@@ -4250,15 +4549,15 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Opens a member editor in infinite editing, the submit callback returns the updated member
-     * @param {Object} editor rendering options
-     * @param {String} editor.id The id (GUID) of the member
-     * @param {Boolean} editor.create Create new member
-     * @param {Function} editor.submit Callback function when the submit button is clicked. Returns the editor model object
-     * @param {Function} editor.close Callback function when the close button is clicked.
-     * @param {String} editor.doctype If editor.create is true, provide member type for the creation of the member
-     * 
-     * @returns {Object} editor object
+     * Opens a member editor in infinite editing, the submit callback returns the updated member.
+     *
+     * @param {object} editor rendering options.
+     * @param {string} editor.id The id (GUID) of the member.
+     * @param {boolean} editor.create Create new member.
+     * @param {function} editor.submit Callback function when the submit button is clicked. Returns the editor model object.
+     * @param {function} editor.close Callback function when the close button is clicked.
+     * @param {string} editor.doctype If `editor.create` is `true`, provide member type for the creation of the member.
+     * @returns {object} editor object.
      */
             function memberEditor(editor) {
                 editor.view = 'views/member/edit.html';
@@ -4272,8 +4571,7 @@ When building a custom infinite editor view you can use the same components as a
      *
      * @description
      * Internal method to keep track of keyboard shortcuts registered
-     * to each editor so they can be rebound when an editor closes
-     *
+     * to each editor so they can be rebound when an editor closes.
      */
             function unbindKeyboardShortcuts() {
                 var shortcuts = Utilities.copy(keyboardService.keyboardEvent);
@@ -4291,8 +4589,7 @@ When building a custom infinite editor view you can use the same components as a
      * @methodOf umbraco.services.editorService
      *
      * @description
-     * Internal method to rebind keyboard shortcuts for the editor in focus
-     *
+     * Internal method to rebind keyboard shortcuts for the editor in focus.
      */
             function rebindKeyboardShortcuts() {
                 // find the shortcuts from the previous editor
@@ -4333,6 +4630,7 @@ When building a custom infinite editor view you can use the same components as a
                 nodePermissions: nodePermissions,
                 insertCodeSnippet: insertCodeSnippet,
                 userGroupPicker: userGroupPicker,
+                userGroupEditor: userGroupEditor,
                 templateEditor: templateEditor,
                 sectionPicker: sectionPicker,
                 insertField: insertField,
@@ -4342,7 +4640,8 @@ When building a custom infinite editor view you can use the same components as a
                 macroPicker: macroPicker,
                 memberGroupPicker: memberGroupPicker,
                 memberPicker: memberPicker,
-                memberEditor: memberEditor
+                memberEditor: memberEditor,
+                mediaCropDetails: mediaCropDetails
             };
             return service;
         }
@@ -4477,13 +4776,77 @@ When building a custom infinite editor view you can use the same components as a
             },
             /** pass in the result of 'on' to this method, or just call the method returned from 'on' to unsubscribe */
             unsubscribe: function unsubscribe(handle) {
-                if (angular.isFunction(handle)) {
+                if (Utilities.isFunction(handle)) {
                     handle();
                 }
             }
         };
     }
     angular.module('umbraco.services').factory('eventsService', eventsService);
+    'use strict';
+    /**
+ * @ngdoc service
+ * @name umbraco.services.externalLoginInfoService
+ * @description A service for working with external login providers
+ **/
+    function externalLoginInfoService(externalLoginInfo, umbRequestHelper) {
+        function getLoginProvider(provider) {
+            if (provider) {
+                var found = _.find(externalLoginInfo.providers, function (x) {
+                    return x.authType == provider;
+                });
+                return found;
+            }
+            return null;
+        }
+        function getLoginProviderView(provider) {
+            if (provider && provider.properties && provider.properties.UmbracoBackOfficeExternalLoginOptions && provider.properties.UmbracoBackOfficeExternalLoginOptions.CustomBackOfficeView) {
+                return umbRequestHelper.convertVirtualToAbsolutePath(provider.properties.UmbracoBackOfficeExternalLoginOptions.CustomBackOfficeView);
+            }
+            return null;
+        }
+        /**
+   * Returns true if any provider denies local login if `provider` is null, else whether the passed 
+   * @param {any} provider
+   */
+        function hasDenyLocalLogin(provider) {
+            if (!provider) {
+                return _.some(externalLoginInfo.providers, function (x) {
+                    return x.properties && x.properties.UmbracoBackOfficeExternalLoginOptions && x.properties.UmbracoBackOfficeExternalLoginOptions.DenyLocalLogin === true;
+                });
+            } else {
+                return provider && provider.properties && provider.properties.UmbracoBackOfficeExternalLoginOptions && provider.properties.UmbracoBackOfficeExternalLoginOptions.DenyLocalLogin === true;
+            }
+        }
+        /**
+   * Returns all login providers    
+   */
+        function getLoginProviders() {
+            return externalLoginInfo.providers;
+        }
+        /** Returns all logins providers that have options that the user can interact with */
+        function getLoginProvidersWithOptions() {
+            // only include providers that allow manual linking or ones that provide a custom view
+            var providers = _.filter(externalLoginInfo.providers, function (x) {
+                // transform the data and also include the custom view as a nicer property
+                x.customView = getLoginProviderView(x);
+                if (x.customView) {
+                    return true;
+                } else {
+                    return x.properties.ExternalSignInAutoLinkOptions.AllowManualLinking;
+                }
+            });
+            return providers;
+        }
+        return {
+            hasDenyLocalLogin: hasDenyLocalLogin,
+            getLoginProvider: getLoginProvider,
+            getLoginProviders: getLoginProviders,
+            getLoginProvidersWithOptions: getLoginProvidersWithOptions,
+            getLoginProviderView: getLoginProviderView
+        };
+    }
+    angular.module('umbraco.services').factory('externalLoginInfoService', externalLoginInfoService);
     'use strict';
     /**
  * @ngdoc service
@@ -4642,6 +5005,47 @@ When building a custom infinite editor view you can use the same components as a
         angular.module('umbraco.services').factory('focusService', focusService);
     }());
     'use strict';
+    (function () {
+        'use strict';
+        function focusLockService($document) {
+            var elementToInert = $document[0].querySelector('#mainwrapper');
+            function addInertAttribute() {
+                if (elementToInert) {
+                    elementToInert.setAttribute('inert', true);
+                }
+            }
+            function removeInertAttribute() {
+                if (elementToInert) {
+                    elementToInert.removeAttribute('inert');
+                }
+            }
+            var service = {
+                addInertAttribute: addInertAttribute,
+                removeInertAttribute: removeInertAttribute
+            };
+            return service;
+        }
+        angular.module('umbraco.services').factory('focusLockService', focusLockService);
+    }());
+    'use strict';
+    function _toConsumableArray(arr) {
+        return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
+    }
+    function _nonIterableSpread() {
+        throw new TypeError('Invalid attempt to spread non-iterable instance');
+    }
+    function _iterableToArray(iter) {
+        if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === '[object Arguments]')
+            return Array.from(iter);
+    }
+    function _arrayWithoutHoles(arr) {
+        if (Array.isArray(arr)) {
+            for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) {
+                arr2[i] = arr[i];
+            }
+            return arr2;
+        }
+    }
     /**
  * @ngdoc service
  * @name umbraco.services.formHelper
@@ -4685,6 +5089,7 @@ When building a custom infinite editor view you can use the same components as a
                     scope: args.scope,
                     action: args.action
                 });
+                this.focusOnFirstError(currentForm);
                 // Some property editors need to perform an action after all property editors have reacted to the formSubmitting.
                 args.scope.$broadcast('formSubmittingFinalPhase', {
                     scope: args.scope,
@@ -4705,6 +5110,32 @@ When building a custom infinite editor view you can use the same components as a
                     serverValidationManager.notify();
                 }
                 return true;
+            },
+            /**
+    * @ngdoc function
+    * @name umbraco.services.formHelper#focusOnFirstError
+    * @methodOf umbraco.services.formHelper
+    * @function
+    *
+    * @description
+    * Called by submitForm when a form has been submitted, it will fire a focus on the first found invalid umb-property it finds in the form..
+    *
+    * @param {object} form Pass in a form object.
+    */
+            focusOnFirstError: function focusOnFirstError(form) {
+                var invalidNgForms = form.$$element.find('.umb-property ng-form.ng-invalid, .umb-property-editor ng-form.ng-invalid-required');
+                var firstInvalidNgForm = invalidNgForms.first();
+                if (firstInvalidNgForm.length !== 0) {
+                    var focusableFields = _toConsumableArray(firstInvalidNgForm.find('umb-range-slider .noUi-handle,input,textarea,select,button'));
+                    if (focusableFields.length !== 0) {
+                        var firstErrorEl = focusableFields.find(function (el) {
+                            return el.type !== 'hidden' && el.hasAttribute('readonly') === false;
+                        });
+                        if (firstErrorEl !== undefined) {
+                            firstErrorEl.focus();
+                        }
+                    }
+                }
             },
             /**
      * @ngdoc function
@@ -5015,12 +5446,50 @@ When building a custom infinite editor view you can use the same components as a
         };
     });
     'use strict';
+    function _slicedToArray(arr, i) {
+        return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest();
+    }
+    function _nonIterableRest() {
+        throw new TypeError('Invalid attempt to destructure non-iterable instance');
+    }
+    function _iterableToArrayLimit(arr, i) {
+        if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === '[object Arguments]')) {
+            return;
+        }
+        var _arr = [];
+        var _n = true;
+        var _d = false;
+        var _e = undefined;
+        try {
+            for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+                _arr.push(_s.value);
+                if (i && _arr.length === i)
+                    break;
+            }
+        } catch (err) {
+            _d = true;
+            _e = err;
+        } finally {
+            try {
+                if (!_n && _i['return'] != null)
+                    _i['return']();
+            } finally {
+                if (_d)
+                    throw _e;
+            }
+        }
+        return _arr;
+    }
+    function _arrayWithHoles(arr) {
+        if (Array.isArray(arr))
+            return arr;
+    }
     /**
 * @ngdoc service
 * @name umbraco.services.iconHelper
 * @description A helper service for dealing with icons, mostly dealing with legacy tree icons
 **/
-    function iconHelper($q, $timeout) {
+    function iconHelper($http, $q, $sce, $timeout) {
         var converter = [
             {
                 oldIcon: '.sprNew',
@@ -5203,8 +5672,7 @@ When building a custom infinite editor view you can use the same components as a
   { oldIcon: ".sprTreeSettingAgent", newIcon: "" },
   { oldIcon: ".sprTreeSettingCss", newIcon: "" },
   { oldIcon: ".sprTreeSettingCssItem", newIcon: "" },
-  
-  { oldIcon: ".sprTreeSettingDataTypeChild", newIcon: "" },
+    { oldIcon: ".sprTreeSettingDataTypeChild", newIcon: "" },
   { oldIcon: ".sprTreeSettingDomain", newIcon: "" },
   { oldIcon: ".sprTreeSettingLanguage", newIcon: "" },
   { oldIcon: ".sprTreeSettingScript", newIcon: "" },
@@ -5248,11 +5716,57 @@ When building a custom infinite editor view you can use the same components as a
                 newIcon: 'icon-linux'
             }
         ];
+        var collectedIcons;
         var imageConverter = [{
                 oldImage: 'contour.png',
                 newIcon: 'icon-umb-contour'
             }];
-        var collectedIcons;
+        var iconCache = [];
+        var promiseQueue = [];
+        var resourceLoadStatus = 'none';
+        /**
+   * This is the same approach as use for loading the localized text json 
+   * We don't want multiple requests for the icon collection, so need to track
+   * the current request state, and resolve the queued requests once the icons arrive
+   * Subsequent requests are returned immediately as the icons are cached into 
+   */
+        function init() {
+            var deferred = $q.defer();
+            if (resourceLoadStatus === 'loaded') {
+                deferred.resolve(iconCache);
+                return deferred.promise;
+            }
+            if (resourceLoadStatus === 'loading') {
+                promiseQueue.push(deferred);
+                return deferred.promise;
+            }
+            resourceLoadStatus = 'loading';
+            $http({
+                method: 'GET',
+                url: Umbraco.Sys.ServerVariables.umbracoUrls.iconApiBaseUrl + 'GetIcons'
+            }).then(function (response) {
+                resourceLoadStatus = 'loaded';
+                for (var _i = 0, _Object$entries = Object.entries(response.data.Data); _i < _Object$entries.length; _i++) {
+                    var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 2), key = _Object$entries$_i[0], value = _Object$entries$_i[1];
+                    iconCache.push({
+                        name: key,
+                        svgString: $sce.trustAsHtml(value)
+                    });
+                }
+                deferred.resolve(iconCache);
+                //ensure all other queued promises are resolved
+                for (var p in promiseQueue) {
+                    promiseQueue[p].resolve(iconCache);
+                }
+            }, function (err) {
+                deferred.reject('Something broke');
+                //ensure all other queued promises are resolved
+                for (var p in promiseQueue) {
+                    promiseQueue[p].reject('Something broke');
+                }
+            });
+            return deferred.promise;
+        }
         return {
             /** Used by the create dialogs for content/media types to format the data so that the thumbnails are styled properly */
             formatContentTypeThumbnails: function formatContentTypeThumbnails(contentTypes) {
@@ -5310,7 +5824,45 @@ When building a custom infinite editor view you can use the same components as a
                 }
                 return false;
             },
-            /** Return a list of icons, optionally filter them */
+            /** Converts the icon from legacy to a new one if an old one is detected */
+            convertFromLegacyIcon: function convertFromLegacyIcon(icon) {
+                if (this.isLegacyIcon(icon)) {
+                    //its legacy so convert it if we can
+                    var found = _.find(converter, function (item) {
+                        return item.oldIcon.toLowerCase() === icon.toLowerCase();
+                    });
+                    return found ? found.newIcon : icon;
+                }
+                return icon;
+            },
+            convertFromLegacyImage: function convertFromLegacyImage(icon) {
+                var found = _.find(imageConverter, function (item) {
+                    return item.oldImage.toLowerCase() === icon.toLowerCase();
+                });
+                return found ? found.newIcon : undefined;
+            },
+            /** If we detect that the tree node has legacy icons that can be converted, this will convert them */
+            convertFromLegacyTreeNodeIcon: function convertFromLegacyTreeNodeIcon(treeNode) {
+                if (this.isLegacyTreeNodeIcon(treeNode)) {
+                    return this.convertFromLegacyIcon(treeNode.icon);
+                }
+                return treeNode.icon;
+            },
+            /** Gets a single IconModel */
+            getIcon: function getIcon(iconName) {
+                return init().then(function (icons) {
+                    return icons.find(function (i) {
+                        return i.name === iconName;
+                    });
+                });
+            },
+            /** Gets all the available icons in the backoffice icon folder and returns them as an array of IconModels */
+            getAllIcons: function getAllIcons() {
+                return init().then(function (icons) {
+                    return icons;
+                });
+            },
+            /** LEGACY - Return a list of icons from icon fonts, optionally filter them */
             /** It fetches them directly from the active stylesheets in the browser */
             getIcons: function getIcons() {
                 var deferred = $q.defer();
@@ -5353,29 +5905,25 @@ When building a custom infinite editor view you can use the same components as a
                 }, 100);
                 return deferred.promise;
             },
-            /** Converts the icon from legacy to a new one if an old one is detected */
-            convertFromLegacyIcon: function convertFromLegacyIcon(icon) {
-                if (this.isLegacyIcon(icon)) {
-                    //its legacy so convert it if we can
-                    var found = _.find(converter, function (item) {
-                        return item.oldIcon.toLowerCase() === icon.toLowerCase();
-                    });
-                    return found ? found.newIcon : icon;
+            /** Creates a icon object, and caches it in a runtime cache */
+            defineIcon: function defineIcon(name, svg) {
+                var icon = iconCache.find(function (x) {
+                    return x.name === name;
+                });
+                if (icon === undefined) {
+                    icon = {
+                        name: name,
+                        svgString: $sce.trustAsHtml(svg)
+                    };
+                    iconCache.push(icon);
                 }
                 return icon;
             },
-            convertFromLegacyImage: function convertFromLegacyImage(icon) {
-                var found = _.find(imageConverter, function (item) {
-                    return item.oldImage.toLowerCase() === icon.toLowerCase();
+            /** Returns the cached icon or undefined */
+            _getIconFromCache: function _getIconFromCache(iconName) {
+                return iconCache.find(function (icon) {
+                    return icon.name === iconName;
                 });
-                return found ? found.newIcon : undefined;
-            },
-            /** If we detect that the tree node has legacy icons that can be converted, this will convert them */
-            convertFromLegacyTreeNodeIcon: function convertFromLegacyTreeNodeIcon(treeNode) {
-                if (this.isLegacyTreeNodeIcon(treeNode)) {
-                    return this.convertFromLegacyIcon(treeNode.icon);
-                }
-                return treeNode.icon;
             }
         };
     }
@@ -5777,7 +6325,7 @@ When building a custom infinite editor view you can use the same components as a
  */
     (function () {
         'use strict';
-        function listViewHelper($location, localStorageService, urlHelper) {
+        function listViewHelper($location, $rootScope, localStorageService, urlHelper, editorService) {
             var firstSelectedIndex = 0;
             var localStorageKey = 'umblistViewLayout';
             /**
@@ -5968,6 +6516,7 @@ When building a custom infinite editor view you can use the same components as a
                     }
                     selection.push(obj);
                     item.selected = true;
+                    $rootScope.$broadcast('listView.itemsChanged', { items: selection });
                 }
             }
             /**
@@ -5988,6 +6537,7 @@ When building a custom infinite editor view you can use the same components as a
                     if (item.id !== 2147483647 && item.id === selectedItem.id || item.key && item.key === selectedItem.key) {
                         selection.splice(i, 1);
                         item.selected = false;
+                        $rootScope.$broadcast('listView.itemsChanged', { items: selection });
                     }
                 }
             }
@@ -6019,6 +6569,7 @@ When building a custom infinite editor view you can use the same components as a
                         folder.selected = false;
                     }
                 }
+                $rootScope.$broadcast('listView.itemsChanged', { items: selection });
             }
             /**
     * @ngdoc method
@@ -6056,6 +6607,7 @@ When building a custom infinite editor view you can use the same components as a
                 if (clearSelection) {
                     selection.length = 0;
                 }
+                $rootScope.$broadcast('listView.itemsChanged', { items: selection });
             }
             /**
     * @ngdoc method
@@ -6074,7 +6626,7 @@ When building a custom infinite editor view you can use the same components as a
                 }
                 if (isSelectedAll(items, selection)) {
                     // unselect all items
-                    angular.forEach(items, function (item) {
+                    items.forEach(function (item) {
                         item.selected = false;
                     });
                     // reset selection without loosing reference.
@@ -6083,7 +6635,7 @@ When building a custom infinite editor view you can use the same components as a
                     // reset selection without loosing reference.
                     selection.length = 0;
                     // select all items
-                    angular.forEach(items, function (item) {
+                    items.forEach(function (item) {
                         var obj = { id: item.id };
                         if (item.key) {
                             obj.key = item.key;
@@ -6092,6 +6644,7 @@ When building a custom infinite editor view you can use the same components as a
                         selection.push(obj);
                     });
                 }
+                $rootScope.$broadcast('listView.itemsChanged', { items: selection });
             }
             /**
     * @ngdoc method
@@ -6200,10 +6753,37 @@ When building a custom infinite editor view you can use the same components as a
     * Method for opening an item in a list view for editing.
     *
     * @param {Object} item The item to edit
+    * @param {Object} scope The scope with options
     */
-            function editItem(item) {
+            function editItem(item, scope) {
                 if (!item.editPath) {
                     return;
+                }
+                if (scope && scope.options && scope.options.useInfiniteEditor) {
+                    var editorModel = {
+                        id: item.id,
+                        submit: function submit(model) {
+                            editorService.close();
+                            scope.getContent(scope.contentId);
+                        },
+                        close: function close() {
+                            editorService.close();
+                            scope.getContent(scope.contentId);
+                        }
+                    };
+                    if (item.editPath.indexOf('/content/') == 0) {
+                        editorService.contentEditor(editorModel);
+                        return;
+                    }
+                    if (item.editPath.indexOf('/media/') == 0) {
+                        editorService.mediaEditor(editorModel);
+                        return;
+                    }
+                    if (item.editPath.indexOf('/member/') == 0) {
+                        editorModel.id = item.key;
+                        editorService.memberEditor(editorModel);
+                        return;
+                    }
                 }
                 var parts = item.editPath.split('?');
                 var path = parts[0];
@@ -7099,9 +7679,9 @@ When building a custom infinite editor view you can use the same components as a
             },
             getAllowedImagetypes: function getAllowedImagetypes(mediaId) {
                 // TODO: This is horribly inneficient - why make one request per type!?
-                //This should make a call to c# to get exactly what it's looking for instead of returning every single media type and doing 
+                //This should make a call to c# to get exactly what it's looking for instead of returning every single media type and doing
                 //some filtering on the client side.
-                //This is also called multiple times when it's not needed! Example, when launching the media picker, this will be called twice 
+                //This is also called multiple times when it's not needed! Example, when launching the media picker, this will be called twice
                 //which means we'll be making at least 6 REST calls to fetch each media type
                 // Get All allowedTypes
                 return mediaTypeResource.getAllowedTypes(mediaId).then(function (types) {
@@ -7110,17 +7690,11 @@ When building a custom infinite editor view you can use the same components as a
                     });
                     // Get full list
                     return $q.all(allowedQ).then(function (fullTypes) {
-                        // Find all the media types with an Image Cropper property editor
-                        var filteredTypes = mediaTypeHelperService.getTypeWithEditor(fullTypes, ['Umbraco.ImageCropper']);
-                        // If there is only one media type with an Image Cropper we will return this one
-                        if (filteredTypes.length === 1) {
-                            return filteredTypes;    // If there is more than one Image cropper, custom media types have been added, and we return all media types with and Image cropper or UploadField
-                        } else {
-                            return mediaTypeHelperService.getTypeWithEditor(fullTypes, [
-                                'Umbraco.ImageCropper',
-                                'Umbraco.UploadField'
-                            ]);
-                        }
+                        // Find all the media types with an Image Cropper or Upload Field property editor
+                        return mediaTypeHelperService.getTypeWithEditor(fullTypes, [
+                            'Umbraco.ImageCropper',
+                            'Umbraco.UploadField'
+                        ]);
                     });
                 });
             },
@@ -7135,6 +7709,36 @@ When building a custom infinite editor view you can use the same components as a
                             }
                         }
                     }
+                });
+            },
+            getTypeAcceptingFileExtensions: function getTypeAcceptingFileExtensions(mediaTypes, fileExtensions) {
+                return mediaTypes.filter(function (mediaType) {
+                    var uploadProperty;
+                    mediaType.groups.forEach(function (group) {
+                        var foundProperty = group.properties.find(function (property) {
+                            return property.alias === 'umbracoFile';
+                        });
+                        if (foundProperty) {
+                            uploadProperty = foundProperty;
+                        }
+                    });
+                    if (uploadProperty) {
+                        var acceptedFileExtensions;
+                        if (uploadProperty.editor === 'Umbraco.ImageCropper') {
+                            acceptedFileExtensions = Umbraco.Sys.ServerVariables.umbracoSettings.imageFileTypes;
+                        } else if (uploadProperty.editor === 'Umbraco.UploadField') {
+                            acceptedFileExtensions = uploadProperty.config.fileExtensions && uploadProperty.config.fileExtensions.length > 0 ? uploadProperty.config.fileExtensions.map(function (x) {
+                                return x.value;
+                            }) : null;
+                        }
+                        if (acceptedFileExtensions && acceptedFileExtensions.length > 0) {
+                            return fileExtensions.length === fileExtensions.filter(function (fileExt) {
+                                return acceptedFileExtensions.includes(fileExt);
+                            }).length;
+                        }
+                        return true;
+                    }
+                    return false;
                 });
             }
         };
@@ -7363,6 +7967,10 @@ When building a custom infinite editor view you can use the same components as a
                 leftColumn.removeClass(aboveClass);
             }
         }
+        function showBackdrop() {
+            var backDropOptions = { 'element': $('#leftcolumn')[0] };
+            backdropService.open(backDropOptions);
+        }
         var service = {
             /**
      * @ngdoc method
@@ -7398,7 +8006,7 @@ When building a custom infinite editor view you can use the same components as a
                 //if the routing parameter keys are the same, we'll compare their values to see if any have changed and if so then the routing will be allowed.
                 if (diff1.length === 0 && diff2.length === 0) {
                     var partsChanged = 0;
-                    _.each(currRoutingKeys, function (k) {
+                    currRoutingKeys.forEach(function (k) {
                         if (currUrlParams[k] != nextUrlParams[k]) {
                             partsChanged++;
                         }
@@ -7432,7 +8040,7 @@ When building a custom infinite editor view you can use the same components as a
                 var toRetain = _.union(retainedQueryStrings, toRetain);
                 var currentSearch = $location.search();
                 $location.search('');
-                _.each(toRetain, function (k) {
+                toRetain.forEach(function (k) {
                     if (currentSearch[k]) {
                         $location.search(k, currentSearch[k]);
                     }
@@ -7463,7 +8071,7 @@ When building a custom infinite editor view you can use the same components as a
             retainQueryStrings: function retainQueryStrings(currRouteParams, nextRouteParams) {
                 var toRetain = Utilities.copy(nextRouteParams);
                 var updated = false;
-                _.each(retainedQueryStrings, function (r) {
+                retainedQueryStrings.forEach(function (r) {
                     // if mculture is set to null in nextRouteParams, the value will be undefined and we will not retain any query string that has a value of "null"
                     if (currRouteParams[r] && nextRouteParams[r] !== undefined && !nextRouteParams[r]) {
                         toRetain[r] = currRouteParams[r];
@@ -7629,9 +8237,8 @@ When building a custom infinite editor view you can use the same components as a
      */
             showMenu: function showMenu(args) {
                 var self = this;
-                var backDropOptions = { 'element': $('#leftcolumn')[0] };
                 return treeService.getMenu({ treeNode: args.node }).then(function (data) {
-                    backdropService.open(backDropOptions);
+                    showBackdrop();
                     //check for a default
                     //NOTE: event will be undefined when a call to hideDialog is made so it won't re-load the default again.
                     // but perhaps there's a better way to deal with with an additional parameter in the args ? it works though.
@@ -7719,6 +8326,7 @@ When building a custom infinite editor view you can use the same components as a
                             }]);
                     }
                 } else {
+                    showBackdrop();
                     service.showDialog({
                         node: node,
                         action: action,
@@ -8180,7 +8788,7 @@ When building a custom infinite editor view you can use the same components as a
  */
     (function () {
         'use strict';
-        function overlayService(eventsService, backdropService) {
+        function overlayService(eventsService, backdropService, focusLockService) {
             var currentOverlay = null;
             function open(newOverlay) {
                 // prevent two open overlays at the same time
@@ -8206,11 +8814,13 @@ When building a custom infinite editor view you can use the same components as a
                     backdropOptions.disableEventsOnClick = true;
                 }
                 overlay.show = true;
+                focusLockService.addInertAttribute();
                 backdropService.open(backdropOptions);
                 currentOverlay = overlay;
                 eventsService.emit('appState.overlay', overlay);
             }
             function _close() {
+                focusLockService.removeInertAttribute();
                 backdropService.close();
                 currentOverlay = null;
                 eventsService.emit('appState.overlay', null);
@@ -8416,7 +9026,7 @@ When building a custom infinite editor view you can use the same components as a
  *
  * <pre>
  *      searchService.searchMembers({term: 'bob'}).then(function(results){
- *          angular.forEach(results, function(result){
+ *          results.forEach(function(result){
  *                  //returns:
  *                  {name: "name", id: 1234, menuUrl: "url", editorPath: "url", metaData: {}, subtitle: "/path/etc" }
  *           })
@@ -8424,7 +9034,7 @@ When building a custom infinite editor view you can use the same components as a
  *       })
  * </pre>
  */
-    angular.module('umbraco.services').factory('searchService', function ($q, $log, entityResource, contentResource, umbRequestHelper, $injector, searchResultFormatter) {
+    angular.module('umbraco.services').factory('searchService', function (entityResource, $injector, searchResultFormatter) {
         return {
             /**
     * @ngdoc method
@@ -8442,8 +9052,8 @@ When building a custom infinite editor view you can use the same components as a
                     throw 'args.term is required';
                 }
                 return entityResource.search(args.term, 'Member', args.searchFrom).then(function (data) {
-                    _.each(data, function (item) {
-                        searchResultFormatter.configureMemberResult(item);
+                    data.forEach(function (item) {
+                        return searchResultFormatter.configureMemberResult(item);
                     });
                     return data;
                 });
@@ -8464,8 +9074,8 @@ When building a custom infinite editor view you can use the same components as a
                     throw 'args.term is required';
                 }
                 return entityResource.search(args.term, 'Document', args.searchFrom, args.canceler, args.dataTypeKey).then(function (data) {
-                    _.each(data, function (item) {
-                        searchResultFormatter.configureContentResult(item);
+                    data.forEach(function (item) {
+                        return searchResultFormatter.configureContentResult(item);
                     });
                     return data;
                 });
@@ -8486,8 +9096,8 @@ When building a custom infinite editor view you can use the same components as a
                     throw 'args.term is required';
                 }
                 return entityResource.search(args.term, 'Media', args.searchFrom, args.canceler, args.dataTypeKey).then(function (data) {
-                    _.each(data, function (item) {
-                        searchResultFormatter.configureMediaResult(item);
+                    data.forEach(function (item) {
+                        return searchResultFormatter.configureMediaResult(item);
                     });
                     return data;
                 });
@@ -8504,11 +9114,12 @@ When building a custom infinite editor view you can use the same components as a
     * @returns {Promise} returns promise containing all matching items
     */
             searchAll: function searchAll(args) {
+                var _this = this;
                 if (!args.term) {
                     throw 'args.term is required';
                 }
                 return entityResource.searchAll(args.term, args.canceler).then(function (data) {
-                    _.each(data, function (resultByType) {
+                    Object.values(data).forEach(function (resultByType) {
                         //we need to format the search result data to include things like the subtitle, urls, etc...
                         // this is done with registered angular services as part of the SearchableTreeAttribute, if that
                         // is not found, than we format with the default formatter
@@ -8527,8 +9138,8 @@ When building a custom infinite editor view you can use the same components as a
                             }
                         }
                         //now apply the formatter for each result
-                        _.each(resultByType.results, function (item) {
-                            formatterMethod.apply(this, [
+                        resultByType.results.forEach(function (item) {
+                            formatterMethod.apply(_this, [
                                 item,
                                 resultByType.treeAlias,
                                 resultByType.appAlias
@@ -9064,7 +9675,7 @@ When building a custom infinite editor view you can use the same components as a
    * @ngdoc function
    * @name addErrorsForModelState
    * @methodOf umbraco.services.serverValidationManager
-   * @param {any} modelState
+   * @param {any} modelState the modelState object
    * @param {any} parentValidationPath optional parameter specifying a nested element's UDI for which this property belongs (for complex editors)
    * @description
    * This wires up all of the server validation model state so that valServer and valServerField directives work
@@ -10064,7 +10675,7 @@ When building a custom infinite editor view you can use the same components as a
             //a collection of promises, the first one is an empty promise
             //queue rules loading
             if (configuredStylesheets) {
-                angular.forEach(configuredStylesheets, function (val, key) {
+                configuredStylesheets.forEach(function (val, key) {
                     if (val.indexOf(Umbraco.Sys.ServerVariables.umbracoSettings.cssPath + '/') === 0) {
                         // current format (full path to stylesheet)
                         stylesheets.push(val);
@@ -10073,7 +10684,7 @@ When building a custom infinite editor view you can use the same components as a
                         stylesheets.push(Umbraco.Sys.ServerVariables.umbracoSettings.cssPath + '/' + val + '.css');
                     }
                     promises.push(stylesheetResource.getRulesByName(val).then(function (rules) {
-                        angular.forEach(rules, function (rule) {
+                        rules.forEach(function (rule) {
                             var r = {};
                             r.title = rule.name;
                             if (rule.selector[0] == '.') {
@@ -10325,8 +10936,7 @@ When building a custom infinite editor view you can use the same components as a
         // We are not ready to limit the pasted elements further than default, we will return to this feature. ( TODO: Make this feature an option. )
         // We keep spans here, cause removing spans here also removes b-tags inside of them, instead we strip them out later. (TODO: move this definition to the config file... )
         var validPasteElements = "-strong/b,-em/i,-u,-span,-p,-ol,-ul,-li,-p/div,-a[href|name],sub,sup,strike,br,del,table[width],tr,td[colspan|rowspan|width],th[colspan|rowspan|width],thead,tfoot,tbody,img[src|alt|width|height],ul,ol,li,hr,pre,dl,dt,figure,figcaption,wbr"
-        
-        // add elements from user configurated styleFormats to our list of validPasteElements.
+          // add elements from user configurated styleFormats to our list of validPasteElements.
         // (This means that we only allow H3-element if its configured as a styleFormat on this specific propertyEditor.)
         var style, i = 0;
         for(; i < styles.styleFormats.length; i++) {
@@ -11083,6 +11693,8 @@ When building a custom infinite editor view you can use the same components as a
                 //if (!args.model.value) {
                 //    throw "args.model.value is required";
                 //}
+                // force TinyMCE to load plugins/themes from minified files (see http://archive.tinymce.com/wiki.php/api4:property.tinymce.suffix.static)
+                args.editor.suffix = '.min';
                 var unwatch = null;
                 //Starts a watch on the model value so that we can update TinyMCE if the model changes behind the scenes or from the server
                 function startWatch() {
@@ -11106,10 +11718,22 @@ When building a custom infinite editor view you can use the same components as a
                     }
                 }
                 function syncContent() {
+                    if (args.model.value === args.editor.getContent()) {
+                        return;
+                    }
                     //stop watching before we update the value
                     stopWatch();
                     angularHelper.safeApply($rootScope, function () {
                         args.model.value = args.editor.getContent();
+                        //make the form dirty manually so that the track changes works, setting our model doesn't trigger
+                        // the angular bits because tinymce replaces the textarea.
+                        if (args.currentForm) {
+                            args.currentForm.$setDirty();
+                        }
+                        // With complex validation we need to set a input field to dirty, not the form. but we will keep the old code for backwards compatibility.
+                        if (args.currentFormInput) {
+                            args.currentFormInput.$setDirty();
+                        }
                     });
                     //re-watch the value
                     startWatch();
@@ -11132,7 +11756,7 @@ When building a custom infinite editor view you can use the same components as a
                     var content = e.content;
                     // Upload BLOB images (dragged/pasted ones)
                     // find src attribute where value starts with `blob:`
-                    // search is case-insensitive and allows single or double quotes 
+                    // search is case-insensitive and allows single or double quotes
                     if (content.search(/src=["']blob:.*?["']/gi) !== -1) {
                         args.editor.uploadImages(function (data) {
                             // Once all images have been uploaded
@@ -11183,6 +11807,9 @@ When building a custom infinite editor view you can use the same components as a
                 args.editor.on('Change', function (e) {
                     syncContent();
                 });
+                args.editor.on('Keyup', function (e) {
+                    syncContent();
+                });
                 //when we leave the editor (maybe)
                 args.editor.on('blur', function (e) {
                     syncContent();
@@ -11195,11 +11822,7 @@ When building a custom infinite editor view you can use the same components as a
                     syncContent();
                 });
                 args.editor.on('Dirty', function (e) {
-                    //make the form dirty manually so that the track changes works, setting our model doesn't trigger
-                    // the angular bits because tinymce replaces the textarea.
-                    if (args.currentForm) {
-                        args.currentForm.$setDirty();
-                    }
+                    syncContent();    // Set model.value to the RTE's content
                 });
                 var self = this;
                 //create link picker
@@ -11629,7 +12252,7 @@ When building a custom infinite editor view you can use the same components as a
                 //take the last child
                 var childPath = this.getPath(node.children[node.children.length - 1]).join(',');
                 //check if this already exists, if so exit
-                if (expandedPaths.indexOf(childPath) !== -1) {
+                if (expandedPaths.includes(childPath)) {
                     return;
                 }
                 if (expandedPaths.length === 0) {
@@ -11639,16 +12262,16 @@ When building a custom infinite editor view you can use the same components as a
                 }
                 var clonedPaths = expandedPaths.slice(0);
                 //make a copy to iterate over so we can modify the original in the iteration
-                _.each(clonedPaths, function (p) {
+                clonedPaths.forEach(function (p) {
                     if (childPath.startsWith(p + ',')) {
                         //this means that the node's path supercedes this path stored so we can remove the current 'p' and replace it with node.path
                         expandedPaths.splice(expandedPaths.indexOf(p), 1);
                         //remove it
-                        if (expandedPaths.indexOf(childPath) === -1) {
+                        if (expandedPaths.includes(childPath) === false) {
                             expandedPaths.push(childPath);    //replace it
                         }
                     } else if (p.startsWith(childPath + ',')) {
-                    } else if (expandedPaths.indexOf(childPath) === -1) {
+                    } else if (expandedPaths.includes(childPath) === false) {
                         expandedPaths.push(childPath);    //track it
                     }
                 });
@@ -11695,7 +12318,7 @@ When building a custom infinite editor view you can use the same components as a
                     if (treeNode.iconIsClass === undefined || treeNode.iconIsClass) {
                         var converted = iconHelper.convertFromLegacyTreeNodeIcon(treeNode);
                         treeNode.cssClass = standardCssClass + ' ' + converted;
-                        if (converted.startsWith('.')) {
+                        if (converted && converted.startsWith('.')) {
                             //its legacy so add some width/height
                             treeNode.style = 'height:16px;width:16px;';
                         } else {
@@ -11783,7 +12406,7 @@ When building a custom infinite editor view you can use the same components as a
                                 return cc;
                             }
                         });
-                    } else if (args.filter && angular.isFunction(args.filter)) {
+                    } else if (args.filter && Utilities.isFunction(args.filter)) {
                         //if a filter is supplied a cacheKey must be supplied as well
                         if (!args.cacheKey) {
                             throw 'args.cacheKey is required if args.filter is supplied';
@@ -11850,7 +12473,7 @@ When building a custom infinite editor view you can use the same components as a
                         args.node.expanded = true;
                         args.node.hasChildren = true;
                         //Since we've removed the children &  reloaded them, we need to refresh the UI now because the tree node UI doesn't operate on normal angular $watch since that will be pretty slow
-                        if (angular.isFunction(args.node.updateNodeData)) {
+                        if (Utilities.isFunction(args.node.updateNodeData)) {
                             args.node.updateNodeData(args.node);
                         }
                     }
@@ -11876,7 +12499,7 @@ When building a custom infinite editor view you can use the same components as a
      * @param {object} treeNode the node to remove
      */
             removeNode: function removeNode(treeNode) {
-                if (!angular.isFunction(treeNode.parent)) {
+                if (!Utilities.isFunction(treeNode.parent)) {
                     return;
                 }
                 if (treeNode.parent() == null) {
@@ -12015,7 +12638,7 @@ When building a custom infinite editor view you can use the same components as a
                 while (root === null && current) {
                     if (current.metaData && current.metaData['treeAlias']) {
                         root = current;
-                    } else if (angular.isFunction(current.parent)) {
+                    } else if (Utilities.isFunction(current.parent)) {
                         //we can only continue if there is a parent() method which means this
                         // tree node was loaded in as part of a real tree, not just as a single tree
                         // node from the server.
@@ -12189,7 +12812,7 @@ When building a custom infinite editor view you can use the same components as a
                         //the trick here is to not actually replace the node - this would cause the delete animations
                         //to fire, instead we're just going to replace all the properties of this node.
                         //there should always be a method assigned but we'll check anyways
-                        if (angular.isFunction(node.parent().children[index].updateNodeData)) {
+                        if (Utilities.isFunction(node.parent().children[index].updateNodeData)) {
                             node.parent().children[index].updateNodeData(found);
                         } else {
                             //just update as per normal - this means styles, etc.. won't be applied
@@ -12220,7 +12843,7 @@ When building a custom infinite editor view you can use the same components as a
                 if (!node) {
                     throw 'node cannot be null';
                 }
-                if (!angular.isFunction(node.parent)) {
+                if (!Utilities.isFunction(node.parent)) {
                     throw 'node.parent is not a function, the path cannot be resolved';
                 }
                 var reversePath = [];
@@ -12501,7 +13124,7 @@ When building a custom infinite editor view you can use the same components as a
                             return p.propertyState === 'init' || p.inherited === true;
                         });
                         var saveProperties = _.map(realProperties, function (p) {
-                            var saveProperty = _.pick(p, 'id', 'alias', 'description', 'validation', 'label', 'sortOrder', 'dataTypeId', 'groupId', 'memberCanEdit', 'showOnMemberProfile', 'isSensitiveData', 'allowCultureVariant', 'allowSegmentVariant');
+                            var saveProperty = _.pick(p, 'id', 'alias', 'description', 'validation', 'label', 'sortOrder', 'dataTypeId', 'groupId', 'memberCanEdit', 'showOnMemberProfile', 'isSensitiveData', 'allowCultureVariant', 'allowSegmentVariant', 'labelOnTop');
                             return saveProperty;
                         });
                         saveGroup.properties = saveProperties;
@@ -12804,7 +13427,7 @@ When building a custom infinite editor view you can use the same components as a
                                 var otherVariants = _.filter(displayModel.variants, function (variant) {
                                     return variant !== defaultVariant;
                                 });
-                                // now assign this same invariant property instance to the same index of the other variants property array                            
+                                // now assign this same invariant property instance to the same index of the other variants property array
                                 _.each(otherVariants, function (variant) {
                                     _.each(invariantProps, function (invProp) {
                                         var tab = variant.tabs[invProp.tabIndex];
@@ -13015,7 +13638,7 @@ When building a custom infinite editor view you can use the same components as a
                         //show a ysod dialog
                         if (Umbraco.Sys.ServerVariables['isDebuggingEnabled'] === true) {
                             var error = {
-                                errorMsg: 'An error occured',
+                                errorMsg: 'An error occurred',
                                 data: response.data
                             };
                             // TODO: All YSOD handling should be done with an interceptor
@@ -13081,9 +13704,11 @@ When building a custom infinite editor view you can use the same components as a
                         //each item has a property alias and the file object, we'll ensure that the alias is suffixed to the key
                         // so we know which property it belongs to on the server side
                         var file = args.files[f];
-                        var fileKey = 'file_' + file.alias + '_' + (file.culture ? file.culture : '') + '_' + (file.segment ? file.segment : '');
+                        var fileKey = 'file_' + (file.alias || '').replace(/_/g, '\\_') + '_' + (file.culture ? file.culture.replace(/_/g, '\\_') : '') + '_' + (file.segment ? file.segment.replace(/_/g, '\\_') : '');
                         if (Utilities.isArray(file.metaData) && file.metaData.length > 0) {
-                            fileKey += '_' + file.metaData.join('_');
+                            fileKey += '_' + _.map(file.metaData, function (x) {
+                                return ('' + x).replace(/_/g, '\\_');
+                            }).join('_');
                         }
                         formData.append(fileKey, file.file);
                     }
@@ -13091,8 +13716,8 @@ When building a custom infinite editor view you can use the same components as a
                     //success callback
                     //reset the tabs and set the active one
                     if (response.data.tabs && response.data.tabs.length > 0) {
-                        _.each(response.data.tabs, function (item) {
-                            item.active = false;
+                        response.data.tabs.forEach(function (item) {
+                            return item.active = false;
                         });
                         response.data.tabs[activeTabIndex].active = true;
                     }
@@ -13117,7 +13742,7 @@ When building a custom infinite editor view you can use the same components as a
                         } else if (Umbraco.Sys.ServerVariables['isDebuggingEnabled'] === true) {
                             //show a ysod dialog
                             var error = {
-                                errorMsg: 'An error occured',
+                                errorMsg: 'An error occurred',
                                 data: response.data
                             };
                             // TODO: All YSOD handling should be done with an interceptor
@@ -13144,7 +13769,7 @@ When building a custom infinite editor view you can use the same components as a
                     throw 'jsonData cannot be null';
                 }
                 if (Utilities.isArray(jsonData)) {
-                    _.each(jsonData, function (item) {
+                    jsonData.forEach(function (item) {
                         if (!item.key || !item.value) {
                             throw 'jsonData array item must have both a key and a value property';
                         }
@@ -13164,7 +13789,7 @@ When building a custom infinite editor view you can use the same components as a
                         var formData = new FormData();
                         //add the json data
                         if (Utilities.isArray(data)) {
-                            _.each(data, function (item) {
+                            data.forEach(function (item) {
                                 formData.append(item.key, !Utilities.isString(item.value) ? Utilities.toJson(item.value) : item.value);
                             });
                         } else {
@@ -13275,7 +13900,7 @@ When building a custom infinite editor view you can use the same components as a
                         // Fallback to window.open method
                         window.open(httpPath, '_blank', '');
                     }
-                    return $q.resolve();
+                    return $q.resolve(response);
                 }, function (response) {
                     return $q.reject({
                         errorMsg: 'An error occurred downloading the file',
@@ -13386,7 +14011,7 @@ When building a custom infinite editor view you can use the same components as a
         angular.module('umbraco.services').factory('urlHelper', urlHelper);
     }());
     'use strict';
-    angular.module('umbraco.services').factory('userService', function ($rootScope, eventsService, $q, $location, requestRetryQueue, authResource, emailMarketingResource, $timeout, angularHelper) {
+    angular.module('umbraco.services').factory('userService', function ($rootScope, eventsService, $q, $location, $window, requestRetryQueue, authResource, emailMarketingResource, $timeout, angularHelper) {
         var currentUser = null;
         var lastUserId = null;
         //this tracks the last date/time that the user's remainingAuthSeconds was updated from the server
@@ -13547,9 +14172,13 @@ When building a custom infinite editor view you can use the same components as a
                             loginType: 'credentials'
                         };
                         eventsService.emit('app.notAuthenticated', result);
+                        // TODO: How does this make sense? How can you throw from a promise? Does this get caught by the rejection?
+                        // If so then return $q.reject should be used.
                         throw result;
                     }
                     return data;
+                }, function (err) {
+                    return $q.reject(err);
                 }).then(this.setAuthenticationSuccessful);
             },
             setAuthenticationSuccessful: function setAuthenticationSuccessful(data) {
@@ -13570,8 +14199,12 @@ When building a custom infinite editor view you can use the same components as a
             logout: function logout() {
                 return authResource.performLogout().then(function (data) {
                     userAuthExpired();
-                    //done!
-                    return null;
+                    if (data && data.signOutRedirectUrl) {
+                        $window.location.replace(data.signOutRedirectUrl);
+                    } else {
+                        //done!
+                        return null;
+                    }
                 });
             },
             /** Refreshes the current user data with the data stored for the user on the server and returns it */
@@ -13586,9 +14219,9 @@ When building a custom infinite editor view you can use the same components as a
                     };
                     setCurrentUser(data);
                     deferred.resolve(currentUser);
-                }, function () {
+                }, function (err) {
                     //it failed, so they are not logged in
-                    deferred.reject();
+                    deferred.reject(err);
                 });
                 return deferred.promise;
             },
@@ -13608,9 +14241,9 @@ When building a custom infinite editor view you can use the same components as a
                         }
                         setCurrentUser(data);
                         return $q.when(currentUser);
-                    }, function () {
+                    }, function (err) {
                         //it failed, so they are not logged in
-                        return $q.reject(currentUser);
+                        return $q.reject(err);
                     });
                 } else {
                     return $q.when(currentUser);
@@ -13666,11 +14299,11 @@ When building a custom infinite editor view you can use the same components as a
                     'color': 'warning'
                 }
             ];
-            localizationService.localizeMany(_.map(userStates, function (userState) {
+            localizationService.localizeMany(userStates.map(function (userState) {
                 return 'user_state' + userState.key;
             })).then(function (data) {
                 var reg = /^\[[\S\s]*]$/g;
-                _.each(data, function (value, index) {
+                data.forEach(function (value, index) {
                     if (!reg.test(value)) {
                         // Only translate if key exists
                         userStates[index].name = value;
@@ -13678,27 +14311,19 @@ When building a custom infinite editor view you can use the same components as a
                 });
             });
             function getUserStateFromValue(value) {
-                var foundUserState;
-                angular.forEach(userStates, function (userState) {
-                    if (userState.value === value) {
-                        foundUserState = userState;
-                    }
+                return userStates.find(function (userState) {
+                    return userState.value === value;
                 });
-                return foundUserState;
             }
             function getUserStateByKey(key) {
-                var foundUserState;
-                angular.forEach(userStates, function (userState) {
-                    if (userState.key === key) {
-                        foundUserState = userState;
-                    }
+                return userStates.find(function (userState) {
+                    return userState.key === key;
                 });
-                return foundUserState;
             }
             function getUserStatesFilter(userStatesObject) {
                 var userStatesFilter = [];
                 for (var key in userStatesObject) {
-                    if (userStatesObject.hasOwnProperty(key)) {
+                    if (hasOwnProperty.call(userStatesObject, key)) {
                         var userState = getUserStateByKey(key);
                         if (userState) {
                             userState.count = userStatesObject[key];
@@ -13853,9 +14478,9 @@ When building a custom infinite editor view you can use the same components as a
                     'parentId',
                     'path'
                 ];
-                _.each(required, function (k) {
-                    if (!_.has(source, k)) {
-                        throw 'The source object does not contain the property ' + k;
+                required.forEach(function (k) {
+                    if (!hasOwnProperty.call(source, k)) {
+                        throw 'The source object does not contain the property '.concat(k);
                     }
                 });
                 var optional = [

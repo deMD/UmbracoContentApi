@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Umbraco.Core.Models.PublishedContent;
+using Umbraco.Core.Models;
 using UmbracoContentApi.Core.Resolvers;
 
 namespace UmbracoContentApi.Core.Converters
@@ -24,12 +24,12 @@ namespace UmbracoContentApi.Core.Converters
                 throw new ArgumentNullException(nameof(value), $"A value for {EditorAlias} is required.");
             }
 
-            if (value is IEnumerable<IPublishedContent> ar)
+            if (value is IEnumerable<MediaWithCrops> ar)
             {
-                return ar.Select(t => _contentResolver.Value.ResolveContent(t, options)).ToList();
+                return ar.Select(t => _contentResolver.Value.ResolveContent(t.MediaItem, options)).ToList();
             }
 
-            return _contentResolver.Value.ResolveContent((IPublishedElement)value, options);
+            return _contentResolver.Value.ResolveContent(((MediaWithCrops)value).MediaItem, options);
         }
     }
 }

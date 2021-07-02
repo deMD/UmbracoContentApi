@@ -6,7 +6,7 @@
     var app = angular.module('umbraco.preview', [
         'umbraco.resources',
         'umbraco.services'
-    ]).controller('previewController', function ($scope, $window, $location) {
+    ]).controller('previewController', function ($scope, $window, $location, $http) {
         $scope.currentCulture = {
             iso: '',
             title: '...',
@@ -14,7 +14,7 @@
         };
         var cultures = [];
         $scope.tabbingActive = false;
-        // There are a number of ways to detect when a focus state should be shown when using the tab key and this seems to be the simplest solution. 
+        // There are a number of ways to detect when a focus state should be shown when using the tab key and this seems to be the simplest solution.
         // For more information about this approach, see https://hackernoon.com/removing-that-ugly-focus-ring-and-keeping-it-too-6c8727fefcd2
         function handleFirstTab(evt) {
             if (evt.keyCode === 9) {
@@ -30,7 +30,30 @@
             window.removeEventListener('mousedown', disableTabbingActive);
             window.addEventListener('keydown', handleFirstTab);
         }
+        var iframeWrapper = angular.element('#demo-iframe-wrapper');
+        var canvasDesignerPanel = angular.element('#canvasdesignerPanel');
         window.addEventListener('keydown', handleFirstTab);
+        window.addEventListener('resize', scaleIframeWrapper);
+        iframeWrapper.on('transitionend', scaleIframeWrapper);
+        function scaleIframeWrapper() {
+            if ($scope.previewDevice.name == 'fullsize') {
+                // dont scale fullsize preview
+                iframeWrapper.css({ 'transform': '' });
+            } else {
+                var wrapWidth = canvasDesignerPanel.width();
+                // width of the wrapper
+                var wrapHeight = canvasDesignerPanel.height();
+                var childWidth = iframeWrapper.width() + 30;
+                // width of child iframe plus some space
+                var childHeight = iframeWrapper.height() + 30;
+                // child height plus some space
+                var wScale = wrapWidth / childWidth;
+                var hScale = wrapHeight / childHeight;
+                var scale = Math.min(wScale, hScale, 1);
+                // get the lowest ratio, but not higher than 1
+                iframeWrapper.css({ 'transform': 'scale(' + scale + ')' });    // set scale
+            }
+        }
         //gets a real query string value
         function getParameterByName(name, url) {
             if (!url)
@@ -79,11 +102,19 @@
                 console.log('Could not connect to SignalR preview hub.');
             });
         }
+        function fixExternalLinks(iframe) {
+            // Make sure external links don't open inside the iframe
+            Array.from(iframe.contentDocument.getElementsByTagName('a')).filter(function (a) {
+                return a.hostname !== location.hostname && !a.target;
+            }).forEach(function (a) {
+                return a.target = '_top';
+            });
+        }
         var isInit = getParameterByName('init');
         if (isInit === 'true') {
             //do not continue, this is the first load of this new window, if this is passed in it means it's been
             //initialized by the content editor and then the content editor will actually re-load this window without
-            //this flag. This is a required trick to get around chrome popup mgr. 
+            //this flag. This is a required trick to get around chrome popup mgr.
             return;
         }
         setPageUrl();
@@ -95,7 +126,7 @@
                 name: 'fullsize',
                 css: 'fullsize',
                 icon: 'icon-application-window-alt',
-                title: 'Browser'
+                title: 'Fit browser'
             },
             {
                 name: 'desktop',
@@ -162,10 +193,23 @@
             closeOthers();
             $scope.$digest();
         }
-        var win = $($window);
-        win.on('blur', windowBlurHandler);
+        window.addEventListener('blur', windowBlurHandler);
+        function windowVisibilityHandler(e) {
+            var amountOfPreviewSessions = localStorage.getItem('UmbPreviewSessionAmount');
+            // When tab is visible again:
+            if (document.hidden === false) {
+                checkPreviewState();
+            }
+        }
+        document.addEventListener('visibilitychange', windowVisibilityHandler);
+        function beforeUnloadHandler(e) {
+            endPreviewSession();
+        }
+        window.addEventListener('beforeunload', beforeUnloadHandler, false);
         $scope.$on('$destroy', function () {
-            win.off('blur', handleBlwindowBlurHandlerur);
+            window.removeEventListener('blur', windowBlurHandler);
+            document.removeEventListener('visibilitychange', windowVisibilityHandler);
+            window.removeEventListener('beforeunload', beforeUnloadHandler);
         });
         function setPageUrl() {
             $scope.pageId = $location.search().id || getParameterByName('id');
@@ -178,6 +222,113 @@
                 $scope.pageUrl = 'frame?' + query;
             }
         }
+        function getCookie(cname) {
+            var name = cname + '=';
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return null;
+        }
+        function setCookie(cname, cvalue, exminutes) {
+            var d = new Date();
+            d.setTime(d.getTime() + exminutes * 60 * 1000);
+            document.cookie = cname + '=' + cvalue + ';expires=' + d.toUTCString() + ';path=/';
+        }
+        var hasPreviewDialog = false;
+        function checkPreviewState() {
+            if (getCookie('UMB_PREVIEW') === null) {
+                if (hasPreviewDialog === true)
+                    return;
+                hasPreviewDialog = true;
+                // Ask to re-enter preview mode?
+                var localizeVarsFallback = {
+                    'returnToPreviewHeadline': 'Preview website?',
+                    'returnToPreviewDescription': 'You have ended preview mode, do you want to enable it again to view the latest saved version of your website?',
+                    'returnToPreviewAcceptButton': 'Preview latest version',
+                    'returnToPreviewDeclineButton': 'View published version'
+                };
+                var umbLocalizedVars = Object.assign(localizeVarsFallback, $window.umbLocalizedVars);
+                // This modal is also used in websitepreview.js
+                var modelStyles = '\n\n                    /* Webfont: LatoLatin-Bold */\n                    @font-face {\n                        font-family: \'Lato\';\n                        src: url(\'https://fonts.googleapis.com/css2?family=Lato:wght@700&display=swap\');\n                        font-style: normal;\n                        font-weight: 700;\n                        font-display: swap;\n                        text-rendering: optimizeLegibility;\n                    }\n\n                    .umbraco-preview-dialog {\n                        position: fixed;\n                        display: flex;\n                        align-items: center;\n                        justify-content: center;\n                        z-index: 99999999;\n                        top:0;\n                        bottom:0;\n                        left:0;\n                        right:0;\n                        overflow: auto;\n                        background-color: rgba(0,0,0,0.6);\n                    }\n\n                    .umbraco-preview-dialog__modal {\n                        background-color: #fff;\n                        border-radius: 6px;\n                        box-shadow: 0 3px 7px rgba(0,0,0,0.3);\n                        margin: auto;\n                        padding: 30px 40px;\n                        width: 100%;\n                        max-width: 540px;\n                        font-family: Lato,Helvetica Neue,Helvetica,Arial,sans-serif;\n                        font-size: 15px;\n                    }\n\n                    .umbraco-preview-dialog__headline {\n                        font-weight: 700;\n                        font-size: 22px;\n                        color: #1b264f;\n                        margin-top:10px;\n                        margin-bottom:20px;\n                    }\n                    .umbraco-preview-dialog__question {\n                        margin-bottom:30px;\n                    }\n                    .umbraco-preview-dialog__modal > button {\n                        display: inline-block;\n                        cursor: pointer;\n                        padding: 8px 18px;\n                        text-align: center;\n                        vertical-align: middle;\n                        border-radius: 3px;\n                        border:none;\n                        font-family: inherit;\n                        font-weight: 700;\n                        font-size: 15px;\n                        float:right;\n                        margin-left:10px;\n\n                        color: #1b264f;\n                        background-color: #f6f1ef;\n                    }\n                    .umbraco-preview-dialog__modal > button:hover {\n                        color: #2152a3;\n                        background-color: #f6f1ef;\n                    }\n                    .umbraco-preview-dialog__modal > button.umbraco-preview-dialog__continue {\n                        color: #fff;\n                        background-color: #2bc37c;\n                    }\n                    .umbraco-preview-dialog__modal > button.umbraco-preview-dialog__continue:hover {\n                        background-color: #39d38b;\n                    }\n                ';
+                var bodyEl = document.getElementsByTagName('BODY')[0];
+                var fragment = document.createElement('div');
+                var shadowRoot = fragment.attachShadow({ mode: 'open' });
+                var style = document.createElement('style');
+                style.innerHTML = modelStyles;
+                shadowRoot.appendChild(style);
+                var con = document.createElement('div');
+                con.className = 'umbraco-preview-dialog';
+                shadowRoot.appendChild(con);
+                var modal = document.createElement('div');
+                modal.className = 'umbraco-preview-dialog__modal';
+                modal.innerHTML = '<div class="umbraco-preview-dialog__headline">'.concat(umbLocalizedVars.returnToPreviewHeadline, '</div>\n                    <div class="umbraco-preview-dialog__question">').concat(umbLocalizedVars.returnToPreviewDescription, '</div>');
+                con.appendChild(modal);
+                var declineButton = document.createElement('button');
+                declineButton.type = 'button';
+                declineButton.innerHTML = umbLocalizedVars.returnToPreviewDeclineButton;
+                declineButton.addEventListener('click', function () {
+                    bodyEl.removeChild(fragment);
+                    $scope.exitPreview();
+                    hasPreviewDialog = false;
+                });
+                modal.appendChild(declineButton);
+                var continueButton = document.createElement('button');
+                continueButton.type = 'button';
+                continueButton.className = 'umbraco-preview-dialog__continue';
+                continueButton.innerHTML = umbLocalizedVars.returnToPreviewAcceptButton;
+                continueButton.addEventListener('click', function () {
+                    bodyEl.removeChild(fragment);
+                    reenterPreviewMode();
+                    hasPreviewDialog = false;
+                });
+                modal.appendChild(continueButton);
+                bodyEl.appendChild(fragment);
+                continueButton.focus();
+            }
+        }
+        function reenterPreviewMode() {
+            //Re-enter Preview Mode
+            $http({
+                method: 'POST',
+                url: '../preview/enterPreview',
+                params: { id: $scope.pageId }
+            });
+            startPreviewSession();
+        }
+        function getPageURL() {
+            var culture = $location.search().culture || getParameterByName('culture');
+            var relativeUrl = '/' + $scope.pageId;
+            if (culture) {
+                relativeUrl += '?culture=' + culture;
+            }
+            return relativeUrl;
+        }
+        function startPreviewSession() {
+            // lets registrer this preview session.
+            var amountOfPreviewSessions = Math.max(localStorage.getItem('UmbPreviewSessionAmount') || 0, 0);
+            amountOfPreviewSessions++;
+            localStorage.setItem('UmbPreviewSessionAmount', amountOfPreviewSessions);
+        }
+        function resetPreviewSessions() {
+            localStorage.setItem('UmbPreviewSessionAmount', 0);
+        }
+        function endPreviewSession() {
+            var amountOfPreviewSessions = localStorage.getItem('UmbPreviewSessionAmount') || 0;
+            amountOfPreviewSessions--;
+            localStorage.setItem('UmbPreviewSessionAmount', amountOfPreviewSessions);
+            if (amountOfPreviewSessions <= 0) {
+                // We are good to end preview mode.
+                navigator.sendBeacon('../preview/end');
+            }
+        }
+        startPreviewSession();
         /*****************************************************************************/
         /* Preview devices */
         /*****************************************************************************/
@@ -186,19 +337,23 @@
             $scope.previewDevice = device;
         };
         /*****************************************************************************/
+        /* Open website in preview mode */
+        /*****************************************************************************/
+        $scope.openInBrowser = function () {
+            setCookie('UMB-WEBSITE-PREVIEW-ACCEPT', 'true', 5);
+            window.open(getPageURL(), '_blank');
+        };
+        /*****************************************************************************/
         /* Exit Preview */
         /*****************************************************************************/
         $scope.exitPreview = function () {
-            var culture = $location.search().culture || getParameterByName('culture');
-            var relativeUrl = '/' + $scope.pageId;
-            if (culture) {
-                relativeUrl += '?culture=' + culture;
-            }
-            window.top.location.href = '../preview/end?redir=' + encodeURIComponent(relativeUrl);
+            resetPreviewSessions();
+            window.top.location.href = '../preview/end?redir=' + encodeURIComponent(getPageURL());
         };
         $scope.onFrameLoaded = function (iframe) {
             $scope.frameLoaded = true;
             configureSignalR(iframe);
+            fixExternalLinks(iframe);
             $scope.currentCultureIso = $location.search().culture || null;
         };
         /*****************************************************************************/
@@ -243,8 +398,8 @@
         controller: function controller($element, $scope, angularHelper) {
             var vm = this;
             vm.$postLink = function () {
-                var resultFrame = $element.find('#resultFrame');
-                resultFrame.on('load', iframeReady);
+                var resultFrame = $element.find('#resultFrame').get(0);
+                resultFrame.addEventListener('load', iframeReady);
             };
             function iframeReady() {
                 var iframe = $element.find('#resultFrame').get(0);
