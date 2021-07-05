@@ -16,6 +16,10 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
+- checkout: self
+  clean: true
+  persistCredentials: true
+
 - task: gitversion/setup@0
   inputs:
     versionSpec: '5.x'
@@ -23,7 +27,7 @@ steps:
 - task: gitversion/execute@0
   inputs:
     useConfigFile: true
-    configFilePath: 'src/UmbracoContentApi.Core/GitVerion.yml'
+    configFilePath: 'src/UmbracoContentApi/UmbracoContentApi.Core/GitVersion.yml'
 
 - task: NuGetToolInstaller@1
 
