@@ -25,11 +25,12 @@ steps:
     useConfigFile: true
     configFilePath: 'src/UmbracoContentApi/UmbracoContentApi.Core.Old/GitVersion.yml'
 
-- task: NuGetToolInstaller@1
-
 - task: NuGetCommand@2
   inputs:
+    command: 'restore'
     restoreSolution: '$(solution)'
+    feedsToUse: 'config'
+    nugetConfigPath: 'NuGet.config'
 
 - task: VSBuild@1
   inputs:
