@@ -27,10 +27,10 @@ namespace UmbracoContentApi.Core.Converters
 
             if (value is IEnumerable<MediaWithCrops> ar)
             {
-                return ar.Select(t => _contentResolver.Value.ResolveContent(t.MediaItem, options)).ToList();
+                return ar.Select(t => _contentResolver.Value.ResolveContent(t, options)).ToList();
             }
 
-            return _contentResolver.Value.ResolveContent(((MediaWithCrops)value).MediaItem, options);
+            return _contentResolver.Value.ResolveContent((IPublishedContent)value, options);
         }
     }
 }
