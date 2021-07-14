@@ -27,7 +27,7 @@ steps:
 - task: gitversion/execute@0
   inputs:
     useConfigFile: true
-    configFilePath: 'src/UmbracoContentApi/UmbracoContentApi.Core/GitVersion.yml'
+    configFilePath: 'GitVersion.yml'
 
 - task: NuGetToolInstaller@1
 
