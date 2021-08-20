@@ -1,18 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
+using Microsoft.Extensions.Options;
 using Umbraco.Cms.Core.Media;
 using Umbraco.Cms.Core.PropertyEditors.ValueConverters;
+using UmbracoContentApi.Core.Configuration;
 
 namespace UmbracoContentApi.Core.Converters
 {
     public class ImageCropperConverter : IConverter
     {
+        private readonly string _cdnUrl;
         private readonly IImageUrlGenerator _imageUrlGenerator;
 
-        public ImageCropperConverter(IImageUrlGenerator imageUrlGenerator)
+        public ImageCropperConverter(IImageUrlGenerator imageUrlGenerator,
+            IOptions<ContentApiOptions> contentApiOptions)
         {
+            _cdnUrl = contentApiOptions.Value.CdnUrl;
             _imageUrlGenerator = imageUrlGenerator;
         }
 
@@ -25,41 +29,41 @@ namespace UmbracoContentApi.Core.Converters
                 throw new ArgumentNullException(nameof(value), $"A value for {EditorAlias} is required.");
             }
 
-            var ctn = (ImageCropperValue)value;
+            var ctn = (ImageCropperValue) value;
 
-            List<ImageCropperValue.ImageCropperCrop> crops = ctn.Crops?.ToList();
+            var crops = ctn.Crops?.ToList();
             var cropUrls = new Dictionary<string, string>();
-
-            string cdnUrl = ConfigurationManager.AppSettings["ContentApi:CdnUrl"];
 
             // ReSharper disable once InvertIf
             if (crops?.Any() != null)
             {
-                if (string.IsNullOrWhiteSpace(cdnUrl))
+                if (string.IsNullOrWhiteSpace(_cdnUrl))
                 {
-                    foreach (ImageCropperValue.ImageCropperCrop crop in crops)
+                    foreach (var crop in crops)
                     {
                         cropUrls.Add(
                             crop.Alias,
-                            new Uri(ctn.Src + ctn.GetCropUrl(crop.Alias, _imageUrlGenerator), UriKind.Relative).ToString());
+                            new Uri(ctn.Src + ctn.GetCropUrl(crop.Alias, _imageUrlGenerator), UriKind.Relative)
+                                .ToString());
                     }
                 }
                 else
                 {
-                    foreach (ImageCropperValue.ImageCropperCrop crop in crops)
+                    foreach (var crop in crops)
                     {
                         cropUrls.Add(
                             crop.Alias,
-                            new Uri(new Uri(cdnUrl), ctn.Src + ctn.GetCropUrl(crop.Alias, _imageUrlGenerator)).ToString());
+                            new Uri(new Uri(_cdnUrl), ctn.Src + ctn.GetCropUrl(crop.Alias, _imageUrlGenerator))
+                                .ToString());
                     }
                 }
             }
 
             return new
             {
-                Src = string.IsNullOrWhiteSpace(cdnUrl)
+                Src = string.IsNullOrWhiteSpace(_cdnUrl)
                     ? new Uri(ctn.Src, UriKind.Relative).ToString()
-                    : new Uri(new Uri(cdnUrl), ctn.Src).ToString(),
+                    : new Uri(new Uri(_cdnUrl), ctn.Src).ToString(),
                 Crops = cropUrls
             };
         }

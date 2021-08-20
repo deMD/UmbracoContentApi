@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Configuration;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using UmbracoContentApi.Core.Configuration;
 using UmbracoContentApi.Core.Models.Grid;
 
 namespace UmbracoContentApi.Core.Converters.Grid
@@ -8,17 +9,17 @@ namespace UmbracoContentApi.Core.Converters.Grid
     public class MediaConverter : IGridConverter
     {
         private readonly Uri _cdnUrl;
-        
-        public MediaConverter()
+
+        public MediaConverter(IOptions<ContentApiOptions> contentApiOptions)
         {
-            Uri.TryCreate(ConfigurationManager.AppSettings["ContentApi:CdnUrl"], UriKind.Absolute, out _cdnUrl);
+            Uri.TryCreate(contentApiOptions.Value.CdnUrl, UriKind.Absolute, out _cdnUrl);
         }
 
         public string EditorAlias => "media";
 
         public object Convert(object value)
         {
-            var image = JsonConvert.DeserializeObject<Media>(value.ToString());
+            var image = JsonConvert.DeserializeObject<Media>(value?.ToString() ?? "");
             return image != null
                 ? new
                 {

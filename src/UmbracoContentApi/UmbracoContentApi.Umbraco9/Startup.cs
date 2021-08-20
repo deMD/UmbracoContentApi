@@ -62,8 +62,10 @@ namespace UmbracoContentApi.Umbraco9
             app.UseUmbraco()
                 .WithMiddleware(u =>
                 {
-                    u.WithBackOffice();
-                    u.WithWebsite();
+                    u.UseBackOffice();
+                    u.UseWebsite();
+
+                    u.UseUmbracoCoreMiddleware();
                 })
                 .WithEndpoints(u =>
                 {
