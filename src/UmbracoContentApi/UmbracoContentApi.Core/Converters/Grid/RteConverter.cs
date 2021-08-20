@@ -108,7 +108,7 @@ namespace UmbracoContentApi.Core.Converters.Grid
         /// <returns></returns>
         private string RenderRteMacros(string source, bool preview)
         {
-            var umbracoContext = _umbracoContextAccessor.UmbracoContext;
+            var umbracoContext = _umbracoContextAccessor.GetRequiredUmbracoContext();
             using (umbracoContext.ForcedPreview(preview)) // force for macro rendering
             {
                 var sb = new StringBuilder();

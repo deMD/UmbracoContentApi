@@ -27,6 +27,7 @@ Umbraco.Cms.Core.PropertyEditors.ValueConverters.ContentPickerValueConverter, Um
 Umbraco.Cms.Core.PropertyEditors.ValueConverters.DatePickerValueConverter, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.PropertyEditors.ValueConverters.DecimalValueConverter, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.PropertyEditors.ValueConverters.EmailAddressValueConverter, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
+Umbraco.Cms.Core.PropertyEditors.ValueConverters.EyeDropperValueConverter, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.PropertyEditors.ValueConverters.IntegerValueConverter, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.PropertyEditors.ValueConverters.LabelValueConverter, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.PropertyEditors.ValueConverters.MediaPickerValueConverter, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -124,6 +125,7 @@ Umbraco.Cms.Web.BackOffice.Trees.PartialViewMacrosTreeController, Umbraco.Web.Ba
 Umbraco.Cms.Web.BackOffice.Trees.PartialViewsTreeController, Umbraco.Web.BackOffice, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Web.BackOffice.Trees.RelationTypeTreeController, Umbraco.Web.BackOffice, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Web.BackOffice.Trees.ScriptsTreeController, Umbraco.Web.BackOffice, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
+Umbraco.Cms.Web.BackOffice.Trees.StaticFilesTreeController, Umbraco.Web.BackOffice, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Web.BackOffice.Trees.StylesheetsTreeController, Umbraco.Web.BackOffice, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Web.BackOffice.Trees.TemplatesTreeController, Umbraco.Web.BackOffice, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Web.BackOffice.Trees.UserTreeController, Umbraco.Web.BackOffice, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -181,7 +183,9 @@ Umbraco.Cms.Web.BackOffice.Controllers.UsersController, Umbraco.Web.BackOffice, 
 Umbraco.Cms.Web.Common.Controllers.RenderController, Umbraco.Web.Common, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.NoopMigration, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_9_0_0.AddPasswordConfigToMemberTable, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
+Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_9_0_0.DictionaryTablesIndexes, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_9_0_0.ExternalLoginTableIndexes, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
+Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_9_0_0.ExternalLoginTableIndexesFixup, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_9_0_0.ExternalLoginTokenTable, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_9_0_0.MemberTableColumns, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_9_0_0.MigrateLogViewerQueriesFromFileToDb, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -196,6 +200,7 @@ Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_1_0.ConvertTinyMceAndGridMedia
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_1_0.FixContentNuCascade, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_1_0.RenameUserLoginDtoDateIndex, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_15_0.AddCmsContentNuByteColumn, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
+Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_15_0.UpdateCmsPropertyGroupIdSeed, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_15_0.UpgradedIncludeIndexes, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_10_0.AddPropertyTypeLabelOnTopColumn, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_0_1.ChangeNuCacheJsonFormat, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -290,6 +295,7 @@ Umbraco.Cms.Core.PropertyEditors.ValueConverters.ContentPickerValueConverter, Um
 Umbraco.Cms.Core.PropertyEditors.ValueConverters.DatePickerValueConverter, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.PropertyEditors.ValueConverters.DecimalValueConverter, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.PropertyEditors.ValueConverters.EmailAddressValueConverter, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
+Umbraco.Cms.Core.PropertyEditors.ValueConverters.EyeDropperValueConverter, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.PropertyEditors.ValueConverters.IntegerValueConverter, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.PropertyEditors.ValueConverters.LabelValueConverter, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.PropertyEditors.ValueConverters.MediaPickerValueConverter, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -342,6 +348,7 @@ Umbraco.Cms.Web.BackOffice.Trees.PartialViewMacrosTreeController, Umbraco.Web.Ba
 Umbraco.Cms.Web.BackOffice.Trees.PartialViewsTreeController, Umbraco.Web.BackOffice, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Web.BackOffice.Trees.RelationTypeTreeController, Umbraco.Web.BackOffice, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Web.BackOffice.Trees.ScriptsTreeController, Umbraco.Web.BackOffice, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
+Umbraco.Cms.Web.BackOffice.Trees.StaticFilesTreeController, Umbraco.Web.BackOffice, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Web.BackOffice.Trees.StylesheetsTreeController, Umbraco.Web.BackOffice, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Web.BackOffice.Trees.TemplatesTreeController, Umbraco.Web.BackOffice, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Web.BackOffice.Trees.UserTreeController, Umbraco.Web.BackOffice, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null

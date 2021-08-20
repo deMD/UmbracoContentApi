@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using Umbraco.Core.Models;
 using UmbracoContentApi.Core.Models.Grid;
 using UmbracoContentApi.Core.Resolvers;
 
@@ -23,7 +22,7 @@ namespace UmbracoContentApi.Core.Converters
 
             if (options != null &&
                 options.ContainsKey("flattenGrid") &&
-                bool.TryParse(options["flattenGrid"].ToString(), out bool flattenGrid) &&
+                bool.TryParse(options["flattenGrid"].ToString(), out var flattenGrid) &&
                 flattenGrid)
             {
                 return typedValue.Sections.SelectMany(
