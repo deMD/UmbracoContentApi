@@ -1,7 +1,7 @@
 name: Contentapi v9 publish
 
 env:
-  solution: ./src/UmbracoContentApi/UmbracoContentApi.Umbraco9.csproj
+  solution: ./src/UmbracoContentApi/UmbracoContentApi.Umbraco9/UmbracoContentApi.Umbraco9.csproj
 
 on: 
     push:
