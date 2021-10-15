@@ -16,6 +16,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 		..\..\GitVersion.yml = ..\..\GitVersion.yml
 		..\..\License.txt = ..\..\License.txt
 		..\..\README.md = ..\..\README.md
+		..\..\.github\workflows\umb9.yml = ..\..\.github\workflows\umb9.yml
+		..\..\.github\workflows\Contentapi v9 publish.yml = ..\..\.github\workflows\Contentapi v9 publish.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UmbracoContentApi.Web.Old", "UmbracoContentApi.Web.Old\UmbracoContentApi.Web.Old.csproj", "{5D0DBE6A-82E2-45C9-B5E6-D5F1EC9BCA16}"

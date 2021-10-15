@@ -1,4 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>UmbracoContentApi.Core</PackageId>
+    <Version>9.2.0</Version>
+    <Authors>Dave de Moel</Authors>
+    <Company>Dave de Moel</Company>
+    <PackageTags>Umbraco; API; Content;</PackageTags>
+  </PropertyGroup>
+
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
