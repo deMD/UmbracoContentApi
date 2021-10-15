@@ -1,10 +1,12 @@
 name: Contentapi v9 publish
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+env:
+  solution: ./src/UmbracoContentApi/UmbracoContentApi.Umbraco9.csproj
+
+on: 
+    push:
+        tags:
+        - '*.*.*'
 
 jobs:
   build:
@@ -14,18 +16,10 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-        
-    - name: Install GitVersion
-      uses: gittools/actions/gitversion/setup@v0.9.7
-      with:
-        versionSpec: '5.x'
-        
-    - name: Determine Version
-      uses: gittools/actions/gitversion/execute@v0.9.7
-      with:
-        useConfigFile: true    
+      
+    - name: Get tag
+      id: tag
+      uses: dawidd6/action-get-tag@v1        
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
@@ -33,7 +27,7 @@ jobs:
         dotnet-version: 5.0.x
         
     - name: Restore dependencies
-      run: dotnet restore **/UmbracoContentApi.Umbraco9.csproj 
+      run: dotnet restore $solution
       
     - name: Build
-      run: dotnet build **/UmbracoContentApi.Umbraco9.csproj --no-restore
+      run: dotnet build $solution --no-restore
