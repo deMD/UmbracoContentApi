@@ -33,7 +33,7 @@ jobs:
         dotnet-version: 5.0.x
         
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore **/UmbracoContentApi.Umbraco9.csproj 
       
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build **/UmbracoContentApi.Umbraco9.csproj --no-restore
