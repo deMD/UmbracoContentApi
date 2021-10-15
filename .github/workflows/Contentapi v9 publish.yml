@@ -1,4 +1,4 @@
-name: .NET
+name: Contentapi v9 publish
 
 on:
   push:
