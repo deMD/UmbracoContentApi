@@ -29,7 +29,7 @@ namespace UmbracoContentApi.Core.Converters.Grid
 
         public string EditorAlias => "rte";
 
-        public object Convert(object value)
+        public object? Convert(object? value)
         {
             return Convert(value, false);
         }
@@ -40,7 +40,7 @@ namespace UmbracoContentApi.Core.Converters.Grid
         /// <param name="source"></param>
         /// <param name="preview"></param>
         /// <returns></returns>
-        private string Convert(object source, bool preview)
+        private string? Convert(object? source, bool preview)
         {
             if (source == null)
             {

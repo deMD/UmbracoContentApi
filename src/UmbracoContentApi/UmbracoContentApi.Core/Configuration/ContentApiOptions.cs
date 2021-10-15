@@ -4,6 +4,6 @@
         {
             public const string Section = "ContentApi";
 
-            public string CdnUrl { get; set; }
+            public string? CdnUrl { get; set; }
         }
 }

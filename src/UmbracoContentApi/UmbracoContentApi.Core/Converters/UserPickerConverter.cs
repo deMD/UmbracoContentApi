@@ -15,19 +15,14 @@ namespace UmbracoContentApi.Core.Converters
 
         public string EditorAlias => "Umbraco.UserPicker";
 
-        public object Convert(object value, Dictionary<string, object> options = null)
+        public object? Convert(object value, Dictionary<string, object>? options = null)
         {
             if (value == null)
             {
                 throw new ArgumentNullException(nameof(value), $"A value for {EditorAlias} is required.");
             }
 
-            if (int.TryParse(value.ToString(), out int id))
-            {
-                return _userService.GetUserById(id).Name;
-            }
-
-            return null;
+            return int.TryParse(value.ToString(), out var id) ? _userService.GetUserById(id).Name : null;
         }
     }
 }

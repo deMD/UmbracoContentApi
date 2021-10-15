@@ -7,7 +7,7 @@ using UmbracoContentApi.Core.Resolvers;
 namespace UmbracoContentApi.Core.Composers
 {
     // ReSharper disable once UnusedMember.Global
-    internal class ResolversComposer : IUserComposer
+    internal class ResolversComposer : IComposer
     {
         public void Compose(IUmbracoBuilder builder)
         {

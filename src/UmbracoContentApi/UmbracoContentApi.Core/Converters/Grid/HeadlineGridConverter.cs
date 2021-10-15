@@ -6,7 +6,7 @@ namespace UmbracoContentApi.Core.Converters.Grid
     {
         public string EditorAlias => "headline";
 
-        public object Convert(object value)
+        public object Convert(object? value)
         {
             if (value == null)
             {

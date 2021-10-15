@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using UmbracoContentApi.Core.Builder;
-using UmbracoContentApi.Core.Converters.Grid;
 using UmbracoContentApi.Core.Models.Grid;
 
 namespace UmbracoContentApi.Core.Resolvers
@@ -25,12 +23,12 @@ namespace UmbracoContentApi.Core.Resolvers
                 throw new ArgumentException("The Control can't be resolved", nameof(control));
             }
 
-            var converter = _gridConverters.FirstOrDefault(x => x.EditorAlias.Equals(control.Editor.Alias));
+            var converter = _gridConverters.FirstOrDefault(x => x.EditorAlias.Equals(control.Editor?.Alias));
 
             return converter == null
                 ? new Control
-                    {Editor = control.Editor, Value = $"No converter implemented for editor: {control.Editor.Alias}"}
-                : new Control {Editor = control.Editor, Value = converter.Convert(control.Value)};
+                    { Editor = control.Editor, Value = $"No converter implemented for editor: {control.Editor?.Alias}" }
+                : new Control { Editor = control.Editor, Value = converter.Convert(control.Value) };
         }
     }
 }

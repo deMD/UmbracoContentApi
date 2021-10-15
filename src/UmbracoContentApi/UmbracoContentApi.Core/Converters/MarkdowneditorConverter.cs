@@ -8,9 +8,9 @@ namespace UmbracoContentApi.Core.Converters
         public string EditorAlias => "Umbraco.MarkdownEditor";
 
         /// <inheritdoc />
-        public object Convert(object value, Dictionary<string, object> options = null)
+        public object Convert(object value, Dictionary<string, object>? options = null)
         {
-            return value.ToString();
+            return value.ToString() ?? string.Empty;
         }
     }
 }

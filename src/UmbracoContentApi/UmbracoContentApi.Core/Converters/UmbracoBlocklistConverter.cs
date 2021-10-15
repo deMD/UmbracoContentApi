@@ -15,9 +15,9 @@ namespace UmbracoContentApi.Core.Converters
             _blockListResolver = blockListResolver;
         }
 
-        public object Convert(object value, Dictionary<string, object> options = null)
+        public object? Convert(object value, Dictionary<string, object>? options = null)
         {
-            if (!(value is BlockListModel model))
+            if (value is not BlockListModel model)
             {
                 return null;
             }

@@ -2,7 +2,6 @@
 using System.Linq;
 using Umbraco.Cms.Core.Models.Blocks;
 using UmbracoContentApi.Core.Builder;
-using UmbracoContentApi.Core.Converters.BlockList;
 
 namespace UmbracoContentApi.Core.Resolvers
 {
@@ -15,7 +14,7 @@ namespace UmbracoContentApi.Core.Resolvers
             _blockConverters = blockConverters;
         }
 
-        public object ResolveBlockList(BlockListItem blockListItem, Dictionary<string, object> options = null)
+        public object ResolveBlockList(BlockListItem blockListItem, Dictionary<string, object>? options = null)
         {
             var converter =
                 _blockConverters.FirstOrDefault(

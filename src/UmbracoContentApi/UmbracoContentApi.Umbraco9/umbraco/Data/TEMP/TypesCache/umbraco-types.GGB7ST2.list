@@ -79,6 +79,7 @@ Umbraco.Cms.Core.Cache.RelationTypeCacheRefresher, Umbraco.Core, Version=9.0.0.0
 Umbraco.Cms.Core.Cache.TemplateCacheRefresher, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.Cache.UserCacheRefresher, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.Cache.UserGroupCacheRefresher, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
+Umbraco.Cms.Core.Cache.ValueEditorCacheRefresher, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.Actions.ActionAssignDomain, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.Actions.ActionBrowse, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.Actions.ActionCopy, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -95,7 +96,7 @@ Umbraco.Cms.Core.Actions.ActionSort, Umbraco.Core, Version=9.0.0.0, Culture=neut
 Umbraco.Cms.Core.Actions.ActionToPublish, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.Actions.ActionUnpublish, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.Actions.ActionUpdate, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
-UmbracoContentApi.Web.Controllers.AssetApiController, UmbracoContentApi.Web, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+UmbracoContentApi.Web.BlocklistComposer, UmbracoContentApi.Web, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
 UmbracoContentApi.Web.Controllers.ContentApiController, UmbracoContentApi.Web, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
 UmbracoContentApi.Web.Controllers.PreviewApiController, UmbracoContentApi.Web, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
 UmbracoContentApi.Core.Composers.ConvertersComposer, UmbracoContentApi.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -189,6 +190,7 @@ Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_9_0_0.ExternalLoginTableIndexesF
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_9_0_0.ExternalLoginTokenTable, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_9_0_0.MemberTableColumns, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_9_0_0.MigrateLogViewerQueriesFromFileToDb, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
+Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_9_0_0.UmbracoServerColumn, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_9_0.ExternalLoginTableUserData, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_7_0.MissingDictionaryIndex, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_6_0.AddMainDomLock, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -199,6 +201,7 @@ Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_6_0.UpdateRelationTypeTable, U
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_1_0.ConvertTinyMceAndGridMediaUrlsToLocalLink, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_1_0.FixContentNuCascade, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_1_0.RenameUserLoginDtoDateIndex, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
+Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_17_0.AddPropertyTypeGroupColumns, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_15_0.AddCmsContentNuByteColumn, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_15_0.UpdateCmsPropertyGroupIdSeed, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Infrastructure.Migrations.Upgrade.V_8_15_0.UpgradedIncludeIndexes, Umbraco.Infrastructure, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -325,7 +328,6 @@ Umbraco.Cms.Core.PropertyEditors.ValueConverters.RteMacroRenderingValueConverter
 
 Umbraco.Cms.Web.Common.Controllers.UmbracoApiController
 
-UmbracoContentApi.Web.Controllers.AssetApiController, UmbracoContentApi.Web, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
 UmbracoContentApi.Web.Controllers.ContentApiController, UmbracoContentApi.Web, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
 UmbracoContentApi.Web.Controllers.PreviewApiController, UmbracoContentApi.Web, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Web.BackOffice.Trees.ApplicationTreeController, Umbraco.Web.BackOffice, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -410,6 +412,7 @@ Umbraco.Cms.Web.Website.Controllers.UmbRegisterController, Umbraco.Web.Website, 
 
 Umbraco.Cms.Core.Composing.IComposer
 
+UmbracoContentApi.Web.BlocklistComposer, UmbracoContentApi.Web, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
 UmbracoContentApi.Core.Composers.ConvertersComposer, UmbracoContentApi.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
 UmbracoContentApi.Core.Composers.GridConvertersComposer, UmbracoContentApi.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
 UmbracoContentApi.Core.Composers.ResolversComposer, UmbracoContentApi.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
@@ -432,6 +435,7 @@ Umbraco.Cms.Core.Cache.RelationTypeCacheRefresher, Umbraco.Core, Version=9.0.0.0
 Umbraco.Cms.Core.Cache.TemplateCacheRefresher, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.Cache.UserCacheRefresher, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 Umbraco.Cms.Core.Cache.UserGroupCacheRefresher, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
+Umbraco.Cms.Core.Cache.ValueEditorCacheRefresher, Umbraco.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=null
 
 Umbraco.Cms.Core.PropertyEditors.IDataEditor
 

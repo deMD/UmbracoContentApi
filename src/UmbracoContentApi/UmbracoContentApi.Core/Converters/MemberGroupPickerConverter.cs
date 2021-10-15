@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Services;
 
 namespace UmbracoContentApi.Core.Converters
@@ -16,10 +15,10 @@ namespace UmbracoContentApi.Core.Converters
 
         public string EditorAlias => "Umbraco.MemberGroupPicker";
 
-        public object Convert(object value, Dictionary<string, object> options = null)
+        public object? Convert(object value, Dictionary<string, object>? options = null)
         {
-            var values = value.ToString().Split(',').Select(int.Parse);
-            return _memberGroupService.GetByIds(values).Select(x => x.Name);
+            var values = (value.ToString() ?? string.Empty).Split(',').Select(int.Parse).ToList();
+            return !values.Any() ? null : _memberGroupService.GetByIds(values).Select(x => x.Name);
         }
     }
 }

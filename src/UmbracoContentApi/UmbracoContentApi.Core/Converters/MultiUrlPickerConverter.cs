@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using Umbraco.Cms.Core.Models;
 using UmbracoContentApi.Core.Models;
 
@@ -10,22 +9,21 @@ namespace UmbracoContentApi.Core.Converters
     {
         public string EditorAlias => "Umbraco.MultiUrlPicker";
 
-        public object Convert(object value, Dictionary<string, object> options = null)
+        public object Convert(object value, Dictionary<string, object>? options = null)
         {
             if (value == null)
             {
                 throw new ArgumentNullException(nameof(value), $"A value for {EditorAlias} is required.");
             }
 
-            
 
-            var links = new List<MulitLinkModel>();
-            if(value is IEnumerable<Link> valueLinks)
+            var links = new List<MultiLinkModel>();
+            if (value is IEnumerable<Link> valueLinks)
             {
                 foreach (Link link in valueLinks)
                 {
                     links.Add(
-                        new MulitLinkModel
+                        new MultiLinkModel
                         {
                             Name = link.Name,
                             Target = link.Target,
@@ -36,9 +34,10 @@ namespace UmbracoContentApi.Core.Converters
 
                 return links;
             }
+
             if (value is Link valueLink)
             {
-                return new MulitLinkModel
+                return new MultiLinkModel
                 {
                     Name = valueLink.Name,
                     Target = valueLink.Target,

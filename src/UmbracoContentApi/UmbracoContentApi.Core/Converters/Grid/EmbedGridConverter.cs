@@ -8,14 +8,14 @@ namespace UmbracoContentApi.Core.Converters.Grid
     {
         public string EditorAlias => "embed";
 
-        public object Convert(object value)
+        public object? Convert(object? value)
         {
             if (value == null)
             {
                 throw new ArgumentNullException(nameof(value));
             }
 
-            return JsonConvert.DeserializeObject<EmbedModel>(value.ToString());
+            return JsonConvert.DeserializeObject<EmbedModel>(value.ToString() ?? string.Empty);
         }
     }
 }

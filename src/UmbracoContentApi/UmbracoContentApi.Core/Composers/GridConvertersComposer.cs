@@ -9,7 +9,7 @@ using UmbracoContentApi.Core.Converters.Grid;
 namespace UmbracoContentApi.Core.Composers
 {
     // ReSharper disable once UnusedMember.Global
-    public class GridConvertersComposer : IUserComposer
+    public class GridConvertersComposer : IComposer
     {
         public void Compose(IUmbracoBuilder builder)
         {

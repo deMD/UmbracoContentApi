@@ -18,7 +18,7 @@ namespace UmbracoContentApi.Core.Converters
 
         public string EditorAlias => "Umbraco.MediaPicker3";
 
-        public object Convert(object value, Dictionary<string, object> options = null)
+        public object Convert(object value, Dictionary<string, object>? options = null)
         {
             if (value == null)
             {

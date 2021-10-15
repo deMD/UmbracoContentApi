@@ -6,7 +6,7 @@ namespace UmbracoContentApi.Core.Models
     {
         public Guid Id { get; set; }
 
-        public string LinkType { get; set; }
+        public string? LinkType { get; set; }
 
         public string Type => "Link";
     }

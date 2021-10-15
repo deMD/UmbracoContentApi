@@ -28,7 +28,7 @@ namespace UmbracoContentApi.Web.Controllers
             _contentService = contentService;
         }
 
-        [Route("{id:guid}")]
+        [HttpGet("{id:guid}")]
         public IActionResult Get(Guid id)
         {
             //IPublishedContent content = _publishedSnapshotService.CreatePublishedSnapshot(

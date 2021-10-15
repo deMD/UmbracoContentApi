@@ -46,3 +46,5 @@
 **/Logs
 **/mediacache
 **/TEMP
+
+**/.idea/*

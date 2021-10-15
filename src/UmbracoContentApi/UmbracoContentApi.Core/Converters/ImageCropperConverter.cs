@@ -10,19 +10,19 @@ namespace UmbracoContentApi.Core.Converters
 {
     public class ImageCropperConverter : IConverter
     {
-        private readonly string _cdnUrl;
+        private readonly string? _cdnUrl;
         private readonly IImageUrlGenerator _imageUrlGenerator;
 
         public ImageCropperConverter(IImageUrlGenerator imageUrlGenerator,
-            IOptions<ContentApiOptions> contentApiOptions)
+            IOptions<ContentApiOptions>? contentApiOptions)
         {
-            _cdnUrl = contentApiOptions.Value.CdnUrl;
+            _cdnUrl = contentApiOptions?.Value.CdnUrl;
             _imageUrlGenerator = imageUrlGenerator;
         }
 
         public string EditorAlias => "Umbraco.ImageCropper";
 
-        public object Convert(object value, Dictionary<string, object> options = null)
+        public object Convert(object value, Dictionary<string, object>? options = null)
         {
             if (value == null)
             {

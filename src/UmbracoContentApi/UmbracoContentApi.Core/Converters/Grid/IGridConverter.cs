@@ -4,6 +4,6 @@
     {
         string EditorAlias { get; }
 
-        object Convert(object value);
+        object? Convert(object? value);
     }
 }

@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Umbraco.Cms.Core.Models.PublishedContent;
 using Umbraco.Extensions;
 using UmbracoContentApi.Core.Builder;
-using UmbracoContentApi.Core.Converters;
 using UmbracoContentApi.Core.Models;
 
 namespace UmbracoContentApi.Core.Resolvers
@@ -29,7 +28,7 @@ namespace UmbracoContentApi.Core.Resolvers
             _publishedValueFallback = publishedValueFallback;
         }
 
-        public ContentModel ResolveContent(IPublishedElement content, Dictionary<string, object> options = null)
+        public ContentModel ResolveContent(IPublishedElement content, Dictionary<string, object>? options = null)
         {
             try
             {
@@ -84,7 +83,10 @@ namespace UmbracoContentApi.Core.Resolvers
 
                         prop = converter.Convert(prop, options?.ToDictionary(x => x.Key, x => x.Value));
 
-                        dict.Add(property.Alias, prop);
+                        if (prop != null)
+                        {
+                            dict.Add(property.Alias, prop);
+                        }
                     }
                     else
                     {
@@ -99,7 +101,7 @@ namespace UmbracoContentApi.Core.Resolvers
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "An exceptional exception happened, see the inner exception for details.");
+                _logger.LogError(e, "An exceptional exception happened, see the inner exception for details");
                 throw;
             }
         }

@@ -20,14 +20,13 @@ namespace UmbracoContentApi.Web.Controllers
             _publishedContent = publishedContent;
         }
 
-        [Route("{id:guid}")]
+        [HttpGet("{id:guid}")]
         public IActionResult Get(Guid id, int level = 0)
         {
             var content = _publishedContent.Content(id);
             var dictionary = new Dictionary<string, object>
             {
-                {"addUrl", true},
-                {"flattenGrid", true}
+                {"addUrl", true}
             };
 
             if (level <= 0)

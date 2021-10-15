@@ -8,10 +8,10 @@
 
         public int Width { get; set; }
 
-        public string Url { get; set; }
+        public string? Url { get; set; }
 
-        public string Info { get; set; }
+        public string? Info { get; set; }
 
-        public string preview { get; set; }
+        public string? Preview { get; set; }
     }
 }

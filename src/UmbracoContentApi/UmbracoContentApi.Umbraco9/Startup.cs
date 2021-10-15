@@ -40,7 +40,9 @@ namespace UmbracoContentApi.Umbraco9
         public void ConfigureServices(IServiceCollection services)
         {
 #pragma warning disable IDE0022 // Use expression body for methods
-            services.AddUmbraco(_env, _config)
+            services
+                .AddSwaggerGen()
+                .AddUmbraco(_env, _config)
                 .AddBackOffice()
                 .AddWebsite()
                 .AddComposers()
@@ -58,6 +60,9 @@ namespace UmbracoContentApi.Umbraco9
             {
                 app.UseDeveloperExceptionPage();
             }
+            
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             app.UseUmbraco()
                 .WithMiddleware(u =>

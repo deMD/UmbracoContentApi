@@ -6,7 +6,7 @@ namespace UmbracoContentApi.Core.Converters
     {
         public string EditorAlias => "Umbraco.ColorPicker";
 
-        public object Convert(object value, Dictionary<string, object> options = null)
+        public object Convert(object value, Dictionary<string, object>? options = null)
         {
             return value;
         }

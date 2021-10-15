@@ -6,6 +6,6 @@ namespace UmbracoContentApi.Core.Converters
     {
         string EditorAlias { get; }
 
-        object Convert(object value, Dictionary<string, object> options = null);
+        object? Convert(object value, Dictionary<string, object>? options = null);
     }
 }
