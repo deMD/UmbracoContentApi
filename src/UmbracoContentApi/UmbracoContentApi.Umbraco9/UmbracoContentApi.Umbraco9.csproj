@@ -48,6 +48,7 @@
       <Folder Include="umbraco\Data\TEMP\ExamineIndexes\" />
       <Folder Include="umbraco\Data\TEMP\Install\" />
       <Folder Include="umbraco\Data\TEMP\NuCache\" />
+      <Folder Include="umbraco\Data\TEMP\TypesCache" />
       <Folder Include="umbraco\Logs\" />
     </ItemGroup>
 

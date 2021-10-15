@@ -3,6 +3,7 @@ using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Extensions;
 using UmbracoContentApi.Core.Converters;
+using UmbracoContentApi.Core.Converters.BlockList;
 
 namespace UmbracoContentApi.Core.Composers
 {
@@ -18,7 +19,7 @@ namespace UmbracoContentApi.Core.Composers
                 builder.Converters().Append(converter);
             }
 
-            builder.BlockConverters();
+            builder.BlockConverters().Append<DefaultBlockConverter>();
         }
     }
 }
