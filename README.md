@@ -15,9 +15,10 @@ Out of the box easy to use, full DI support and fast.
 #### Basic Usage:
 1. Download the package from [NuGet](https://www.nuget.org/packages/UmbracoContentApi.Core/)
 2. Install the package
-3. Create an UmbracoApiController
-4. Inject the content resolver 
-5. Resolve the content
+3. Add this key into the web.config and configure your base CDN Url <add key="ContentApi:CdnUrl" value="https://cdn.contentapi.net" />
+4. Create an UmbracoApiController
+5. Inject the content resolver 
+6. Resolve the content
 
 ```csharp
 public class SampleApiController : UmbracoApiController
@@ -72,7 +73,7 @@ composition.Converters()
 ```
 
 #### Sample app login
-email: admin@contentapi.com
+email: admin@contentapi.comr
 password: Password123!
 
 ### Changelog
