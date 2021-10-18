@@ -4,7 +4,7 @@
     <Version>9.2.0</Version>
     <Authors>Dave de Moel</Authors>
     <Company>Dave de Moel</Company>
-    <PackageTags>Umbraco; API; Content;</PackageTags>
+    <PackageTags>Umbraco; Content; API; Headless; REST; WebApi;</PackageTags>
     <PackageProjectUrl>https://github.com/deMD/UmbracoContentApi</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
