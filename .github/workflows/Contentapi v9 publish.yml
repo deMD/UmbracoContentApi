@@ -2,6 +2,7 @@ name: Contentapi v9 publish
 
 env:
   solution: ./src/UmbracoContentApi/UmbracoContentApi.Umbraco9/UmbracoContentApi.Umbraco9.csproj
+  package_source: ./src/UmbracoContentApi/UmbracoContentApi.Core/UmbracoContentApi.Core.csproj
 
 on: 
     push:
@@ -28,8 +29,5 @@ jobs:
       with:
         dotnet-version: 5.0.x
         
-    - name: Restore dependencies
-      run: dotnet restore $solution
-      
-    - name: Build
-      run: dotnet build $solution --no-restore
+    - name: Pack
+      run: dotnet pack $packagae-source -p:PackageVersion=${{steps.tag.outputs.tag}} --configuration Release
