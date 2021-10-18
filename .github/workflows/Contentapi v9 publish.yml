@@ -3,6 +3,7 @@ name: Contentapi v9 publish
 env:
   solution: ./src/UmbracoContentApi/UmbracoContentApi.Umbraco9/UmbracoContentApi.Umbraco9.csproj
   packagesource: ./src/UmbracoContentApi/UmbracoContentApi.Core/UmbracoContentApi.Core.csproj
+  packageloc: ./src/UmbracoContentApi/UmbracoContentApi.Core/bin/Release/*.nupkg
 
 on: 
     push:
@@ -31,3 +32,6 @@ jobs:
         
     - name: Pack
       run: dotnet pack $packagesource -p:PackageVersion=${{steps.tag.outputs.tag}} --configuration Release
+      
+    - name: Publish
+      run: dotnet nuget push $packageloc -k ${{ secrets.NUGET_TOKEN }} -s https://api.nuget.org/v3/index.json
