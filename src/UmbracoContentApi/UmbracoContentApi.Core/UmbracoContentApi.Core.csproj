@@ -33,10 +33,4 @@
     <PackageReference Include="Umbraco.Cms.Web.Common" Version="9.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="..\..\..\License.txt">
-      <Link>License.txt</Link>
-    </Content>
-  </ItemGroup>
-
 </Project>
