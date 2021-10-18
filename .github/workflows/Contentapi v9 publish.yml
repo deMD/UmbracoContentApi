@@ -1,7 +1,6 @@
 name: Contentapi v9 publish
 
 env:
-  solution: ./src/UmbracoContentApi/UmbracoContentApi.Umbraco9/UmbracoContentApi.Umbraco9.csproj
   packagesource: ./src/UmbracoContentApi/UmbracoContentApi.Core/UmbracoContentApi.Core.csproj
   packageloc: ./src/UmbracoContentApi/UmbracoContentApi.Core/bin/Release/*.nupkg
 
