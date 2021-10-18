@@ -11,6 +11,7 @@ Out of the box easy to use, full DI support and fast.
 - The Umbraco Content Api 2.0.10 works with Umbraco 8.1.3+
 - The Umbraco Content Api 3.0.0+ works with Umbraco 8.7.0+
 - The Umbraco Content Api 4.0.0+ works with Umbraco 8.14.0+
+- The Umbraco Content Api 9.2.0+ works with Umbraco 9.0.0+
 
 #### Basic Usage:
 1. Download the package from [NuGet](https://www.nuget.org/packages/UmbracoContentApi.Core/)
@@ -20,20 +21,36 @@ Out of the box easy to use, full DI support and fast.
 5. Resolve the content
 
 ```csharp
-public class SampleApiController : UmbracoApiController
+[Route("api/content")]
+    public class ContentApiController : UmbracoApiController
     {
         private readonly Lazy<IContentResolver> _contentResolver;
+        private readonly IPublishedContentQuery _publishedContent;
 
-        public ContentApiController(Lazy<IContentResolver> contentResolver)
+        public ContentApiController(
+            Lazy<IContentResolver> contentResolver, IPublishedContentQuery publishedContent)
         {
             _contentResolver = contentResolver;
+            _publishedContent = publishedContent;
         }
 
-        public IHttpActionResult Get(Guid id)
-        { 
-            IPublishedContent content = Umbraco.Content(id);
-            var model = _contentResolver.Value.ResolveContent(content);
-            return Ok(model);
+        [HttpGet("{id:guid}")]
+        public IActionResult Get(Guid id, int level = 0)
+        {
+            var content = _publishedContent.Content(id);
+            var dictionary = new Dictionary<string, object>
+            {
+                {"addUrl", true}
+            };
+
+            if (level <= 0)
+            {
+                return Ok(_contentResolver.Value.ResolveContent(content, dictionary));
+            }
+
+            dictionary.Add("level", level);
+
+            return Ok(_contentResolver.Value.ResolveContent(content, dictionary));
         }
     }
 ```
@@ -54,20 +71,16 @@ public class SampleConverter : IConverter
         }
     }
 // Composer:
-    [ComposeAfter(typeof(UmbracoContentApi.Core.Composers.ConvertersComposer))]
-    public class ConverterComposer : IUserComposer
-    {
-        public void Compose(Composition composition)
+    public void Compose(IUmbracoBuilder builder)
         {
-            composition.Converters().Append<SampleConverter>();
+            builder.Converters().Append<SampleConverter>();
         }
-    }
 ```
 
 #### Replace an exsisting converter
 To replace a converter just add the following to the composer:
 ```csharp
-composition.Converters()
+builder.Converters()
     .Replace<ConverterToReplace, SampleConverter>();
 ```
 
@@ -88,3 +101,12 @@ Added grid editor converters.
 #### 4.0.0
 
 Added support for Umbraco MediaPicker 3
+
+#### 9.2.0
+
+Added official support for Umbraco 9
+
+Added default BlocklistConverter. 
+The BlockListConverter will use the default converter if no specific converter is specified for the block's element type.
+
+Migrated to Github Actions for package releases.

@@ -5,6 +5,12 @@
     <Authors>Dave de Moel</Authors>
     <Company>Dave de Moel</Company>
     <PackageTags>Umbraco; API; Content;</PackageTags>
+    <PackageProjectUrl>https://github.com/deMD/UmbracoContentApi</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>License.txt</PackageLicenseFile>
+    <Copyright>Copyright (c) 2021 Dave de Moel</Copyright>
+    <Description>The Umbraco Content Api is a package that enables easy integration of Headless Api functionality into your project.</Description>
+    <PackageIcon>UmbracoContentApiLogo.png</PackageIcon>
   </PropertyGroup>
 
 
@@ -15,6 +21,9 @@
 
   <ItemGroup>
     <None Remove="GitVersion.yml" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="License.txt" Pack="true" PackagePath="\" />
+    <None Include="UmbracoContentApiLogo.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,6 +31,12 @@
     <PackageReference Include="Umbraco.Cms.Core" Version="9.0.0" />
     <PackageReference Include="Umbraco.Cms.Infrastructure" Version="9.0.0" />
     <PackageReference Include="Umbraco.Cms.Web.Common" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\..\License.txt">
+      <Link>License.txt</Link>
+    </Content>
   </ItemGroup>
 
 </Project>

@@ -12,7 +12,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 		..\..\.gitattributes = ..\..\.gitattributes
 		..\..\.gitignore = ..\..\.gitignore
 		..\..\ContentApi Umb8.yml = ..\..\ContentApi Umb8.yml
-		..\..\ContentApi Umb9.yml = ..\..\ContentApi Umb9.yml
 		..\..\GitVersion.yml = ..\..\GitVersion.yml
 		..\..\License.txt = ..\..\License.txt
 		..\..\README.md = ..\..\README.md
@@ -34,9 +33,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Umbraco 8", "Umbraco 8", "{
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Umbraco 9", "Umbraco 9", "{ED25CE6F-82DF-499E-9597-7CEF5238B4E7}"
-	ProjectSection(SolutionItems) = preProject
-		UmbracoContentApi.Core\GitVersion.yml = UmbracoContentApi.Core\GitVersion.yml
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
