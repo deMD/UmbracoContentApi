@@ -35,22 +35,10 @@ Out of the box easy to use, full DI support and fast.
         }
 
         [HttpGet("{id:guid}")]
-        public IActionResult Get(Guid id, int level = 0)
+        public IActionResult Get(Guid id)
         {
             var content = _publishedContent.Content(id);
-            var dictionary = new Dictionary<string, object>
-            {
-                {"addUrl", true}
-            };
-
-            if (level <= 0)
-            {
-                return Ok(_contentResolver.Value.ResolveContent(content, dictionary));
-            }
-
-            dictionary.Add("level", level);
-
-            return Ok(_contentResolver.Value.ResolveContent(content, dictionary));
+            return Ok(_contentResolver.Value.ResolveContent(content));
         }
     }
 ```
