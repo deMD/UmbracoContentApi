@@ -110,3 +110,7 @@ Added default BlocklistConverter.
 The BlockListConverter will use the default converter if no specific converter is specified for the block's element type.
 
 Migrated to Github Actions for package releases.
+
+#### 9.2.1
+
+Reimplemented Legacy mediapicker 
