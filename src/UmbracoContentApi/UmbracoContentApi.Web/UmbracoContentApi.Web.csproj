@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="Umbraco.Cms.Core" Version="9.0.0" />
+    <PackageReference Include="Umbraco.Cms.Core" Version="9.2.0" />
     <PackageReference Include="Umbraco.Cms.Web.Common" Version="9.0.0" />
   </ItemGroup>
 
