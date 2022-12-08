@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Umbraco.Cms.Core" Version="9.0.0" />
     <PackageReference Include="Umbraco.Cms.Infrastructure" Version="9.0.0" />
     <PackageReference Include="Umbraco.Cms.Web.Common" Version="9.0.0" />
