@@ -5,7 +5,7 @@
 
     <ItemGroup>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.2" />
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.2.2" />
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.4.0" />
         <PackageReference Include="Umbraco.Cms" Version="9.0.0" />
         <PackageReference Include="Umbraco.Cms.SqlCe" Version="9.0.0" />
         <PackageReference Include="Umbraco.SqlServerCE" Version="4.0.0.1" />
